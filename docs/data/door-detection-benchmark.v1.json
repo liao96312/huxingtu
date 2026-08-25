@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "0.1.0",
+  "matchingProtocol": "one-to-one: proposal hinge inside red component bbox and radius within 0.18x..1.05x bbox diameter",
+  "train": {
+    "precision": 0.6923,
+    "recall": 0.675,
+    "f1": 0.6835,
+    "truePositive": 27,
+    "falsePositive": 12,
+    "falseNegative": 13
+  },
+  "test": {
+    "precision": 0.56,
+    "recall": 0.7778,
+    "f1": 0.6512,
+    "truePositive": 14,
+    "falsePositive": 11,
+    "falseNegative": 4
+  },
+  "all": {
+    "precision": 0.6406,
+    "recall": 0.7069,
+    "f1": 0.6721,
+    "truePositive": 41,
+    "falsePositive": 23,
+    "falseNegative": 17
+  },
+  "files": [
+    {
+      "file": "1.png",
+      "originalSha256": "7ecfc15f321221bc93466ee0080ed531399fa2183607de816ceba3459914d165",
+      "annotatedSha256": "fff955438138a22d519b46b7c88c447045fd0350a3d4506872129547e2f95ee5",
+      "width": 799,
+      "height": 799,
+      "truthCount": 7,
+      "proposalCount": 7,
+      "truePositive": 4,
+      "falsePositive": 3,
+      "falseNegative": 3,
+      "sourceConsistencyMae": 0.0
+    },
+    {
+      "file": "2.png",
+      "originalSha256": "1fed20d0cd074fdf6caf56905aad32202d1f8eb21a6c3751de0b7c998e7fb800",
+      "annotatedSha256": "d31b887a5f62801c90a8541a2f0a7ced2fc64f264321832ed452c5573b219f2b",
+      "width": 798,
+      "height": 798,
+      "truthCount": 6,
+      "proposalCount": 8,
+      "truePositive": 6,
+      "falsePositive": 2,
+      "falseNegative": 0,
+      "sourceConsistencyMae": 0.0
+    },
+    {
+      "file": "3.png",
+      "originalSha256": "652c928286c358c01d9e7489a7a67079ce7782a8627bbad6716f4749294f93e1",
+      "annotatedSha256": "1219fbf4e828fee7e54af5964081c8292724c05cf7621125d78303c7ec5e8ce0",
+      "width": 798,
+      "height": 798,
+      "truthCount": 6,
+      "proposalCount": 5,
+      "truePositive": 4,
+      "falsePositive": 1,
+      "falseNegative": 2,
+      "sourceConsistencyMae": 0.0
+    },
+    {
+      "file": "4.png",
+      "originalSha256": "6b5efd6cec243ab5032db52fb20c623bd624e13430b15e92939db126bbb6abb9",
+      "annotatedSha256": "713d52c3f700c476eae25481e598c9f679709cf4ddb138a5796f58332694ab2f",
+      "width": 800,
+      "height": 799,
+      "truthCount": 7,
+      "proposalCount": 7,
+      "truePositive": 5,
+      "falsePositive": 2,
+      "falseNegative": 2,
+      "sourceConsistencyMae": 0.0
+    },
+    {
+      "file": "5.png",
+      "originalSha256": "0ee0d11ebab0cd6b759733751fcb202128c3f4a14b41349ecc2f13b2cf21769b",
+      "annotatedSha256": "d36df2684d1363e1c29dbfffddf8230ec0d03c4fcc24beea749a96a0660015aa",
+      "width": 799,
+      "height": 799,
+      "truthCount": 7,
+      "proposalCount": 5,
+      "truePositive": 3,
+      "falsePositive": 2,
+      "falseNegative": 4,
+      "sourceConsistencyMae": 0.0
+    },
+    {
+      "file": "6.png",
+      "originalSha256": "cb02d228d9451d1c7a56a9d7de6610bf22cf01a49d19faf63393e5906c4c1145",
+      "annotatedSha256": "879b125d55c729defd731702b99dada63fbc116b2a89b94c9ea8b988725f894e",
+      "width": 798,
+      "height": 798,
+      "truthCount": 7,
+      "proposalCount": 7,
+      "truePositive": 5,
+      "falsePositive": 2,
+      "falseNegative": 2,
+      "sourceConsistencyMae": 0.0
+    },
+    {
+      "file": "7.png",
+      "originalSha256": "78e5e53ca2b3c4a4e4cca789b9f39bdae182655ef0d98a9c748f89576692aa62",
+      "annotatedSha256": "ca355e1d4302caa59931d5a09e2449266d26d0cbe3c786f44333bcd894b55886",
+      "width": 798,
+      "height": 798,
+      "truthCount": 6,
+      "proposalCount": 6,
+      "truePositive": 5,
+      "falsePositive": 1,
+      "falseNegative": 1,
+      "sourceConsistencyMae": 0.0
+    },
+    {
+      "file": "8.png",
+      "originalSha256": "1e6e76623e114bb751a268f7fc0948ee9df2930e0428bbbb5e6f156ea33bd48b",
+      "annotatedSha256": "c3fac0eff4722ea680b5c229c53167a0faa4b08cbc47c78cd678751178273d55",
+      "width": 767,
+      "height": 709,
+      "truthCount": 5,
+      "proposalCount": 10,
+      "truePositive": 3,
+      "falsePositive": 7,
+      "falseNegative": 2,
+      "sourceConsistencyMae": 0.0
+    },
+    {
+      "file": "PixPin_2026-06-25_14-36-42.png",
+      "originalSha256": "80fbb407b8fef236ce12b4d6ffb74ddf8e120801c9443406f5e34049e5fc3bdb",
+      "annotatedSha256": "b6ff621b3eca9757def789d09c0dd8a5f550a59c68033ab12d805d61c5bad0db",
+      "width": 801,
+      "height": 795,
+      "truthCount": 7,
+      "proposalCount": 9,
+      "truePositive": 6,
+      "falsePositive": 3,
+      "falseNegative": 1,
+      "sourceConsistencyMae": 0.0
+    }
+  ]
+}

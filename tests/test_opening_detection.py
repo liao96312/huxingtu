@@ -9,6 +9,7 @@ from pano_platform.opening_detection import (
     choose_single_door_origin,
     cluster_collinear_window_lines,
     detect_wall_anchored_door_arcs,
+    detect_door_arc_proposals,
     is_door_rect_pair,
 )
 
@@ -54,6 +55,14 @@ def test_hough_door_arcs_find_closed_leaf_missing_from_wall_gap_detector() -> No
 
     assert any(arc.wall_edge_id == "upper" and 600 < arc.radius_px * 28.923076923 < 900 for arc in arcs)
     assert {arc.wall_edge_id for arc in arcs} == {"upper", "lower", "bed"}
+
+
+def test_wall_filtered_proposals_keep_known_door_without_raw_hough_flood() -> None:
+    image = cv2.imread(str(ROOT / "datasets/source/fp-001.png"), cv2.IMREAD_GRAYSCALE)
+    proposals = detect_door_arc_proposals(image)
+
+    assert len(proposals) < 20
+    assert any(abs(item.center[0] - 436) < 8 and abs(item.center[1] - 236) < 8 for item in proposals)
 
 
 def test_automatic_detection_artifact_contains_no_manual_annotation() -> None:
