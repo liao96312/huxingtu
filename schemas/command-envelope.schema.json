@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/command-envelope/0.1.0",
+  "title": "CommandEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "requestId", "command", "projectId", "payload"],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "requestId": { "type": "string", "format": "uuid" },
+    "command": {
+      "enum": ["parse", "layout", "buildScene", "capture", "render", "queryResult"]
+    },
+    "projectId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "layoutRevision": { "type": "integer", "minimum": 1 },
+    "roomId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "payload": { "type": "object" }
+  }
+}

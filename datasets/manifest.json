@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "desktop-floorplans-poc",
+  "revision": 1,
+  "purpose": "poc",
+  "samples": [
+    {
+      "id": "fp-001",
+      "floorIndex": 0,
+      "floorCount": 1,
+      "inputKind": "orthogonalFloorplan",
+      "scopeTier": "p0Candidate",
+      "image": {
+        "file": "source/fp-001.png",
+        "sha256": "1eb6c0bc9f5ede557d1b39ab596b3482d0699256a2df94a4ab00bdcc2f6d7966",
+        "byteLength": 84916,
+        "width": 621,
+        "height": 450,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": ["testing", "benchmark"],
+        "allowTraining": false
+      },
+      "dimensionUnitHint": "mm",
+      "roomHints": ["living", "dining", "bedroom", "bedroom", "bathroom", "kitchen"],
+      "expectedGate": {
+        "decision": "needsReview",
+        "reasonCodes": ["SHORT_EDGE_BELOW_1200", "SCALE_CONFIRMATION_REQUIRED"]
+      },
+      "notes": "单层正交户型，外轮廓和尺寸标注清楚；分辨率低于 P0 自动解析门槛，应先确认比例尺。"
+    },
+    {
+      "id": "fp-002",
+      "pairGroupId": "house-001",
+      "floorIndex": 0,
+      "floorCount": 2,
+      "inputKind": "sitePlanGroundFloor",
+      "scopeTier": "p1Multilevel",
+      "image": {
+        "file": "source/fp-002.png",
+        "sha256": "7e9b876dfa2ec08bacfc187a8a58ac128579f4a06d96c7a68881dd1cbf56712a",
+        "byteLength": 464071,
+        "width": 412,
+        "height": 766,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": ["testing", "benchmark"],
+        "allowTraining": false
+      },
+      "dimensionUnitHint": "cm",
+      "roomHints": ["living", "dining", "kitchen", "bathroom", "bedroom", "garage", "outdoor"],
+      "expectedGate": {
+        "decision": "reject",
+        "reasonCodes": ["SHORT_EDGE_BELOW_1200", "SITE_PLAN_INCLUDED", "STAIRCASE_PRESENT", "MULTILEVEL_INPUT"]
+      },
+      "notes": "10m×22m 住宅一层，包含庭院、三车位和楼梯；用于验证 P0 正确拒绝复杂场地/多楼层输入。"
+    },
+    {
+      "id": "fp-003",
+      "pairGroupId": "house-001",
+      "floorIndex": 1,
+      "floorCount": 2,
+      "inputKind": "upperFloorPlan",
+      "scopeTier": "p1Multilevel",
+      "image": {
+        "file": "source/fp-003.png",
+        "sha256": "95cb63aa7432b71a7f30749a75047a3e6ba39fe3b0b9ccce6e218b7d687c3e37",
+        "byteLength": 379241,
+        "width": 430,
+        "height": 782,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": ["testing", "benchmark"],
+        "allowTraining": false
+      },
+      "dimensionUnitHint": "cm",
+      "roomHints": ["bedroom", "bedroom", "bedroom", "bathroom", "bathroom", "familyRoom", "balcony"],
+      "expectedGate": {
+        "decision": "reject",
+        "reasonCodes": ["SHORT_EDGE_BELOW_1200", "UPPER_FLOOR_PLAN", "STAIRCASE_PRESENT", "MULTILEVEL_INPUT"]
+      },
+      "notes": "同一住宅二层，包含楼梯、露台和多卧室；与 fp-002 配对进入 P1 多楼层数据切片。"
+    }
+  ],
+  "contentHash": "edf64f1db330bd9019ef0102bb2429763d75723d4587c9dfbb0e2f77257c38a3"
+}

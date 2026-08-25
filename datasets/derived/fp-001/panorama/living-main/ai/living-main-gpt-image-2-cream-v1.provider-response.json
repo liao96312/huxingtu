@@ -1,0 +1,26 @@
+{
+  "created": 1787625578,
+  "data": [
+    {
+      "height": 887,
+      "revised_prompt": "Create a photorealistic interior-design version of this exact 360-degree equirectangular panorama.\nThis is a 2:1 ERP structural reference of a living and dining room. Preserve the camera position, projection, room geometry, wall lengths, ceiling height, every door, every window, their dimensions and positions, and the left/right panorama seam exactly. Do not crop, rotate, change viewpoint, add or remove openings, bend straight walls, or duplicate objects across the seam.\nStyle: contemporary warm minimalist Chinese apartment, light oak and warm off-white palette, natural stone accents, realistic ceiling and floor materials, elegant living-room seating, dining table and chairs, restrained built-in storage, curtains fitted only to the existing windows, warm indirect lighting plus daylight, physically plausible scale, premium but lived-in, clean architectural photography.\nKeep all poles and the full 360 field of view coherent. Output must remain a seamless 2:1 equirectangular panorama, not a perspective photo, collage, or fisheye image.\nStyleContext designStyle=cream style; visualMode=realistic; inspirations=natural light, texture. Realistic cream-style interior, soft ivory and light beige palette, rounded but structurally faithful furniture, boucle and light oak, diffuse natural light, no excessive ornament.",
+      "url": "https://apioss22.sydney-ai.com/ximg/1ng7.9g.15.288x144/429cbcf4-c132-4182-8935-5960b507c986/gi2-e1787625613.png",
+      "width": 1774
+    }
+  ],
+  "usage": {
+    "input_tokens": 2694,
+    "output_tokens": 2112,
+    "total_tokens": 4806,
+    "input_tokens_details": {
+      "text_tokens": 332,
+      "image_tokens": 2362,
+      "cached_tokens": 0
+    },
+    "output_tokens_details": {
+      "text_tokens": 0,
+      "image_tokens": 2112,
+      "reasoning_tokens": 0
+    }
+  }
+}

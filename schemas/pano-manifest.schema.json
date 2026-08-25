@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/pano-manifest/0.1.0",
+  "title": "PanoManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "projectId",
+    "revision",
+    "defaultSceneId",
+    "projection",
+    "scenes",
+    "share",
+    "contentHash"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "projectId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "revision": { "type": "integer", "minimum": 1 },
+    "defaultSceneId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "projection": { "const": "equirectangular" },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/scene" }
+    },
+    "share": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "contentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  },
+  "$defs": {
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "width", "height", "contentType"],
+      "properties": {
+        "url": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "contentType": { "enum": ["image/jpeg", "image/webp", "image/png", "image/svg+xml"] }
+      }
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["original", "proxy2k", "proxy1k", "thumbnailUrl"],
+      "properties": {
+        "original": { "$ref": "#/$defs/asset" },
+        "proxy4k": { "$ref": "#/$defs/asset" },
+        "proxy2k": { "$ref": "#/$defs/asset" },
+        "proxy1k": { "$ref": "#/$defs/asset" },
+        "thumbnailUrl": { "type": "string", "minLength": 1, "maxLength": 2048 }
+      }
+    },
+    "initialView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["yaw", "pitch", "fov"],
+      "properties": {
+        "yaw": { "type": "number", "minimum": -180, "maximum": 180 },
+        "pitch": { "type": "number", "minimum": -85, "maximum": 85 },
+        "fov": { "type": "number", "minimum": 45, "maximum": 100 }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "roomId", "roomName", "title", "order", "assets", "initialView"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "roomId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "roomName": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "order": { "type": "integer", "minimum": 0 },
+        "assets": { "$ref": "#/$defs/assets" },
+        "initialView": { "$ref": "#/$defs/initialView" }
+      }
+    }
+  }
+}

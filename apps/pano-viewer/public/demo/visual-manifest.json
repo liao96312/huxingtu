@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp-001-visual-sample",
+  "revision": 1,
+  "defaultSceneId": "fp001_living_v2",
+  "projection": "equirectangular",
+  "scenes": [
+    {
+      "id": "fp001_living_v2",
+      "roomId": "room_living_dining",
+      "roomName": "客餐厅",
+      "title": "fp-001 客餐厅视觉样张",
+      "order": 0,
+      "assets": {
+        "original": {
+          "url": "/demo/fp-001-living-visual-v2-seam.png",
+          "width": 1774,
+          "height": 887,
+          "contentType": "image/png"
+        },
+        "proxy2k": {
+          "url": "/demo/fp-001-living-visual-v2-seam.png",
+          "width": 1774,
+          "height": 887,
+          "contentType": "image/png"
+        },
+        "proxy1k": {
+          "url": "/demo/fp-001-living-visual-v2-seam.png",
+          "width": 1774,
+          "height": 887,
+          "contentType": "image/png"
+        },
+        "thumbnailUrl": "/demo/fp-001-living-visual-v2-seam.png"
+      },
+      "initialView": { "yaw": 0, "pitch": 0, "fov": 82 }
+    }
+  ],
+  "share": { "title": "fp-001 客餐厅 360°视觉样张" },
+  "contentHash": "65a2c60693b57cf5b1c7f939b12df85da5893029138cb5dbc8514cb92db361e0"
+}

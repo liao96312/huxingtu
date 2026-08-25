@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "artifact:fp001:camera-plan:auto-v1",
+  "projectId": "fp001",
+  "artifactType": "cameraPlan",
+  "contentHash": "e0a50cc34df444d72be23cf000c8c950b40ab230756c889c8c8c74dbcb60027d",
+  "byteLength": 1641,
+  "contentType": "application/json",
+  "generator": {
+    "name": "shapely-polylabel-camera-plan",
+    "version": "0.1.0"
+  },
+  "inputDigests": [
+    "600599c78cd3488a7bc3dd552711dd65c5b53ab457fb7e2dce4bdc760ca610fe",
+    "edd1f553bc9270fd37228b59c26a80c7cdf3c9ef688b2ea4ff82f9e9962a6d5e"
+  ],
+  "createdAt": "2026-08-25T01:25:57.636000Z",
+  "metadata": {
+    "cameraCount": 5,
+    "cameraPlanHash": "c21b457aa7f6b15af38f7c947bb1d84fa93fc26e02f6ad4dacc0fa01f4b71ad6"
+  }
+}

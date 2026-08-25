@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "0.1.0",
+  "sampleId": "fp-001",
+  "observations": [
+    {
+      "id": "top_segment_2900mm",
+      "pixelDistance": 100,
+      "worldDistanceMm": 2900,
+      "confidence": 0.95
+    },
+    {
+      "id": "top_segment_2400mm",
+      "pixelDistance": 81,
+      "worldDistanceMm": 2400,
+      "confidence": 0.95
+    },
+    {
+      "id": "top_segment_1500mm",
+      "pixelDistance": 52,
+      "worldDistanceMm": 1500,
+      "confidence": 0.95
+    },
+    {
+      "id": "top_segment_1700mm",
+      "pixelDistance": 58,
+      "worldDistanceMm": 1700,
+      "confidence": 0.95
+    },
+    {
+      "id": "left_segment_3000mm",
+      "pixelDistance": 104,
+      "worldDistanceMm": 3000,
+      "confidence": 0.95
+    },
+    {
+      "id": "left_segment_3200mm",
+      "pixelDistance": 111,
+      "worldDistanceMm": 3200,
+      "confidence": 0.95
+    }
+  ],
+  "pixelOrigin": { "x": 200, "y": 369 },
+  "worldOrigin": { "x": 0, "y": 0 },
+  "maxRelativeResidual": 0.05
+}

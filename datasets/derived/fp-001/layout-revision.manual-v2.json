@@ -1,0 +1,386 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "layout_fp001_manual_r2",
+  "projectId": "fp001",
+  "revision": 2,
+  "units": "mm",
+  "coordinateFrame": "business-z-up-rh",
+  "source": {
+    "imageArtifactId": "dataset:desktop-floorplans-poc:fp-001",
+    "pixelToWorldTransform": [
+      28.923076923076923,
+      0.0,
+      -5784.615384615385,
+      0.0,
+      -28.923076923076923,
+      10672.615384615385,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "scaleConfidence": 0.9
+  },
+  "nodes": [
+    {
+      "x": -462.769231,
+      "y": 6218.461538,
+      "id": "n001"
+    },
+    {
+      "x": -462.769231,
+      "y": 3210.461538,
+      "id": "n002"
+    },
+    {
+      "x": 0.0,
+      "y": 3210.461538,
+      "id": "n003"
+    },
+    {
+      "x": 0.0,
+      "y": 115.692308,
+      "id": "n004"
+    },
+    {
+      "x": 2371.692308,
+      "y": 7259.692308,
+      "id": "n005"
+    },
+    {
+      "x": 2371.692308,
+      "y": 6710.153846,
+      "id": "n006"
+    },
+    {
+      "x": 2950.153846,
+      "y": 6710.153846,
+      "id": "n007"
+    },
+    {
+      "x": 2950.153846,
+      "y": 6218.461538,
+      "id": "n008"
+    },
+    {
+      "x": 2950.153846,
+      "y": 3210.461538,
+      "id": "n009"
+    },
+    {
+      "x": 4193.846154,
+      "y": 7259.692308,
+      "id": "n010"
+    },
+    {
+      "x": 4193.846154,
+      "y": 6825.846154,
+      "id": "n011"
+    },
+    {
+      "x": 5177.230769,
+      "y": 6825.846154,
+      "id": "n012"
+    },
+    {
+      "x": 5177.230769,
+      "y": 5697.846154,
+      "id": "n013"
+    },
+    {
+      "x": 5177.230769,
+      "y": 3210.461538,
+      "id": "n014"
+    },
+    {
+      "x": 6739.076923,
+      "y": 5697.846154,
+      "id": "n015"
+    },
+    {
+      "x": 6739.076923,
+      "y": 4859.076923,
+      "id": "n016"
+    },
+    {
+      "x": 6739.076923,
+      "y": 3210.461538,
+      "id": "n017"
+    },
+    {
+      "x": 6739.076923,
+      "y": 1388.307692,
+      "id": "n018"
+    },
+    {
+      "x": 6739.076923,
+      "y": 115.692308,
+      "id": "n019"
+    },
+    {
+      "x": 8503.384615,
+      "y": 4859.076923,
+      "id": "n020"
+    },
+    {
+      "x": 8503.384615,
+      "y": 1388.307692,
+      "id": "n021"
+    }
+  ],
+  "edges": [
+    {
+      "id": "w_outer_top_left",
+      "startNodeId": "n001",
+      "endNodeId": "n008",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.9
+    },
+    {
+      "id": "w_outer_step_1",
+      "startNodeId": "n008",
+      "endNodeId": "n007",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.85
+    },
+    {
+      "id": "w_outer_center_recess",
+      "startNodeId": "n007",
+      "endNodeId": "n006",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.82
+    },
+    {
+      "id": "w_outer_bump_left",
+      "startNodeId": "n006",
+      "endNodeId": "n005",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.82
+    },
+    {
+      "id": "w_outer_bump_top",
+      "startNodeId": "n005",
+      "endNodeId": "n010",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.88
+    },
+    {
+      "id": "w_outer_bump_right",
+      "startNodeId": "n010",
+      "endNodeId": "n011",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.82
+    },
+    {
+      "id": "w_outer_top_center",
+      "startNodeId": "n011",
+      "endNodeId": "n012",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.86
+    },
+    {
+      "id": "w_outer_step_2",
+      "startNodeId": "n012",
+      "endNodeId": "n013",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.85
+    },
+    {
+      "id": "w_outer_top_bath",
+      "startNodeId": "n013",
+      "endNodeId": "n015",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.86
+    },
+    {
+      "id": "w_outer_step_3",
+      "startNodeId": "n015",
+      "endNodeId": "n016",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.82
+    },
+    {
+      "id": "w_outer_top_kitchen",
+      "startNodeId": "n016",
+      "endNodeId": "n020",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.88
+    },
+    {
+      "id": "w_outer_right_kitchen",
+      "startNodeId": "n020",
+      "endNodeId": "n021",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.9
+    },
+    {
+      "id": "w_outer_bottom_kitchen",
+      "startNodeId": "n021",
+      "endNodeId": "n018",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.88
+    },
+    {
+      "id": "w_outer_right_living",
+      "startNodeId": "n018",
+      "endNodeId": "n019",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.85
+    },
+    {
+      "id": "w_outer_bottom_living",
+      "startNodeId": "n019",
+      "endNodeId": "n004",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.88
+    },
+    {
+      "id": "w_outer_left_living",
+      "startNodeId": "n004",
+      "endNodeId": "n003",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.8
+    },
+    {
+      "id": "w_outer_recess",
+      "startNodeId": "n003",
+      "endNodeId": "n002",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.8
+    },
+    {
+      "id": "w_outer_left_bed",
+      "startNodeId": "n002",
+      "endNodeId": "n001",
+      "thickness": 180.0,
+      "height": 2800.0,
+      "confidence": 0.9
+    },
+    {
+      "id": "w_bed_left_right",
+      "startNodeId": "n008",
+      "endNodeId": "n009",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 0.86
+    },
+    {
+      "id": "w_bed_left_bottom",
+      "startNodeId": "n003",
+      "endNodeId": "n009",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 0.84
+    },
+    {
+      "id": "w_bed_center_right",
+      "startNodeId": "n013",
+      "endNodeId": "n014",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 0.82
+    },
+    {
+      "id": "w_bed_center_bottom",
+      "startNodeId": "n009",
+      "endNodeId": "n014",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 0.82
+    },
+    {
+      "id": "w_bath_bottom",
+      "startNodeId": "n014",
+      "endNodeId": "n017",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 0.78
+    },
+    {
+      "id": "w_kitchen_left_upper",
+      "startNodeId": "n016",
+      "endNodeId": "n017",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 0.8
+    },
+    {
+      "id": "w_kitchen_left_lower",
+      "startNodeId": "n017",
+      "endNodeId": "n018",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 0.78
+    }
+  ],
+  "openings": [],
+  "roomAnnotations": [
+    {
+      "id": "room_bed_left",
+      "type": "bedroom",
+      "label": "卧室",
+      "anchor": {
+        "x": 1446.153846,
+        "y": 4743.384615
+      },
+      "confidence": 0.88
+    },
+    {
+      "id": "room_bed_center",
+      "type": "bedroom",
+      "label": "卧室",
+      "anchor": {
+        "x": 4049.230769,
+        "y": 5177.230769
+      },
+      "confidence": 0.84
+    },
+    {
+      "id": "room_bath",
+      "type": "bathroom",
+      "label": "卫生间",
+      "anchor": {
+        "x": 5929.230769,
+        "y": 4454.153846
+      },
+      "confidence": 0.8
+    },
+    {
+      "id": "room_kitchen",
+      "type": "kitchen",
+      "label": "厨房",
+      "anchor": {
+        "x": 7664.615385,
+        "y": 3152.615385
+      },
+      "confidence": 0.84
+    },
+    {
+      "id": "room_living_dining",
+      "type": "living_dining",
+      "label": "客餐厅",
+      "anchor": {
+        "x": 3760.0,
+        "y": 1417.230769
+      },
+      "confidence": 0.86
+    }
+  ],
+  "contentHash": "32388ae818d8772ce6cdb0a436bac61459decce9d4703ae0da954c6750aaa52b"
+}

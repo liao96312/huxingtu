@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "layoutRevisionId": "layout_fp001_auto_r5",
+  "cameraPlanHash": "c21b457aa7f6b15af38f7c947bb1d84fa93fc26e02f6ad4dacc0fa01f4b71ad6",
+  "camera": {
+    "id": "camera_room_living_dining_main",
+    "roomId": "room_living_dining",
+    "position": {
+      "x": 3369.538,
+      "y": 1663.077,
+      "z": 1500
+    },
+    "clearance": 1547.385,
+    "method": "polylabel"
+  },
+  "renderPass": "rgb",
+  "faceSize": 2048,
+  "generatedAt": "2026-08-25T03:34:00.362Z",
+  "assets": [
+    {
+      "face": "px",
+      "file": "px.png",
+      "width": 2048,
+      "height": 2048,
+      "byteLength": 49386,
+      "sha256": "d8630f00eb81d488a0eb2a0f0e6f42dd0f2310a0514e8d6559b713afc9661642"
+    },
+    {
+      "face": "nx",
+      "file": "nx.png",
+      "width": 2048,
+      "height": 2048,
+      "byteLength": 351375,
+      "sha256": "e9fdcd96b1d6dc4ddfb09ee9f2c32abdeaccf6e31aed294f187d130616c7825f"
+    },
+    {
+      "face": "py",
+      "file": "py.png",
+      "width": 2048,
+      "height": 2048,
+      "byteLength": 16823,
+      "sha256": "49420009415237afe40f748db3baaed8a3aba4bda74161b20fe3c552cf6e1559"
+    },
+    {
+      "face": "ny",
+      "file": "ny.png",
+      "width": 2048,
+      "height": 2048,
+      "byteLength": 203089,
+      "sha256": "dcd5bdfcc8697f94bd3b540c3215b26f34b0f81b3a78ad037d6d6dab6a69665e"
+    },
+    {
+      "face": "pz",
+      "file": "pz.png",
+      "width": 2048,
+      "height": 2048,
+      "byteLength": 67164,
+      "sha256": "2cb28479346cdefb8a0495564ff0034dec149b4d9a3eb71ba5d643e756191d39"
+    },
+    {
+      "face": "nz",
+      "file": "nz.png",
+      "width": 2048,
+      "height": 2048,
+      "byteLength": 281822,
+      "sha256": "765e9f7146a0856221742dd07f36363ed5c6ba5d1a0726abbbead40d93ab250b"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "scene": "living-main",
+  "renderPass": "rgb",
+  "projection": "equirectangular",
+  "file": "living-main-erp-2048x1024.png",
+  "width": 2048,
+  "height": 1024,
+  "byteLength": 166103,
+  "sha256": "3c982848ef188a6914829f0f787aaf6816f85b1b0f0314885223ea446bc5580b",
+  "seamMae": 0.0488,
+  "cubemapIndex": "cubemap/cubemap.index.json"
+}

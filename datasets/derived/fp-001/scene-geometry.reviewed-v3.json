@@ -1,0 +1,499 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "layoutRevisionId": "layout_fp001_manual_r3",
+  "sourceLayoutHash": "4eac75c4a4b63784bb53b9abd58e2dd04570f0d5fec96c7d666fba2e874b1b3c",
+  "solids": [
+    {
+      "id": "w_outer_top_left_wall_1",
+      "wallEdgeId": "w_outer_top_left",
+      "kind": "wall",
+      "center": {
+        "x": 1243.6923075000002,
+        "y": 6218.461538,
+        "z": 1400.0
+      },
+      "length": 3412.9230770000004,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 0.0
+    },
+    {
+      "id": "w_outer_step_1_wall_2",
+      "wallEdgeId": "w_outer_step_1",
+      "kind": "wall",
+      "center": {
+        "x": 2950.153846,
+        "y": 6464.307692,
+        "z": 1400.0
+      },
+      "length": 491.6923080000006,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 1.5707963267948966
+    },
+    {
+      "id": "w_outer_center_recess_wall_3",
+      "wallEdgeId": "w_outer_center_recess",
+      "kind": "wall",
+      "center": {
+        "x": 2660.9230770000004,
+        "y": 6710.153846,
+        "z": 1400.0
+      },
+      "length": 578.461538,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 3.141592653589793
+    },
+    {
+      "id": "w_outer_bump_left_wall_4",
+      "wallEdgeId": "w_outer_bump_left",
+      "kind": "wall",
+      "center": {
+        "x": 2371.692308,
+        "y": 6984.9230769999995,
+        "z": 1400.0
+      },
+      "length": 549.5384619999995,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 1.5707963267948966
+    },
+    {
+      "id": "w_outer_bump_top_wall_5",
+      "wallEdgeId": "w_outer_bump_top",
+      "kind": "wall",
+      "center": {
+        "x": 3282.769231,
+        "y": 7259.692308,
+        "z": 1400.0
+      },
+      "length": 1822.1538459999997,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 0.0
+    },
+    {
+      "id": "w_outer_bump_right_wall_6",
+      "wallEdgeId": "w_outer_bump_right",
+      "kind": "wall",
+      "center": {
+        "x": 4193.846154,
+        "y": 7042.769231,
+        "z": 1400.0
+      },
+      "length": 433.84615399999984,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_outer_top_center_wall_7",
+      "wallEdgeId": "w_outer_top_center",
+      "kind": "wall",
+      "center": {
+        "x": 4685.5384615,
+        "y": 6825.846154,
+        "z": 1400.0
+      },
+      "length": 983.3846149999999,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 0.0
+    },
+    {
+      "id": "w_outer_step_2_wall_8",
+      "wallEdgeId": "w_outer_step_2",
+      "kind": "wall",
+      "center": {
+        "x": 5177.230769,
+        "y": 6261.846154,
+        "z": 1400.0
+      },
+      "length": 1128.0,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_outer_top_bath_wall_9",
+      "wallEdgeId": "w_outer_top_bath",
+      "kind": "wall",
+      "center": {
+        "x": 5958.153845999999,
+        "y": 5697.846154,
+        "z": 1400.0
+      },
+      "length": 1561.8461539999998,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 0.0
+    },
+    {
+      "id": "w_outer_step_3_wall_10",
+      "wallEdgeId": "w_outer_step_3",
+      "kind": "wall",
+      "center": {
+        "x": 6739.076923,
+        "y": 5278.4615385,
+        "z": 1400.0
+      },
+      "length": 838.7692310000002,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_outer_top_kitchen_wall_11",
+      "wallEdgeId": "w_outer_top_kitchen",
+      "kind": "wall",
+      "center": {
+        "x": 7621.230769,
+        "y": 4859.076923,
+        "z": 1400.0
+      },
+      "length": 1764.3076920000012,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 0.0
+    },
+    {
+      "id": "w_outer_right_kitchen_wall_12",
+      "wallEdgeId": "w_outer_right_kitchen",
+      "kind": "wall",
+      "center": {
+        "x": 8503.384615,
+        "y": 3123.6923075,
+        "z": 1400.0
+      },
+      "length": 3470.7692309999993,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_outer_bottom_kitchen_wall_13",
+      "wallEdgeId": "w_outer_bottom_kitchen",
+      "kind": "wall",
+      "center": {
+        "x": 7621.230769,
+        "y": 1388.307692,
+        "z": 1400.0
+      },
+      "length": 1764.3076920000012,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 3.141592653589793
+    },
+    {
+      "id": "w_outer_right_living_lintel_14",
+      "wallEdgeId": "w_outer_right_living",
+      "kind": "lintel",
+      "center": {
+        "x": 6739.076923,
+        "y": 911.0769230000001,
+        "z": 2500.0
+      },
+      "length": 954.461538,
+      "thickness": 180.0,
+      "height": 600.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_outer_right_living_wall_15",
+      "wallEdgeId": "w_outer_right_living",
+      "kind": "wall",
+      "center": {
+        "x": 6739.076923,
+        "y": 274.769231,
+        "z": 1400.0
+      },
+      "length": 318.15384600000016,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_outer_bottom_living_wall_16",
+      "wallEdgeId": "w_outer_bottom_living",
+      "kind": "wall",
+      "center": {
+        "x": 5524.307691999999,
+        "y": 115.692308,
+        "z": 1400.0
+      },
+      "length": 2429.538462,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 3.141592653589793
+    },
+    {
+      "id": "w_outer_bottom_living_sill_17",
+      "wallEdgeId": "w_outer_bottom_living",
+      "kind": "sill",
+      "center": {
+        "x": 2776.6153845,
+        "y": 115.692308,
+        "z": 300.0
+      },
+      "length": 3065.846153,
+      "thickness": 180.0,
+      "height": 600.0,
+      "angleRadians": 3.141592653589793
+    },
+    {
+      "id": "w_outer_bottom_living_lintel_18",
+      "wallEdgeId": "w_outer_bottom_living",
+      "kind": "lintel",
+      "center": {
+        "x": 2776.6153845,
+        "y": 115.692308,
+        "z": 2450.0
+      },
+      "length": 3065.846153,
+      "thickness": 180.0,
+      "height": 700.0,
+      "angleRadians": 3.141592653589793
+    },
+    {
+      "id": "w_outer_bottom_living_wall_19",
+      "wallEdgeId": "w_outer_bottom_living",
+      "kind": "wall",
+      "center": {
+        "x": 621.8461539999998,
+        "y": 115.692308,
+        "z": 1400.0
+      },
+      "length": 1243.6923079999997,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 3.141592653589793
+    },
+    {
+      "id": "w_outer_left_living_wall_20",
+      "wallEdgeId": "w_outer_left_living",
+      "kind": "wall",
+      "center": {
+        "x": 0.0,
+        "y": 1663.0769229999999,
+        "z": 1400.0
+      },
+      "length": 3094.76923,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 1.5707963267948966
+    },
+    {
+      "id": "w_outer_recess_wall_21",
+      "wallEdgeId": "w_outer_recess",
+      "kind": "wall",
+      "center": {
+        "x": -231.3846155,
+        "y": 3210.461538,
+        "z": 1400.0
+      },
+      "length": 462.769231,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 3.141592653589793
+    },
+    {
+      "id": "w_outer_left_bed_wall_22",
+      "wallEdgeId": "w_outer_left_bed",
+      "kind": "wall",
+      "center": {
+        "x": -462.769231,
+        "y": 4714.461538,
+        "z": 1400.0
+      },
+      "length": 3007.9999999999995,
+      "thickness": 180.0,
+      "height": 2800.0,
+      "angleRadians": 1.5707963267948966
+    },
+    {
+      "id": "w_bed_left_right_wall_23",
+      "wallEdgeId": "w_bed_left_right",
+      "kind": "wall",
+      "center": {
+        "x": 2950.153846,
+        "y": 4714.461538,
+        "z": 1400.0
+      },
+      "length": 3007.9999999999995,
+      "thickness": 120.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_bed_left_bottom_wall_24",
+      "wallEdgeId": "w_bed_left_bottom",
+      "kind": "wall",
+      "center": {
+        "x": 1475.076923,
+        "y": 3210.461538,
+        "z": 1400.0
+      },
+      "length": 2950.153846,
+      "thickness": 120.0,
+      "height": 2800.0,
+      "angleRadians": 0.0
+    },
+    {
+      "id": "w_bed_center_right_wall_25",
+      "wallEdgeId": "w_bed_center_right",
+      "kind": "wall",
+      "center": {
+        "x": 5177.230769,
+        "y": 4801.2307695,
+        "z": 1400.0
+      },
+      "length": 1793.230769,
+      "thickness": 120.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_bed_center_right_lintel_26",
+      "wallEdgeId": "w_bed_center_right",
+      "kind": "lintel",
+      "center": {
+        "x": 5177.230769,
+        "y": 3644.3076925,
+        "z": 2500.0
+      },
+      "length": 520.6153849999998,
+      "thickness": 120.0,
+      "height": 600.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_bed_center_right_wall_27",
+      "wallEdgeId": "w_bed_center_right",
+      "kind": "wall",
+      "center": {
+        "x": 5177.230769,
+        "y": 3297.230769,
+        "z": 1400.0
+      },
+      "length": 173.53846199999998,
+      "thickness": 120.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_bed_center_bottom_wall_28",
+      "wallEdgeId": "w_bed_center_bottom",
+      "kind": "wall",
+      "center": {
+        "x": 3282.7692305,
+        "y": 3210.461538,
+        "z": 1400.0
+      },
+      "length": 665.230769,
+      "thickness": 120.0,
+      "height": 2800.0,
+      "angleRadians": 0.0
+    },
+    {
+      "id": "w_bed_center_bottom_lintel_29",
+      "wallEdgeId": "w_bed_center_bottom",
+      "kind": "lintel",
+      "center": {
+        "x": 4135.9999995,
+        "y": 3210.461538,
+        "z": 2500.0
+      },
+      "length": 1041.230769,
+      "thickness": 120.0,
+      "height": 600.0,
+      "angleRadians": 0.0
+    },
+    {
+      "id": "w_bed_center_bottom_wall_30",
+      "wallEdgeId": "w_bed_center_bottom",
+      "kind": "wall",
+      "center": {
+        "x": 4916.9230765,
+        "y": 3210.461538,
+        "z": 1400.0
+      },
+      "length": 520.6153849999996,
+      "thickness": 120.0,
+      "height": 2800.0,
+      "angleRadians": 0.0
+    },
+    {
+      "id": "w_bath_bottom_wall_31",
+      "wallEdgeId": "w_bath_bottom",
+      "kind": "wall",
+      "center": {
+        "x": 5958.153845999999,
+        "y": 3210.461538,
+        "z": 1400.0
+      },
+      "length": 1561.8461539999998,
+      "thickness": 120.0,
+      "height": 2800.0,
+      "angleRadians": 0.0
+    },
+    {
+      "id": "w_kitchen_left_upper_wall_32",
+      "wallEdgeId": "w_kitchen_left_upper",
+      "kind": "wall",
+      "center": {
+        "x": 6739.076923,
+        "y": 4034.7692305,
+        "z": 1400.0
+      },
+      "length": 1648.6153849999996,
+      "thickness": 120.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_kitchen_left_lower_wall_33",
+      "wallEdgeId": "w_kitchen_left_lower",
+      "kind": "wall",
+      "center": {
+        "x": 6739.076923,
+        "y": 2805.538461,
+        "z": 1400.0
+      },
+      "length": 809.846154,
+      "thickness": 120.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_kitchen_left_lower_lintel_34",
+      "wallEdgeId": "w_kitchen_left_lower",
+      "kind": "lintel",
+      "center": {
+        "x": 6739.076923,
+        "y": 2096.9230765,
+        "z": 2500.0
+      },
+      "length": 607.384615,
+      "thickness": 120.0,
+      "height": 600.0,
+      "angleRadians": -1.5707963267948966
+    },
+    {
+      "id": "w_kitchen_left_lower_wall_35",
+      "wallEdgeId": "w_kitchen_left_lower",
+      "kind": "wall",
+      "center": {
+        "x": 6739.076923,
+        "y": 1590.7692305,
+        "z": 1400.0
+      },
+      "length": 404.9230769999999,
+      "thickness": 120.0,
+      "height": 2800.0,
+      "angleRadians": -1.5707963267948966
+    }
+  ],
+  "contentHash": "9825f09b28480f58d15cab05f5b37c17dbd06b75c0c7c2e71ed167aef049fd9f"
+}

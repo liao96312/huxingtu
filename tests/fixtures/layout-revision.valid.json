@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "layout_p001_r1",
+  "projectId": "p001",
+  "revision": 1,
+  "units": "mm",
+  "coordinateFrame": "business-z-up-rh",
+  "source": {
+    "imageArtifactId": "artifact_floorplan_001",
+    "pixelToWorldTransform": [5, 0, 0, 0, 5, 0, 0, 0, 1],
+    "scaleConfidence": 0.98
+  },
+  "nodes": [
+    { "id": "n1", "x": 0, "y": 0 },
+    { "id": "n2", "x": 5200, "y": 0 },
+    { "id": "n3", "x": 5200, "y": 4200 },
+    { "id": "n4", "x": 0, "y": 4200 }
+  ],
+  "edges": [
+    { "id": "e1", "startNodeId": "n1", "endNodeId": "n2", "thickness": 120, "height": 2800, "confidence": 0.99 },
+    { "id": "e2", "startNodeId": "n2", "endNodeId": "n3", "thickness": 120, "height": 2800, "confidence": 0.99 },
+    { "id": "e3", "startNodeId": "n3", "endNodeId": "n4", "thickness": 120, "height": 2800, "confidence": 0.99 },
+    { "id": "e4", "startNodeId": "n4", "endNodeId": "n1", "thickness": 120, "height": 2800, "confidence": 0.99 }
+  ],
+  "openings": [
+    { "id": "d1", "type": "door", "wallEdgeId": "e1", "offset": 900, "width": 900, "height": 2200, "confidence": 0.95 },
+    { "id": "w1", "type": "window", "wallEdgeId": "e3", "offset": 1400, "width": 2400, "height": 1500, "sill": 600, "confidence": 0.96 }
+  ],
+  "roomAnnotations": [
+    { "id": "ra1", "type": "living_dining", "label": "客餐厅", "anchor": { "x": 2600, "y": 2100 }, "confidence": 0.97 }
+  ],
+  "contentHash": "ecc5ba46721ceec48b25bfce769f2ff6abba15d2f19db07bfbfa91454f2227e0"
+}

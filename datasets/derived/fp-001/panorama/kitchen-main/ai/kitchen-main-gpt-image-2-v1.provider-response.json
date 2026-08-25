@@ -1,0 +1,26 @@
+{
+  "created": 1787623888,
+  "data": [
+    {
+      "height": 887,
+      "revised_prompt": "Create a photorealistic fitted-kitchen design from this exact 360-degree 2:1 equirectangular structural panorama.\nPreserve the camera position, projection, room dimensions, wall lengths, ceiling height, all doors and their exact locations, and the left/right panorama seam. Do not crop, rotate, change viewpoint, add or remove openings, or bend straight walls.\nDesign a practical contemporary warm-minimalist Chinese apartment kitchen: light oak and warm white cabinetry, durable pale stone worktops, integrated refrigerator and appliances, realistic sink and cooktop layout, restrained under-cabinet lighting, uncluttered counters, physically plausible cabinet depths and circulation clearances. Keep every cabinet inside the existing room envelope and do not block either door.\nKeep the poles and full 360 field coherent. Output a seamless 2:1 equirectangular panorama, never a perspective photo, collage, or fisheye image.",
+      "url": "https://apioss39.sydney-ai.com/ximg/1ng7.9f.15.288x144/b005ec47-5adb-4468-a8be-e588d874824e/gi2-e1787623914.png",
+      "width": 1774
+    }
+  ],
+  "usage": {
+    "input_tokens": 2594,
+    "output_tokens": 2112,
+    "total_tokens": 4706,
+    "input_tokens_details": {
+      "text_tokens": 232,
+      "image_tokens": 2362,
+      "cached_tokens": 0
+    },
+    "output_tokens_details": {
+      "text_tokens": 0,
+      "image_tokens": 2112,
+      "reasoning_tokens": 0
+    }
+  }
+}

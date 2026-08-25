@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "layoutRevisionId": "layout_fp001_manual_r2",
+  "sourceLayoutHash": "32388ae818d8772ce6cdb0a436bac61459decce9d4703ae0da954c6750aaa52b",
+  "status": "needsReview",
+  "candidates": [
+    {
+      "id": "opening_candidate_01",
+      "kind": "door",
+      "wallEdgeId": "w_bed_center_bottom",
+      "offset": 665.230769,
+      "width": 1041.230769,
+      "confidence": 0.982,
+      "method": "wall_gap+quarter_arc+room_side_sampling",
+      "pixelStart": {
+        "x": 325.0,
+        "y": 258.0
+      },
+      "pixelEnd": {
+        "x": 361.0,
+        "y": 258.0
+      },
+      "arcScore": 1.0,
+      "sideARoomId": "room_living_dining",
+      "sideBRoomId": "room_bed_center"
+    },
+    {
+      "id": "opening_candidate_02",
+      "kind": "door",
+      "wallEdgeId": "w_bed_center_right",
+      "offset": 1793.230769,
+      "width": 520.615385,
+      "confidence": 0.988,
+      "method": "wall_gap+quarter_arc+room_side_sampling",
+      "pixelStart": {
+        "x": 379.0,
+        "y": 234.0
+      },
+      "pixelEnd": {
+        "x": 379.0,
+        "y": 252.0
+      },
+      "arcScore": 1.0,
+      "sideARoomId": "room_bed_center",
+      "sideBRoomId": "room_bath"
+    },
+    {
+      "id": "opening_candidate_03",
+      "kind": "door",
+      "wallEdgeId": "w_bed_left_right",
+      "offset": 2227.076923,
+      "width": 607.384615,
+      "confidence": 0.674,
+      "method": "wall_gap+quarter_arc+room_side_sampling",
+      "pixelStart": {
+        "x": 302.0,
+        "y": 231.0
+      },
+      "pixelEnd": {
+        "x": 302.0,
+        "y": 252.0
+      },
+      "arcScore": 0.56,
+      "sideARoomId": "room_bed_left",
+      "sideBRoomId": "room_bed_center"
+    },
+    {
+      "id": "opening_candidate_04",
+      "kind": "door",
+      "wallEdgeId": "w_kitchen_left_lower",
+      "offset": 809.846154,
+      "width": 607.384615,
+      "confidence": 0.866,
+      "method": "wall_gap+quarter_arc+room_side_sampling",
+      "pixelStart": {
+        "x": 433.0,
+        "y": 286.0
+      },
+      "pixelEnd": {
+        "x": 433.0,
+        "y": 307.0
+      },
+      "arcScore": 1.0,
+      "sideARoomId": "room_living_dining",
+      "sideBRoomId": "room_kitchen"
+    },
+    {
+      "id": "opening_candidate_05",
+      "kind": "window",
+      "wallEdgeId": "w_outer_bottom_living",
+      "offset": 2429.538462,
+      "width": 3065.846153,
+      "confidence": 0.772,
+      "method": "wall_gap_long_run+room_outside_sampling",
+      "pixelStart": {
+        "x": 349.0,
+        "y": 365.0
+      },
+      "pixelEnd": {
+        "x": 243.0,
+        "y": 365.0
+      },
+      "arcScore": null,
+      "sideARoomId": "room_living_dining",
+      "sideBRoomId": null
+    },
+    {
+      "id": "opening_candidate_06",
+      "kind": "window",
+      "wallEdgeId": "w_outer_left_living",
+      "offset": 752.0,
+      "width": 2169.230769,
+      "confidence": 0.762,
+      "method": "wall_gap_long_run+room_outside_sampling",
+      "pixelStart": {
+        "x": 200.0,
+        "y": 339.0
+      },
+      "pixelEnd": {
+        "x": 200.0,
+        "y": 264.0
+      },
+      "arcScore": null,
+      "sideARoomId": "room_living_dining",
+      "sideBRoomId": null
+    },
+    {
+      "id": "opening_candidate_07",
+      "kind": "door",
+      "wallEdgeId": "w_outer_right_living",
+      "offset": 0.0,
+      "width": 954.461538,
+      "confidence": 0.826,
+      "method": "wall_gap+quarter_arc+room_side_sampling",
+      "pixelStart": {
+        "x": 433.0,
+        "y": 321.0
+      },
+      "pixelEnd": {
+        "x": 433.0,
+        "y": 354.0
+      },
+      "arcScore": 1.0,
+      "sideARoomId": "room_living_dining",
+      "sideBRoomId": null
+    }
+  ],
+  "contentHash": "df239b6ecd45083189686e533eb3cc02c93ea44f7022da2cf28da144e501d6e5"
+}

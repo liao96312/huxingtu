@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "artifact:fp001:quality-report:living-main:gpt-image-2:cream-v1",
+  "projectId": "fp001",
+  "artifactType": "qualityReport",
+  "contentHash": "e1eb7274ffb1dea7d8baa8e9913e55cb260629dd51261f5d036c2e97f8b65cd7",
+  "byteLength": 953,
+  "contentType": "application/json",
+  "generator": {
+    "name": "semantic-edge-proxy-qa",
+    "version": "0.1.0"
+  },
+  "inputDigests": [
+    "45dd48694fbdf2af04b1350deda98334a24ba31851effb98a8ca283c555a918e",
+    "ac25dee1928980f1cfeccbfff614113f0a31b07e1c6ee9affa393e21558a1277"
+  ],
+  "createdAt": "2026-08-25T02:42:55.205162Z",
+  "metadata": {
+    "status": "needsReview",
+    "reasonCodes": [
+      "EDGE_RECALL_PROXY_ONLY",
+      "AI_SEMANTIC_SEGMENTATION_REQUIRED_FOR_IOU_AND_F1"
+    ]
+  }
+}

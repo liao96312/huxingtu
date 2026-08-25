@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "sourceLayoutHash": "4eac75c4a4b63784bb53b9abd58e2dd04570f0d5fec96c7d666fba2e874b1b3c",
+  "annotation": {
+    "source": "user-red-box",
+    "pixelStart": {
+      "x": 433,
+      "y": 203
+    },
+    "pixelEnd": {
+      "x": 433,
+      "y": 232
+    },
+    "type": "door"
+  },
+  "openingId": "opening_manual_redbox_02",
+  "outputLayoutHash": "37d035d1333c40bb4f26e2b76a3e86fba0c7750e07674eeb6638a4087b4f96c7",
+  "contentHash": "f4ed25d8d60298040615d484edea15856286cde2f9c6dd50be517d98c0a78e03"
+}

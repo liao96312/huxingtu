@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "artifact:fp001:panorama-reference:living-main:4096x2048",
+  "projectId": "fp001",
+  "artifactType": "panoramaReference",
+  "contentHash": "f007cc43fcbec8a00a5a04e24609b3ea6ec922c09f53995877275d189ceeb5a8",
+  "byteLength": 462678,
+  "contentType": "image/png",
+  "generator": {
+    "name": "opencv-cubemap-to-erp",
+    "version": "0.1.0"
+  },
+  "inputDigests": [
+    "9210681c20db2633fdde6bfcc4667d465a10906e68aa8338ee2de82f792a8fa9"
+  ],
+  "createdAt": "2026-08-25T03:34:00.362000Z",
+  "metadata": {
+    "schemaVersion": "0.1.0",
+    "projectId": "fp001",
+    "scene": "living-main",
+    "renderPass": "rgb",
+    "projection": "equirectangular",
+    "file": "living-main-erp-4096x2048.png",
+    "width": 4096,
+    "height": 2048,
+    "byteLength": 462678,
+    "sha256": "f007cc43fcbec8a00a5a04e24609b3ea6ec922c09f53995877275d189ceeb5a8",
+    "seamMae": 0.055,
+    "cubemapIndex": "cubemap-2048/cubemap.index.json"
+  }
+}

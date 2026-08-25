@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "artifact_layout_p001_r1",
+  "projectId": "p001",
+  "artifactType": "layoutRevision",
+  "contentHash": "ecc5ba46721ceec48b25bfce769f2ff6abba15d2f19db07bfbfa91454f2227e0",
+  "byteLength": 2048,
+  "contentType": "application/json",
+  "generator": {
+    "name": "layout-contract-fixture",
+    "version": "0.1.0"
+  },
+  "inputDigests": [
+    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  ],
+  "createdAt": "2026-08-24T08:00:00+08:00",
+  "metadata": {
+    "layoutRevision": 1
+  }
+}

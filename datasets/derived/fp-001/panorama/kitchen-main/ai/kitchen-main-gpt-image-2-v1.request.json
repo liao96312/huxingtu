@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "0.1.0",
+  "provider": "tuzi",
+  "endpoint": "/v1/images/edits",
+  "model": "gpt-image-2",
+  "quality": "2k",
+  "requestedSize": "2048x1024",
+  "sourceFile": "datasets/derived/fp-001/panorama/kitchen-main/kitchen-main-erp-2048x1024.png",
+  "sourceSha256": "1281ec9e3a55f4eba2ca524d2cb65548635c8867149d3513b495c8077c28fcf7",
+  "promptSha256": "3c67b86e6962416f5df5602df7a4f2e1158e32067a945d009a4a4224d1618ed3",
+  "rawFile": "datasets/derived/fp-001/panorama/kitchen-main/ai/kitchen-main-gpt-image-2-v1.png",
+  "rawSha256": "158117e3ea0f6470133a9cd7224f622bce4a1b75c44bde50dddf030422c6b17d",
+  "rawWidth": 1774,
+  "rawHeight": 887,
+  "rawSeamMae": 4.0864,
+  "outputFile": "datasets/derived/fp-001/panorama/kitchen-main/ai/kitchen-main-gpt-image-2-v1-normalized-2048x1024.jpg",
+  "outputSha256": "93ff39688206cc599c18e7b5e9aa0331940aab7985f546974d832e2ca876d91c",
+  "outputWidth": 2048,
+  "outputHeight": 1024,
+  "outputSeamMae": 0.0,
+  "normalization": {
+    "resize": "lanczos4",
+    "seamBlendStripPx": 96,
+    "jpegQuality": 94
+  },
+  "status": "needsStructureReview",
+  "createdAt": "2026-08-25T02:14:08.301035+00:00",
+  "upscale": {
+    "tool": "Real-ESRGAN-ncnn-vulkan",
+    "model": "realesrgan-x4plus",
+    "modelScale": 4,
+    "scale": 3,
+    "wrapPaddingInputPx": 64,
+    "finalSeamBlendPx": 24,
+    "tileMode": "manual-overlap",
+    "tileSize": 512,
+    "minimumOverlap": 96,
+    "tileGrid": [
+      5,
+      3
+    ],
+    "outputSeamMae": 0.0,
+    "assets": [
+      {
+        "file": "kitchen-main-gpt-image-2-v1-6144x3072.jpg",
+        "width": 6144,
+        "height": 3072,
+        "byteLength": 2268707,
+        "sha256": "a187ff6c94609d707aaeb4f3120c189767db758c67ae467a09b842f9d70d8621"
+      },
+      {
+        "file": "kitchen-main-gpt-image-2-v1-proxy-4096x2048.jpg",
+        "width": 4096,
+        "height": 2048,
+        "byteLength": 754480,
+        "sha256": "89a41c369d531a3751c7b48ad59d670b9502334f3eb112b5e95283f0b50ba82c"
+      },
+      {
+        "file": "kitchen-main-gpt-image-2-v1-proxy-2048x1024.jpg",
+        "width": 2048,
+        "height": 1024,
+        "byteLength": 187950,
+        "sha256": "4e9aac143d63f4442ba0c052d7fdd44fb55c415004a9cef278110040dae0169b"
+      },
+      {
+        "file": "kitchen-main-gpt-image-2-v1-proxy-1024x512.jpg",
+        "width": 1024,
+        "height": 512,
+        "byteLength": 52645,
+        "sha256": "4db338c5e011b61fc0322c5f33a4ef1884c91dd6ce5a73dc019742c15b1b6ebf"
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "scene": "kitchen-main",
+  "renderPass": "rgb",
+  "projection": "equirectangular",
+  "file": "kitchen-main-erp-2048x1024.png",
+  "width": 2048,
+  "height": 1024,
+  "byteLength": 99962,
+  "sha256": "1281ec9e3a55f4eba2ca524d2cb65548635c8867149d3513b495c8077c28fcf7",
+  "seamMae": 0.0,
+  "cubemapIndex": "cubemap/cubemap.index.json"
+}
