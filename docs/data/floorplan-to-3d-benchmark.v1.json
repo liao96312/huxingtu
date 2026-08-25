@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "0.1.0",
+  "candidate": {
+    "repository": "https://github.com/Yytsi/floorplan-to-3d",
+    "commit": "ccc19723d98b097b521b8289287c5143e535df0d",
+    "repositoryLicense": "MIT",
+    "weights": "https://huggingface.co/Yytsi/floorplan-to-3d-walls",
+    "weightsDeclaredLicense": "MIT",
+    "weightsSha256": "d7f6a0fd06e2931aecfc8c4849192c5e153701578026efc78d9a6246731a8d6c",
+    "trainingDataCaveat": "weights are trained on CC BY-NC 4.0 CubiCasa5K; commercial provenance requires explicit review"
+  },
+  "runtime": {
+    "device": "cpu",
+    "python": "3.12.10",
+    "torch": "2.12.1+cpu",
+    "torchvision": "0.27.1+cpu",
+    "segmentationModelsPytorch": "0.5.0",
+    "images": 9,
+    "observedBatchWallSeconds": 6.5
+  },
+  "inputAdapter": {
+    "source": "PNG RGB",
+    "modelInput": "512x512 aspect-preserving letterbox with ImageNet normalization",
+    "classes": ["floor", "wall", "door", "window"],
+    "rawDataPersisted": false
+  },
+  "split": {
+    "trainThresholdSelection": ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png"],
+    "heldOutTest": ["7.png", "8.png", "PixPin_2026-06-25_14-36-42.png"],
+    "truthDoors": 58
+  },
+  "results": {
+    "directDoorMask": {
+      "train": {"precision": 0.5, "recall": 0.7, "f1": 0.5833, "truePositive": 28, "falsePositive": 28, "falseNegative": 12},
+      "test": {"precision": 0.4545, "recall": 0.5556, "f1": 0.5, "truePositive": 10, "falsePositive": 12, "falseNegative": 8},
+      "all": {"precision": 0.4872, "recall": 0.6552, "f1": 0.5588, "truePositive": 38, "falsePositive": 40, "falseNegative": 20}
+    },
+    "modelWallMaskPlusDoorArcProposal": {
+      "train": {"precision": 0.8235, "recall": 0.7, "f1": 0.7568, "truePositive": 28, "falsePositive": 6, "falseNegative": 12},
+      "test": {"precision": 0.6087, "recall": 0.7778, "f1": 0.6829, "truePositive": 14, "falsePositive": 9, "falseNegative": 4},
+      "all": {"precision": 0.7368, "recall": 0.7241, "f1": 0.7304, "truePositive": 42, "falsePositive": 15, "falseNegative": 16},
+      "heldOutFiles": {
+        "7.png": {"truth": 6, "prediction": 5, "truePositive": 5, "falsePositive": 0, "falseNegative": 1},
+        "8.png": {"truth": 5, "prediction": 8, "truePositive": 3, "falsePositive": 5, "falseNegative": 2},
+        "PixPin_2026-06-25_14-36-42.png": {"truth": 7, "prediction": 10, "truePositive": 6, "falsePositive": 4, "falseNegative": 1}
+      }
+    },
+    "currentMorphologyWallMaskPlusDoorArcProposal": {
+      "test": {"precision": 0.56, "recall": 0.7778, "f1": 0.6512, "truePositive": 14, "falsePositive": 11, "falseNegative": 4}
+    }
+  },
+  "decision": {
+    "directDoorMask": "reject",
+    "wallMaskTechnicalSpike": "continue",
+    "productionIntegration": "blockedByAccuracyAndWeightProvenance",
+    "reason": "held-out door F1 0.6829 remains below 0.90; model wall mask is useful but door mask has strong domain shift"
+  }
+}
