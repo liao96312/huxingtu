@@ -32,6 +32,19 @@ if face_size != args.face_size:
     raise SystemExit(f"expected {args.face_size}px cubemap faces, got {face_size}px")
 
 erp = cubemap_to_erp(faces, WIDTH, nearest=args.render_pass == "semantic")
+cubemap_index = json.loads((CUBEMAP / "cubemap.index.json").read_text(encoding="utf-8"))
+base_profile = cubemap_index.get("captureProfile", {
+    "schemaVersion": "0.1.0", "requestedResolution": face_size, "actualCubeFaceSize": face_size,
+    "actualErpWidth": None, "actualErpHeight": None, "method": "sixFaceWebglCpuErp", "supersampleScale": 1,
+    "maxCubeMapTextureSize": None, "maxRenderbufferSize": None,
+    "allocationProbe": "notRun", "pixelReadbackProbe": "notRun", "resizeReasonCode": None,
+})
+capture_profile = {
+    **base_profile,
+    "actualCubeFaceSize": face_size,
+    "actualErpWidth": WIDTH,
+    "actualErpHeight": HEIGHT,
+}
 
 if args.render_pass == "rgb":
     output = PANORAMA / f"{args.scene}-erp-{WIDTH}x{HEIGHT}.png"
@@ -48,6 +61,7 @@ index = {
     "projection": "equirectangular", "file": output.name, "width": WIDTH, "height": HEIGHT,
     "byteLength": len(payload), "sha256": hashlib.sha256(payload).hexdigest(), "seamMae": round(seam_mae, 4),
     "cubemapIndex": str((CUBEMAP / "cubemap.index.json").relative_to(PANORAMA)).replace("\\", "/"),
+    "captureProfile": capture_profile,
 }
 index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2), encoding="utf-8")
 print(f"{output.name}; seam MAE={seam_mae:.4f}")

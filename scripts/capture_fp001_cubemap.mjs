@@ -50,6 +50,12 @@ try {
 const index = {
   schemaVersion: "0.1.0", projectId: "fp001", layoutRevisionId: plan.layoutRevisionId,
   cameraPlanHash: plan.contentHash, camera, renderPass, faceSize: size, generatedAt: new Date().toISOString(), assets,
+  captureProfile: {
+    schemaVersion: "0.1.0", requestedResolution: size, actualCubeFaceSize: size,
+    actualErpWidth: null, actualErpHeight: null, method: "sixFaceWebglCpuErp", supersampleScale: 1,
+    maxCubeMapTextureSize: null, maxRenderbufferSize: null,
+    allocationProbe: "notRun", pixelReadbackProbe: "notRun", resizeReasonCode: null,
+  },
 };
 await writeFile(new URL("cubemap.index.json", output), `${JSON.stringify(index, null, 2)}\n`, "utf8");
 process.stdout.write(`6 ${renderPass} cubemap faces captured for ${camera.roomId}\n`);

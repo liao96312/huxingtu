@@ -18,6 +18,12 @@ cubemap_index_path = CUBEMAP / "cubemap.index.json"
 cubemap_index = json.loads(cubemap_index_path.read_text(encoding="utf-8"))
 pano_index = json.loads((PANORAMA / "panorama-reference.index.json").read_text(encoding="utf-8"))
 created_at = datetime.fromisoformat(cubemap_index["generatedAt"].replace("Z", "+00:00"))
+camera_manifest_path = PANORAMA / "cameraPlan.artifact-manifest.json"
+camera_created_at = (
+    ArtifactManifest.model_validate_json(camera_manifest_path.read_text(encoding="utf-8")).createdAt
+    if camera_manifest_path.exists()
+    else datetime.fromtimestamp(plan_path.stat().st_mtime, timezone.utc)
+)
 
 
 def file_hash(path: Path) -> str:
@@ -29,7 +35,7 @@ manifests = [
         id="artifact:fp001:camera-plan:auto-v1", projectId="fp001", artifactType=ArtifactType.CAMERA_PLAN,
         contentHash=file_hash(plan_path), byteLength=plan_path.stat().st_size, contentType="application/json",
         generator={"name": "shapely-polylabel-camera-plan", "version": "0.1.0"},
-        inputDigests=[plan.sourceLayoutHash, plan.sourceRoomHash], createdAt=created_at,
+        inputDigests=[plan.sourceLayoutHash, plan.sourceRoomHash], createdAt=camera_created_at,
         metadata={"cameraCount": len(plan.cameras), "cameraPlanHash": plan.contentHash},
     ),
     ArtifactManifest(

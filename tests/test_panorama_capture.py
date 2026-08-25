@@ -3,7 +3,7 @@ import json
 import struct
 from pathlib import Path
 
-from pano_platform.contracts import ArtifactManifest, ArtifactType, PanoManifest
+from pano_platform.contracts import ArtifactManifest, ArtifactType, CaptureProfile, PanoManifest
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,6 +29,7 @@ def test_cubemap_and_erp_are_complete_and_aligned() -> None:
     assert png_size(path) == (2048, 1024)
     assert hashlib.sha256(path.read_bytes()).hexdigest() == panorama["sha256"]
     assert panorama["seamMae"] < 5
+    assert CaptureProfile.model_validate(panorama["captureProfile"]).actualErpWidth == 2048
 
     manifests = [ArtifactManifest.model_validate_json(path.read_text(encoding="utf-8")) for path in PANO.glob("*.artifact-manifest.json")]
     assert {manifest.artifactType for manifest in manifests} == {
@@ -63,6 +64,9 @@ def test_living_room_has_auditable_4k_capture() -> None:
     assert png_size(path) == (4096, 2048)
     assert hashlib.sha256(path.read_bytes()).hexdigest() == panorama["sha256"]
     assert panorama["seamMae"] < 1
+    profile = CaptureProfile.model_validate(panorama["captureProfile"])
+    assert (profile.requestedResolution, profile.actualCubeFaceSize) == (2048, 2048)
+    assert (profile.actualErpWidth, profile.actualErpHeight) == (4096, 2048)
 
     assert ArtifactManifest.model_validate_json(
         (PANO / "cubemapSet-high.artifact-manifest.json").read_text(encoding="utf-8")

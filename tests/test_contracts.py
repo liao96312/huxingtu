@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from pano_platform.contracts import (
     ArtifactManifest,
+    CaptureProfile,
     CommandEnvelope,
     CommandName,
     DatasetManifest,
@@ -50,6 +51,7 @@ def test_layout_fixture_matches_json_schema_and_pydantic() -> None:
     [
         ("command-envelope.valid.json", "command-envelope.schema.json", CommandEnvelope),
         ("artifact-manifest.valid.json", "artifact-manifest.schema.json", ArtifactManifest),
+        ("capture-profile.valid.json", "capture-profile.schema.json", CaptureProfile),
         (
             "../../apps/pano-viewer/public/demo/pano-manifest.json",
             "pano-manifest.schema.json",
@@ -181,6 +183,14 @@ def test_opening_cannot_extend_past_wall_edge() -> None:
 
     with pytest.raises(ValidationError, match="exceeds edge"):
         LayoutRevision.model_validate(invalid)
+
+
+def test_capture_profile_rejects_non_2_to_1_erp() -> None:
+    with pytest.raises(ValidationError, match="2:1"):
+        CaptureProfile.model_validate({
+            **load_json(ROOT / "tests/fixtures/capture-profile.valid.json"),
+            "actualErpWidth": 4095,
+        })
 
 
 @pytest.mark.parametrize("command", list(CommandName))

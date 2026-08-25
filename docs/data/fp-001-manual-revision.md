@@ -111,6 +111,7 @@ Revision 5 场景进一步从 5 门/1窗自动生成 25 个 Opening 组件：每
 
 - 5个房间均已生成六面 Cubemap 和2048×1024结构 ERP；结构 Viewer 仍使用 `http://127.0.0.1:5173/?manifest=structural`，现可切换5个场景。
 - 客餐厅另有独立高精链：[`living-main-erp-4096x2048.png`](../../datasets/derived/fp-001/panorama/living-main/living-main-erp-4096x2048.png)，由6张2048×2048 Cubemap转换，接缝MAE 0.055；原2K工件未被覆盖。
+- 2K/4K捕获索引均携带 `CaptureProfile`；当前六面浏览器捕获未执行RenderTarget分配/读回探针，因此对应状态为 `notRun`，未伪报GPU能力。
 - 客餐厅额外生成 Semantic ERP：[`semantic-erp-2048x1024.png`](../../datasets/derived/fp-001/panorama/living-main/control/semantic/semantic-erp-2048x1024.png)。
 - QA 报告：[`living-main-gpt-image-2-v1.structure-qa.json`](../../datasets/derived/fp-001/panorama/living-main/ai/living-main-gpt-image-2-v1.structure-qa.json)。
 - 边界 Overlay：[`living-main-gpt-image-2-v1.structure-edge-overlay.jpg`](../../datasets/derived/fp-001/panorama/living-main/ai/living-main-gpt-image-2-v1.structure-edge-overlay.jpg)。

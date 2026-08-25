@@ -182,6 +182,35 @@ class ArtifactType(StrEnum):
     QUALITY_REPORT = "qualityReport"
 
 
+class CaptureProbeStatus(StrEnum):
+    PASSED = "passed"
+    FAILED = "failed"
+    NOT_RUN = "notRun"
+
+
+class CaptureProfile(StrictModel):
+    schemaVersion: Literal["0.1.0"] = SCHEMA_VERSION
+    requestedResolution: int = Field(gt=0)
+    actualCubeFaceSize: int = Field(gt=0)
+    actualErpWidth: int | None = Field(default=None, gt=0)
+    actualErpHeight: int | None = Field(default=None, gt=0)
+    method: Literal["sixFaceWebglCpuErp"] = "sixFaceWebglCpuErp"
+    supersampleScale: float = Field(default=1, ge=1, le=4)
+    maxCubeMapTextureSize: int | None = Field(default=None, gt=0)
+    maxRenderbufferSize: int | None = Field(default=None, gt=0)
+    allocationProbe: CaptureProbeStatus = CaptureProbeStatus.NOT_RUN
+    pixelReadbackProbe: CaptureProbeStatus = CaptureProbeStatus.NOT_RUN
+    resizeReasonCode: str | None = Field(default=None, min_length=1, max_length=128)
+
+    @model_validator(mode="after")
+    def validate_dimensions(self) -> CaptureProfile:
+        if (self.actualErpWidth is None) != (self.actualErpHeight is None):
+            raise ValueError("actual ERP width and height must be set together")
+        if self.actualErpWidth is not None and self.actualErpWidth != self.actualErpHeight * 2:
+            raise ValueError("actual ERP dimensions must have a 2:1 ratio")
+        return self
+
+
 class GeneratorRef(StrictModel):
     name: str = Field(min_length=1, max_length=128)
     version: str = Field(min_length=1, max_length=128)

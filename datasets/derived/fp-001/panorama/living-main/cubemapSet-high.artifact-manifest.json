@@ -3,8 +3,8 @@
   "id": "artifact:fp001:cubemap:living-main:2048",
   "projectId": "fp001",
   "artifactType": "cubemapSet",
-  "contentHash": "9210681c20db2633fdde6bfcc4667d465a10906e68aa8338ee2de82f792a8fa9",
-  "byteLength": 1793,
+  "contentHash": "cb50dcd20c78e7507d74963f6dbfe78039bb0c176d97b3cafbcc81efecf8460f",
+  "byteLength": 2201,
   "contentType": "application/json",
   "generator": {
     "name": "three-cubemap-capture",
@@ -13,7 +13,7 @@
   "inputDigests": [
     "c21b457aa7f6b15af38f7c947bb1d84fa93fc26e02f6ad4dacc0fa01f4b71ad6"
   ],
-  "createdAt": "2026-08-25T03:34:00.362000Z",
+  "createdAt": "2026-08-25T04:31:17.643000Z",
   "metadata": {
     "roomId": "room_living_dining",
     "faces": [

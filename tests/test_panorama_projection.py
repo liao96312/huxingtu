@@ -40,3 +40,43 @@ def test_cubemap_projection_rejects_incomplete_or_odd_inputs() -> None:
         cubemap_to_erp(faces, 256)
     with pytest.raises(ValueError, match="even"):
         cubemap_to_erp(solid_faces(), 255)
+
+
+def test_coordinate_grid_projection_error_is_at_most_two_face_pixels() -> None:
+    face_size, width = 128, 512
+    y, x = np.indices((face_size, face_size), dtype=np.uint8)
+    names = ("px", "nx", "py", "ny", "pz", "nz")
+    faces = {name: np.dstack((x, y, np.full_like(x, index))) for index, name in enumerate(names)}
+    erp = cubemap_to_erp(faces, width, nearest=True)
+
+    checked = 0
+    for row in range(8, width // 2, 19):
+        latitude = np.pi / 2 - (row + 0.5) / (width // 2) * np.pi
+        for column in range(7, width, 23):
+            longitude = (column + 0.5) / width * 2 * np.pi - np.pi
+            ray = np.array((np.sin(longitude) * np.cos(latitude), np.sin(latitude), -np.cos(longitude) * np.cos(latitude)))
+            scores = [float(ray @ np.asarray(forward)) for forward, _ in (
+                ((1, 0, 0), (0, 1, 0)), ((-1, 0, 0), (0, 1, 0)),
+                ((0, 1, 0), (0, 0, -1)), ((0, -1, 0), (0, 0, 1)),
+                ((0, 0, 1), (0, 1, 0)), ((0, 0, -1), (0, 1, 0)),
+            )]
+            ordered = sorted(scores, reverse=True)
+            if ordered[0] - ordered[1] < 0.05:
+                continue
+            face_index = int(np.argmax(scores))
+            forward, up = (
+                ((1, 0, 0), (0, 1, 0)), ((-1, 0, 0), (0, 1, 0)),
+                ((0, 1, 0), (0, 0, -1)), ((0, -1, 0), (0, 0, 1)),
+                ((0, 0, 1), (0, 1, 0)), ((0, 0, -1), (0, 1, 0)),
+            )[face_index]
+            forward, up = np.asarray(forward), np.asarray(up)
+            right = np.cross(forward, up)
+            denominator = ray @ forward
+            expected_x = ((ray @ right) / denominator + 1) * 0.5 * (face_size - 1)
+            expected_y = (-(ray @ up) / denominator + 1) * 0.5 * (face_size - 1)
+            actual_x, actual_y, actual_face = erp[row, column]
+            assert int(actual_face) == face_index
+            assert abs(int(actual_x) - expected_x) <= 2
+            assert abs(int(actual_y) - expected_y) <= 2
+            checked += 1
+    assert checked > 150

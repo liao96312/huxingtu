@@ -11,13 +11,14 @@
     "version": "0.1.0"
   },
   "inputDigests": [
-    "66ea5180140c2e0bf686f7990ccc91cb2d8b06e79e965a4b5fa0fa39401f7a90"
+    "a2c530078f7c61e647c7252ddcbb7b22000859f12d95869b4ddc6748985c9bec"
   ],
-  "createdAt": "2026-08-25T01:25:57.636000Z",
+  "createdAt": "2026-08-25T04:31:00.729000Z",
   "metadata": {
     "schemaVersion": "0.1.0",
     "projectId": "fp001",
-    "roomId": "room_living_dining",
+    "scene": "living-main",
+    "renderPass": "rgb",
     "projection": "equirectangular",
     "file": "living-main-erp-2048x1024.png",
     "width": 2048,
@@ -25,6 +26,20 @@
     "byteLength": 166103,
     "sha256": "3c982848ef188a6914829f0f787aaf6816f85b1b0f0314885223ea446bc5580b",
     "seamMae": 0.0488,
-    "cubemapIndex": "cubemap/cubemap.index.json"
+    "cubemapIndex": "cubemap/cubemap.index.json",
+    "captureProfile": {
+      "schemaVersion": "0.1.0",
+      "requestedResolution": 1024,
+      "actualCubeFaceSize": 1024,
+      "actualErpWidth": 2048,
+      "actualErpHeight": 1024,
+      "method": "sixFaceWebglCpuErp",
+      "supersampleScale": 1,
+      "maxCubeMapTextureSize": null,
+      "maxRenderbufferSize": null,
+      "allocationProbe": "notRun",
+      "pixelReadbackProbe": "notRun",
+      "resizeReasonCode": null
+    }
   }
 }

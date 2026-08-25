@@ -14,8 +14,9 @@
     "clearance": 1547.385,
     "method": "polylabel"
   },
+  "renderPass": "rgb",
   "faceSize": 1024,
-  "generatedAt": "2026-08-25T01:25:57.636Z",
+  "generatedAt": "2026-08-25T04:31:00.729Z",
   "assets": [
     {
       "face": "px",
@@ -65,5 +66,19 @@
       "byteLength": 84843,
       "sha256": "68d4675ff10539e903c558a87adb908172db1404cb73f6274e73f89e2d491267"
     }
-  ]
+  ],
+  "captureProfile": {
+    "schemaVersion": "0.1.0",
+    "requestedResolution": 1024,
+    "actualCubeFaceSize": 1024,
+    "actualErpWidth": null,
+    "actualErpHeight": null,
+    "method": "sixFaceWebglCpuErp",
+    "supersampleScale": 1,
+    "maxCubeMapTextureSize": null,
+    "maxRenderbufferSize": null,
+    "allocationProbe": "notRun",
+    "pixelReadbackProbe": "notRun",
+    "resizeReasonCode": null
+  }
 }
