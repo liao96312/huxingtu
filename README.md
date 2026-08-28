@@ -53,4 +53,7 @@ datasets/               # PoC 户型图、Manifest 与视觉方向样张
 schemas/                # 可跨语言消费的 JSON Schema
 tests/                  # 最小契约和 API 检查
 docs/adr/               # 已冻结的架构决策
+docs/plan/              # 户型识别CV+Tuzi视觉模型方案与详细TODO
 ```
+
+户型识别实施基线：[CV + Tuzi视觉模型 + 几何融合方案](docs/plan/floorplan-recognition-v2.md)；执行清单见 [识别v2详细TODO](docs/plan/floorplan-recognition-v2-todo.md)。
