@@ -2,6 +2,7 @@ import argparse
 import base64
 import hashlib
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -23,20 +24,27 @@ Design a practical contemporary warm-minimalist Chinese apartment kitchen: light
 Keep the poles and full 360 field coherent. Output a seamless 2:1 equirectangular panorama, never a perspective photo, collage, or fisheye image."""
 
 
+def load_api_key(key_file: Path | None = None) -> str:
+    key = os.getenv("TUZI_API_KEY", "").strip()
+    if not key and key_file is not None:
+        key = key_file.read_text(encoding="utf-8").strip()
+    if len(key) < 30 or "\n" in key or "\r" in key:
+        raise SystemExit("TUZI_API_KEY is missing or invalid")
+    return key
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--key-file", type=Path, default=Path.home() / "Desktop" / "新建文本文档.txt")
+    parser.add_argument("--key-file", type=Path, help="optional fallback; TUZI_API_KEY is preferred")
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--base-url", default="https://api.tu-zi.com")
+    parser.add_argument("--base-url", default=os.getenv("TUZI_BASE_URL", "https://api.tu-zi.com"))
     parser.add_argument("--prompt-kind", choices=("living", "kitchen"), default="living")
     parser.add_argument("--style")
     args = parser.parse_args()
     args.source = args.source.resolve()
     args.output = args.output.resolve()
-    key = args.key_file.read_text(encoding="utf-8").strip()
-    if len(key) < 30 or "\n" in key:
-        raise SystemExit("invalid API key file")
+    key = load_api_key(args.key_file)
     source_bytes = args.source.read_bytes()
     prompt = PROMPT if args.prompt_kind == "living" else KITCHEN_PROMPT
     style_context = None

@@ -86,14 +86,14 @@ flowchart TD
 
 ```text
 TUZI_BASE_URL=https://api.tu-zi.com
-TUZI_API_KEY_FILE=<secret-mounted-path>
+TUZI_API_KEY=<process-environment-or-secret-injection>
 TUZI_VISION_PRIMARY_MODEL=<runtime-verified-model-id>
 TUZI_VISION_REVIEW_MODEL=<runtime-verified-model-id>
 TUZI_TIMEOUT_SECONDS=180
 TUZI_MAX_IMAGE_BYTES=10485760
 ```
 
-- Key只能在服务端Secret或本地密钥文件中；不写入仓库、浏览器、Prompt记录或错误响应。
+- Key通过进程环境变量或部署Secret注入；不写入仓库、浏览器、Prompt记录或错误响应。本地开发使用Windows用户级 `TUZI_API_KEY`。
 - 模型ID是部署配置，不是代码常量。
 - 未设置模型ID时，服务启动失败；不得自动挑“列表第一个模型”。
 
@@ -350,7 +350,7 @@ ON        通过留出集门禁后作为P0主路径
 
 - CV预处理、WallGraph和RoomPolygon原型位于 `backend/pano_platform/floorplan/`；
 - Tuzi图片渲染链已验证，但视觉识别Adapter尚未实现；
-- 当前本机Tuzi Key文件不存在，无法查询该账户实际视觉模型列表；
+- 当前本机已配置Windows用户级 `TUZI_API_KEY/TUZI_BASE_URL/TUZI_VISION_PRIMARY_MODEL/TUZI_VISION_REVIEW_MODEL`；主/复核模型暂设为模型列表中已确认存在的 `gemini-2.5-pro/gemini-2.5-flash`；图片+严格JSON能力探针尚未执行；
 - `floorplan-to-3d`、FloorplanVLM、MiniCPM LoRA、Raster-to-Graph均未进入生产依赖；
 - 识别v2相关代码和数据目前尚未纳入Git，需要在实现前做来源与数据授权审计。
 

@@ -31,7 +31,7 @@ DoD：Git中无来源不明文件；图片可由SHA定位授权；测试集与�
 
 ### [ ] T01 实现Tuzi模型发现与能力探针
 
-依赖：T00；需要用户恢复Tuzi Key到本地Secret文件。
+依赖：T00；Windows用户级 `TUZI_API_KEY` 已配置，执行进程需继承该环境变量。
 
 目标文件：
 
@@ -232,8 +232,9 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 
 当前阻断：
 
-- [ ] 用户恢复Tuzi API Key到本地Secret文件；
-- [ ] `/v1/models` 确认当前Key的视觉模型ID；
+- [x] Windows用户级 `TUZI_API_KEY` 已配置；部署环境仍需用Secret注入；
+- [x] `/v1/models` 已确认当前Key可见 `gemini-2.5-pro/gemini-2.5-flash`（2026-08-28）；
+- [ ] 对上述两模型完成 `input_image + strict json_schema` 能力探针；
 - [ ] 墙、房间、窗真值补足；
 - [ ] 样本扩到30张PoC，发布前独立集≥200张。
 
