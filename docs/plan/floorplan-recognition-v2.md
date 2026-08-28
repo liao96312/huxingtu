@@ -1,8 +1,8 @@
 # 户型图识别技术方案 v2：CV + Tuzi 视觉模型 + 几何融合
 
-> 状态：**实施基线 1.0**（2026-08-28）  
-> 适用输入：清晰、单层、以正交墙为主的 JPG/PNG/WebP 户型图  
-> 详细任务：[floorplan-recognition-v2-todo.md](./floorplan-recognition-v2-todo.md)  
+> 状态：**实施基线 1.0**（2026-08-28）
+> 适用输入：清晰、单层、以正交墙为主的 JPG/PNG/WebP 户型图
+> 详细任务：[floorplan-recognition-v2-todo.md](./floorplan-recognition-v2-todo.md)
 > 纯 CV 降级基线：[floorplan-recognition-v1.md](./floorplan-recognition-v1.md)
 
 ## 0. 结论与不可破坏边界

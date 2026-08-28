@@ -1,6 +1,6 @@
 # 户型图识别 v2 详细执行 TODO
 
-> 对应方案：[floorplan-recognition-v2.md](./floorplan-recognition-v2.md)  
+> 对应方案：[floorplan-recognition-v2.md](./floorplan-recognition-v2.md)
 > 原则：一次只推进一个可验证切片；任何视觉结果都不能绕过几何与质量门。
 
 ## 0. 执行顺序
