@@ -255,7 +255,10 @@ def _render_panoramas(
         ai_ready = False
         if generate_ai:
             try:
-                original = _generate_ai_panorama(structural, folder / "ai-erp-2048x1024.jpg", room.type)
+                original = _generate_ai_panorama(
+                    structural, folder / "ai-erp-2048x1024.jpg", room.type,
+                    _opening_hint(layout, room),
+                )
                 ai_generated_count += 1
                 ai_ready = True
             except Exception:  # structural preview remains deliverable
@@ -315,8 +318,11 @@ def _upscale_with_realesrgan(source: Path, folder: Path) -> dict[str, Path]:
         "--source", str(source), "--output-dir", str(folder),
         "--output-base", base, "--tool", str(tool),
     ]
+    child_env = os.environ.copy()
+    backend_path = str(ROOT / "backend")
+    child_env["PYTHONPATH"] = backend_path + os.pathsep + child_env.get("PYTHONPATH", "")
     completed = subprocess.run(
-        command, cwd=ROOT, capture_output=True, text=True, timeout=900,
+        command, cwd=ROOT, env=child_env, capture_output=True, text=True, timeout=900,
     )
     if completed.returncode != 0:
         detail = (completed.stderr or completed.stdout or "Real-ESRGAN failed").strip()
@@ -422,7 +428,9 @@ def _ray_segment_intersections(cx, cy, directions, ax, ay, bx, by):
     return t, u
 
 
-def _generate_ai_panorama(source: Path, output: Path, room_type: str) -> Path:
+def _generate_ai_panorama(
+    source: Path, output: Path, room_type: str, opening_hint: str = ""
+) -> Path:
     import base64
     import requests
     from requests.adapters import HTTPAdapter
@@ -433,8 +441,12 @@ def _generate_ai_panorama(source: Path, output: Path, room_type: str) -> Path:
         raise RuntimeError("TUZI_API_KEY missing")
     prompt = (
         "Transform this exact structural 2:1 equirectangular 360 panorama into a photorealistic "
-        f"warm contemporary {room_type} interior. Preserve every wall, door, window, camera position, "
-        "projection and the left/right seam. Do not add or remove openings. Return a seamless 2:1 ERP."
+        f"warm contemporary {room_type} interior. Preserve every wall, architectural opening, camera position, "
+        "projection and the left/right seam. This is a topology-locked edit, not a free redesign. "
+        f"{opening_hint} Do not add or remove any architectural opening. Do not invent room doors, hallway doors, "
+        "balcony doors, windows, wall cutouts, closets, wardrobes, cabinet doors, cupboard doors, handles, or "
+        "door-shaped panels that are not present in the reference. If an opening is not specified, keep that wall "
+        "blank. Use simple furniture with flat, handleless surfaces. Return a seamless 2:1 ERP."
     )
     idempotency_key = hashlib.sha256(
         source.read_bytes() + prompt.encode("utf-8") + b"gpt-image-2:2k"
@@ -478,6 +490,35 @@ def _generate_ai_panorama(source: Path, output: Path, room_type: str) -> Path:
         normalized[:, -1 - offset] = np.clip(normalized[:, -1 - offset] * (1 - alpha) + average * alpha, 0, 255)
     cv2.imwrite(str(output), normalized, [cv2.IMWRITE_JPEG_QUALITY, 94])
     return output
+
+
+def _opening_hint(layout: LayoutRevision, room) -> str:
+    """Describe only the allowed architectural openings for this room."""
+
+    from shapely.geometry import Point
+
+    polygon = Polygon([(point.x, point.y) for point in room.polygon])
+    nodes = {node.id: node for node in layout.nodes}
+    allowed = []
+    for opening in layout.openings:
+        edge = next((item for item in layout.edges if item.id == opening.wallEdgeId), None)
+        if edge is None:
+            continue
+        start, end = nodes[edge.startNodeId], nodes[edge.endNodeId]
+        ux, uy = end.x - start.x, end.y - start.y
+        length = math.hypot(ux, uy)
+        if length <= 0:
+            continue
+        midpoint = Point(
+            start.x + ux * (opening.offset + opening.width / 2) / length,
+            start.y + uy * (opening.offset + opening.width / 2) / length,
+        )
+        if polygon.boundary.distance(midpoint) <= max(180.0, opening.width * 0.35):
+            allowed.append(opening.type.value)
+    if not allowed:
+        return "Architectural openings allowed in this room: exactly 0 (all walls must remain solid)."
+    counts = ", ".join(f"{kind}×{allowed.count(kind)}" for kind in sorted(set(allowed)))
+    return f"Architectural openings allowed in this room: exactly {len(allowed)} total ({counts}); no others."
 
 
 def load_preview_scene_geometry(project_id: str) -> SceneGeometry:

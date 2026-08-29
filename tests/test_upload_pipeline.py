@@ -66,7 +66,7 @@ def test_ai_renders_every_room(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
     layout, rooms, _ = _publish_preview("upload-ai", b"fixture", _preview_run())
 
-    def fake_ai(source: Path, output: Path, room_type: str) -> Path:
+    def fake_ai(source: Path, output: Path, room_type: str, opening_hint: str = "") -> Path:
         shutil.copy2(source, output)
         return output
 
@@ -95,7 +95,7 @@ def test_one_ai_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> Non
     monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
     layout, rooms, _ = _publish_preview("upload-partial", b"fixture", _preview_run())
 
-    def partial_ai(source: Path, output: Path, room_type: str) -> Path:
+    def partial_ai(source: Path, output: Path, room_type: str, opening_hint: str = "") -> Path:
         if room_type == "bedroom":
             raise RuntimeError("provider unavailable")
         shutil.copy2(source, output)
