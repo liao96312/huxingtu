@@ -41,7 +41,7 @@ def _preview_run() -> ParseRun:
 def test_preview_geometry_and_erp_are_published(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
     layout, rooms, scene = _publish_preview("upload-test", b"fixture", _preview_run())
-    manifest, ai_generated_count, failed_rooms = _render_panoramas("upload-test", layout, rooms, generate_ai=False)
+    manifest, ai_generated_count, failed_rooms, superres_count, superres_failed = _render_panoramas("upload-test", layout, rooms, generate_ai=False)
 
     assert len(layout.edges) == 4
     assert len(rooms.rooms) == 2
@@ -49,6 +49,7 @@ def test_preview_geometry_and_erp_are_published(tmp_path, monkeypatch) -> None:
     assert manifest.scenes[0].assets.original.width == 2048
     assert manifest.scenes[0].assets.original.height == 1024
     assert ai_generated_count == 0 and failed_rooms == []
+    assert superres_count == 0 and superres_failed == []
     panorama = tmp_path / "upload-test/panorama/room_001-main/structural-erp-2048x1024.jpg"
     assert panorama.is_file() and panorama.stat().st_size > 1000
     folder = tmp_path / "upload-test"
@@ -69,12 +70,22 @@ def test_ai_renders_every_room(tmp_path, monkeypatch) -> None:
         shutil.copy2(source, output)
         return output
 
+    def fake_superres(source: Path, folder: Path) -> dict[str, Path]:
+        paths = {key: folder / name for key, name in {
+            "original": "ai-erp-6144x3072.jpg", "proxy4k": "ai-erp-proxy-4096x2048.jpg",
+            "proxy2k": "ai-erp-proxy-2048x1024.jpg", "proxy1k": "ai-erp-proxy-1024x512.jpg",
+        }.items()}
+        for path in paths.values(): shutil.copy2(source, path)
+        return paths
+
     monkeypatch.setattr(pipeline, "_generate_ai_panorama", fake_ai)
-    manifest, ai_generated_count, failed_rooms = _render_panoramas("upload-ai", layout, rooms, generate_ai=True)
+    monkeypatch.setattr(pipeline, "_upscale_with_realesrgan", fake_superres)
+    manifest, ai_generated_count, failed_rooms, superres_count, superres_failed = _render_panoramas("upload-ai", layout, rooms, generate_ai=True)
     assert ai_generated_count == len(rooms.rooms) == 2
     assert failed_rooms == []
-    assert all(scene.title.endswith("AI预览") for scene in manifest.scenes)
-    assert all(scene.assets.original.url.endswith("ai-erp-2048x1024.jpg") for scene in manifest.scenes)
+    assert superres_count == 2 and superres_failed == []
+    assert all(scene.title.endswith("AI+超分预览") for scene in manifest.scenes)
+    assert all(scene.assets.original.url.endswith("ai-erp-6144x3072.jpg") for scene in manifest.scenes)
 
 
 def test_one_ai_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> None:
@@ -90,11 +101,21 @@ def test_one_ai_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> Non
         shutil.copy2(source, output)
         return output
 
+    def fake_superres(source: Path, folder: Path) -> dict[str, Path]:
+        paths = {key: folder / name for key, name in {
+            "original": "ai-erp-6144x3072.jpg", "proxy4k": "ai-erp-proxy-4096x2048.jpg",
+            "proxy2k": "ai-erp-proxy-2048x1024.jpg", "proxy1k": "ai-erp-proxy-1024x512.jpg",
+        }.items()}
+        for path in paths.values(): shutil.copy2(source, path)
+        return paths
+
     monkeypatch.setattr(pipeline, "_generate_ai_panorama", partial_ai)
-    manifest, count, failed = _render_panoramas("upload-partial", layout, rooms, generate_ai=True)
+    monkeypatch.setattr(pipeline, "_upscale_with_realesrgan", fake_superres)
+    manifest, count, failed, superres_count, superres_failed = _render_panoramas("upload-partial", layout, rooms, generate_ai=True)
     assert count == 1
     assert failed == ["卧室"]
-    assert sum(scene.title.endswith("AI预览") for scene in manifest.scenes) == 1
+    assert superres_count == 1 and superres_failed == []
+    assert sum(scene.title.endswith("AI+超分预览") for scene in manifest.scenes) == 1
 
 
 def test_upload_endpoint_returns_viewer_link(monkeypatch) -> None:

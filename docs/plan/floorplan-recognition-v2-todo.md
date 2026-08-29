@@ -254,6 +254,7 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - [x] 新增 `POST /api/v1/pipeline/upload`，支持PNG/JPEG/WebP、10MB门禁、项目ID校验和显式外部视觉授权；
 - [x] 将通用WallGraph、闭合房间和已确认开口转换为预览 `LayoutRevision`、`DerivedRoomSet`、`SceneGeometry`；
 - [x] 从矢量墙/门窗洞和房间polylabel相机确定性生成每房间 `2048×1024` 结构ERP、1K代理和缩略图；
+- [x] image-2成功后接入环绕感知 Real-ESRGAN：左右环绕填充、512分块、重叠融合，输出 `6144×3072` 及4K/2K/1K代理；工具缺失或失败时保留AI原图并记录房间级失败；
 - [x] 发布动态 `PanoManifest`，Viewer支持 `?manifestUrl=/artifacts/...` 加载并拖动查看；
 - [x] 新增 `/?pipeline=1` 上传页；显示每个识别阶段、质量状态、房间数和Viewer入口；
 - [x] image-2默认逐个装修所有闭合房间；允许用户关闭；单房失败只回退该房间结构ERP；

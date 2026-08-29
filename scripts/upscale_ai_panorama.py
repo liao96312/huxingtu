@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import shutil
 import subprocess
 from datetime import datetime, timezone
@@ -19,12 +20,22 @@ parser.add_argument("--scene", default="living-main", choices=("living-main", "k
 parser.add_argument("--variant", default="v1")
 parser.add_argument("--source", type=Path)
 parser.add_argument("--output-base")
+parser.add_argument("--output-dir", type=Path)
+parser.add_argument("--tool", type=Path)
 args = parser.parse_args()
 SCENE = args.scene
-AI = ROOT / "datasets/derived/fp-001/panorama" / SCENE / "ai"
+AI = args.output_dir.resolve() if args.output_dir else ROOT / "datasets/derived/fp-001/panorama" / SCENE / "ai"
 BASE = args.output_base or (args.source.stem if args.source else f"{SCENE}-gpt-image-2-{args.variant}")
 SOURCE = args.source.resolve() if args.source else AI / f"{BASE}-normalized-2048x1024.jpg"
-TOOL = ROOT / "tmp/tools/realesrgan/realesrgan-ncnn-vulkan.exe"
+_tool_candidates = [
+    args.tool.resolve() if args.tool else None,
+    Path(os.environ["REALESRGAN_TOOL"]).resolve() if os.environ.get("REALESRGAN_TOOL") else None,
+    ROOT / "tools/realesrgan/package/realesrgan-ncnn-vulkan.exe",
+    ROOT / "tmp/tools/realesrgan/realesrgan-ncnn-vulkan.exe",
+]
+TOOL = next((path for path in _tool_candidates if path and path.is_file()), _tool_candidates[0] or Path(""))
+if not TOOL.is_file():
+    raise SystemExit("Real-ESRGAN executable not found; set REALESRGAN_TOOL or install tools/realesrgan")
 MODELS = TOOL.parent / "models"
 TILE_DIR = AI / ".realesrgan-tiles"
 OUTPUT = AI / f"{BASE}-6144x3072.jpg"

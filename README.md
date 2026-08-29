@@ -40,9 +40,17 @@ npm run dev
 docker compose up --build
 ```
 
-当前 Compose 启动 API、PostgreSQL 和 Redis。Capture Worker、对象存储、GPT Image 2 Adapter 与超分/QA Worker 会在对应 P0 项进入实现后加入，P0-01 在此之前保持未完成。
+当前 Compose 启动 API、PostgreSQL 和 Redis。上传测试链在单机 API 进程内执行识别、结构ERP、可选 image-2 和本地 Real-ESRGAN；RQ/Capture/对象存储 Worker 仍是后续生产化工作。
 
 容器 API：`GET http://127.0.0.1:18000/api/health`。宿主端口使用 18000，避免与现有 8000 服务冲突；容器内部仍为 8000。
+
+本地超分工具（不进入 Git）首次安装：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install_realesrgan.ps1
+```
+
+默认使用 `tools/realesrgan/package/realesrgan-ncnn-vulkan.exe` 和 `realesrgan-x4plus`；也可用用户级环境变量 `REALESRGAN_TOOL` 指向已有可执行文件。输出为 `6144×3072`，并同步生成 `4096×2048/2048×1024/1024×512` 代理。
 
 PostgreSQL 集成测试使用宿主端口 55432：
 

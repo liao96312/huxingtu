@@ -10,6 +10,8 @@ type PipelineResult = {
   roomCount?: number;
   aiGeneratedCount?: number;
   aiFailedRooms?: string[];
+  superresGeneratedCount?: number;
+  superresFailedRooms?: string[];
   stages: { stage: string; status: string; detail: string }[];
 };
 
@@ -77,7 +79,7 @@ export default function UploadPipeline() {
         {result && (
           <section className="pipeline-result">
             <h2>{result.viewerUrl ? "全景预览已生成" : "识别未达到生成条件"}</h2>
-            <p>项目：{result.projectId} · Parse：{result.parseStatus} · 房间：{result.roomCount ?? 0} · AI成功：{result.aiGeneratedCount ?? 0}</p>
+            <p>项目：{result.projectId} · Parse：{result.parseStatus} · 房间：{result.roomCount ?? 0} · AI成功：{result.aiGeneratedCount ?? 0} · 超分成功：{result.superresGeneratedCount ?? 0}</p>
             {(result.message || result.warning) && <p>{result.message ?? result.warning}</p>}
             <ol>{result.stages.map((stage) => <li key={stage.stage}><b>{stage.stage}</b>：{stage.status} — {stage.detail}</li>)}</ol>
             {result.viewerUrl && <a className="pipeline-open" href={result.viewerUrl}>打开可拖动360°全景</a>}

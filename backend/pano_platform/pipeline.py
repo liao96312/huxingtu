@@ -11,6 +11,8 @@ import hashlib
 import json
 import math
 import os
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -76,7 +78,7 @@ def run_upload_pipeline(
 
     try:
         layout, rooms, scene = _publish_preview(project_id, image_bytes, run)
-        manifest, ai_generated_count, ai_failed_rooms = _render_panoramas(
+        manifest, ai_generated_count, ai_failed_rooms, superres_count, superres_failed_rooms = _render_panoramas(
             project_id, layout, rooms, generate_ai=generate_ai
         )
     except PipelineNotReady as error:
@@ -95,9 +97,16 @@ def run_upload_pipeline(
         "aiGenerated": ai_generated_count > 0,
         "aiGeneratedCount": ai_generated_count,
         "aiFailedRooms": ai_failed_rooms,
+        "superresGeneratedCount": superres_count,
+        "superresFailedRooms": superres_failed_rooms,
     })
+    warnings = []
     if ai_failed_rooms:
-        result["warning"] = f"以下房间AI失败，已回退结构全景：{', '.join(ai_failed_rooms)}"
+        warnings.append(f"以下房间AI失败，已回退结构全景：{', '.join(ai_failed_rooms)}")
+    if superres_failed_rooms:
+        warnings.append(f"以下房间本地超分失败，保留AI原图：{', '.join(superres_failed_rooms)}")
+    if warnings:
+        result["warning"] = "；".join(warnings)
     return result
 
 
@@ -226,10 +235,12 @@ def _render_panoramas(
     rooms: DerivedRoomSet,
     *,
     generate_ai: bool,
-) -> tuple[PanoManifest, int, list[str]]:
+) -> tuple[PanoManifest, int, list[str], int, list[str]]:
     scenes = []
     ai_generated_count = 0
     ai_failed_rooms: list[str] = []
+    superres_count = 0
+    superres_failed_rooms: list[str] = []
     ordered_rooms = sorted(rooms.rooms, key=lambda room: room.areaMm2, reverse=True)
     for order, room in enumerate(ordered_rooms):
         scene_id = f"{room.id}-main"
@@ -240,28 +251,44 @@ def _render_panoramas(
         cv2.imwrite(str(structural), image, [cv2.IMWRITE_JPEG_QUALITY, 94])
 
         original = structural
+        superres_paths: dict[str, Path] | None = None
+        ai_ready = False
         if generate_ai:
             try:
                 original = _generate_ai_panorama(structural, folder / "ai-erp-2048x1024.jpg", room.type)
                 ai_generated_count += 1
+                ai_ready = True
             except Exception:  # structural preview remains deliverable
                 ai_failed_rooms.append(room.name)
+
+        if ai_ready:
+            try:
+                superres_paths = _upscale_with_realesrgan(original, folder)
+                original = superres_paths["original"]
+                superres_count += 1
+            except Exception:
+                superres_failed_rooms.append(room.name)
 
         proxy = folder / "proxy-1024x512.jpg"
         thumb = folder / "thumb-320x160.jpg"
         loaded = cv2.imread(str(original), cv2.IMREAD_COLOR)
-        cv2.imwrite(str(proxy), cv2.resize(loaded, (1024, 512), interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 90])
+        asset_4k = superres_paths["proxy4k"] if superres_paths else None
+        asset_2k = superres_paths["proxy2k"] if superres_paths else original
+        asset_1k = superres_paths["proxy1k"] if superres_paths else proxy
+        if not superres_paths:
+            cv2.imwrite(str(proxy), cv2.resize(loaded, (1024, 512), interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 90])
         cv2.imwrite(str(thumb), cv2.resize(loaded, (320, 160), interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 85])
         base = f"/artifacts/{project_id}/panorama/{scene_id}"
         original_name = original.name
         scenes.append({
             "id": scene_id, "roomId": room.id, "roomName": room.name,
-            "title": f"{room.name}{' AI预览' if original != structural else ' 结构预览'}",
+            "title": f"{room.name}{' AI+超分预览' if superres_paths else ' AI预览' if ai_ready else ' 结构预览'}",
             "order": order,
             "assets": {
-                "original": {"url": f"{base}/{original_name}", "width": 2048, "height": 1024, "contentType": "image/jpeg"},
-                "proxy2k": {"url": f"{base}/{original_name}", "width": 2048, "height": 1024, "contentType": "image/jpeg"},
-                "proxy1k": {"url": f"{base}/{proxy.name}", "width": 1024, "height": 512, "contentType": "image/jpeg"},
+                "original": {"url": f"{base}/{original_name}", "width": 6144 if superres_paths else 2048, "height": 3072 if superres_paths else 1024, "contentType": "image/jpeg"},
+                "proxy4k": {"url": f"{base}/{asset_4k.name}", "width": 4096, "height": 2048, "contentType": "image/jpeg"} if asset_4k else None,
+                "proxy2k": {"url": f"{base}/{asset_2k.name}", "width": 2048, "height": 1024, "contentType": "image/jpeg"},
+                "proxy1k": {"url": f"{base}/{asset_1k.name}", "width": 1024, "height": 512, "contentType": "image/jpeg"},
                 "thumbnailUrl": f"{base}/{thumb.name}",
             },
             "initialView": {"yaw": 0.0, "pitch": 0.0, "fov": 82.0},
@@ -275,7 +302,47 @@ def _render_panoramas(
     payload["contentHash"] = canonical_sha256(payload)
     manifest = PanoManifest.model_validate(payload)
     _write_model(_data_root() / project_id / "pano-manifest.json", manifest)
-    return manifest, ai_generated_count, ai_failed_rooms
+    return manifest, ai_generated_count, ai_failed_rooms, superres_count, superres_failed_rooms
+
+
+def _upscale_with_realesrgan(source: Path, folder: Path) -> dict[str, Path]:
+    """Run the existing wrap-aware Real-ESRGAN tile script for one ERP."""
+
+    tool = _resolve_realesrgan_tool()
+    base = "ai-erp"
+    command = [
+        sys.executable, str(ROOT / "scripts" / "upscale_ai_panorama.py"),
+        "--source", str(source), "--output-dir", str(folder),
+        "--output-base", base, "--tool", str(tool),
+    ]
+    completed = subprocess.run(
+        command, cwd=ROOT, capture_output=True, text=True, timeout=900,
+    )
+    if completed.returncode != 0:
+        detail = (completed.stderr or completed.stdout or "Real-ESRGAN failed").strip()
+        raise RuntimeError(detail[-1000:])
+    paths = {
+        "original": folder / f"{base}-6144x3072.jpg",
+        "proxy4k": folder / f"{base}-proxy-4096x2048.jpg",
+        "proxy2k": folder / f"{base}-proxy-2048x1024.jpg",
+        "proxy1k": folder / f"{base}-proxy-1024x512.jpg",
+    }
+    if not all(path.is_file() for path in paths.values()):
+        raise RuntimeError("Real-ESRGAN completed without all expected ERP assets")
+    return paths
+
+
+def _resolve_realesrgan_tool() -> Path:
+    configured = os.environ.get("REALESRGAN_TOOL")
+    candidates = [
+        Path(configured) if configured else None,
+        ROOT / "tools/realesrgan/package/realesrgan-ncnn-vulkan.exe",
+        ROOT / "tmp/tools/realesrgan/realesrgan-ncnn-vulkan.exe",
+    ]
+    for candidate in candidates:
+        if candidate and candidate.is_file():
+            return candidate.resolve()
+    raise RuntimeError("Real-ESRGAN executable not found")
 
 
 def render_structural_erp(layout: LayoutRevision, room: dict, width: int = ERP_WIDTH) -> np.ndarray:
