@@ -1,0 +1,47 @@
+{
+  "scaleCandidates": [
+    {
+      "lengthMm": 3600,
+      "pixelStart": [0.30, 0.88],
+      "pixelEnd": [0.70, 0.88],
+      "text": "3600",
+      "confidence": 0.94
+    }
+  ],
+  "rooms": [
+    {
+      "type": "livingDining",
+      "name": "客餐厅",
+      "areaLabelM2": 89.2,
+      "polygon": [
+        [0.12, 0.10],
+        [0.30, 0.10],
+        [0.30, 0.40],
+        [0.12, 0.40]
+      ],
+      "confidence": 0.90
+    },
+    {
+      "type": "bedroom",
+      "name": "卧室",
+      "areaLabelM2": 12.8,
+      "polygon": [
+        [0.40, 0.10],
+        [0.60, 0.10],
+        [0.60, 0.35],
+        [0.40, 0.35]
+      ],
+      "confidence": 0.88
+    }
+  ],
+  "openings": [
+    {
+      "type": "door",
+      "evidence": ["doorArc"],
+      "pixelStart": [0.30, 0.25],
+      "pixelEnd": [0.30, 0.35],
+      "confidence": 0.88
+    }
+  ],
+  "warnings": []
+}

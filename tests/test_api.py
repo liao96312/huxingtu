@@ -1,4 +1,5 @@
 import asyncio
+import base64
 from uuid import uuid4
 
 import httpx
@@ -25,7 +26,15 @@ def test_health() -> None:
     }
 
 
-def test_unimplemented_command_is_explicit() -> None:
+def test_parse_command_persists_queryable_result(tmp_path, monkeypatch) -> None:
+    import cv2
+    import numpy as np
+
+    image = np.full((40, 64, 3), 255, np.uint8)
+    image[10:30, 10:50] = 0
+    ok, encoded = cv2.imencode(".png", image)
+    assert ok
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
     response = request(
         "POST",
         "/api/v1/commands/parse",
@@ -34,11 +43,34 @@ def test_unimplemented_command_is_explicit() -> None:
             "requestId": str(uuid4()),
             "command": "parse",
             "projectId": "p001",
-            "payload": {},
+            "payload": {
+                "imageBase64": base64.b64encode(encoded.tobytes()).decode("ascii"),
+                "visionMode": "off",
+            },
         },
     )
-    assert response.status_code == 501
-    assert response.json()["code"] == "COMMAND_NOT_IMPLEMENTED"
+    assert response.status_code == 202
+    task_id = response.json()["taskId"]
+    result = request("GET", f"/api/v1/projects/p001/parse-results/{task_id}")
+    assert result.status_code == 200
+    assert result.json()["traceId"] == task_id
+    assert result.json()["status"] in ("needsReview", "rejected")
+
+
+def test_parse_rejects_invalid_base64() -> None:
+    response = request(
+        "POST",
+        "/api/v1/commands/parse",
+        json={
+            "schemaVersion": "0.1.0",
+            "requestId": str(uuid4()),
+            "command": "parse",
+            "projectId": "p001",
+            "payload": {"imageBase64": "%%%", "visionMode": "off"},
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["code"] == "INVALID_COMMAND_PAYLOAD"
 
 
 def test_path_and_body_command_must_match() -> None:

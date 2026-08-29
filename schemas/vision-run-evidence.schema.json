@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/vision-run-evidence/0.1.0",
+  "title": "VisionRunEvidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["provider", "endpoint", "requestedModel", "promptVersion", "draftSchemaVersion", "imageSha256", "attemptCount", "status", "recordedAt"],
+  "properties": {
+    "provider": { "const": "tuzi" },
+    "endpoint": { "const": "/v1/chat/completions" },
+    "requestedModel": { "type": "string", "minLength": 1 },
+    "actualModel": { "type": ["string", "null"] },
+    "providerRequestId": { "type": ["string", "null"] },
+    "promptVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "draftSchemaVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "imageSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "latencyMs": { "type": ["integer", "null"], "minimum": 0 },
+    "usage": { "type": "object" },
+    "attemptCount": { "type": "integer", "minimum": 1 },
+    "rawResponseSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "normalizedDraftSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "status": { "enum": ["candidate", "review", "rejected"] },
+    "errorCode": { "type": ["string", "null"], "maxLength": 64 },
+    "errorDetail": { "type": ["string", "null"], "maxLength": 2048 },
+    "recordedAt": { "type": "string", "format": "date-time" }
+  }
+}

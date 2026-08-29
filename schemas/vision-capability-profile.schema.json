@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/vision-capability-profile/0.1.0",
+  "title": "VisionCapabilityProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider",
+    "baseUrl",
+    "model",
+    "status",
+    "imagesSupported",
+    "jsonSchemaSupported",
+    "requestIdAvailable",
+    "latencyMs",
+    "actualModel",
+    "maxTokens",
+    "checkedAt"
+  ],
+  "properties": {
+    "provider": { "const": "tuzi" },
+    "baseUrl": { "type": "string", "minLength": 1 },
+    "model": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": [
+        "ok",
+        "unavailable",
+        "modelNotAvailable",
+        "imageUnsupported",
+        "structuredOutputUnsupported"
+      ]
+    },
+    "imagesSupported": { "type": "boolean" },
+    "jsonSchemaSupported": { "type": "boolean" },
+    "requestIdAvailable": { "type": "boolean" },
+    "latencyMs": { "type": ["integer", "null"], "minimum": 0 },
+    "actualModel": { "type": ["string", "null"] },
+    "maxTokens": { "type": ["integer", "null"], "minimum": 0 },
+    "checkedAt": { "type": "string", "format": "date-time" },
+    "detail": { "type": ["string", "null"] }
+  }
+}

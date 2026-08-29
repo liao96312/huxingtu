@@ -13,7 +13,7 @@ T00 范围与数据 → T01 Tuzi能力 → T02 契约 → T03 Adapter
 
 ## 1. P0阻断项
 
-### [ ] T00 冻结实现范围和数据谱系
+### [进行中] T00 冻结实现范围和数据谱系
 
 依赖：无。
 
@@ -29,7 +29,7 @@ DoD：Git中无来源不明文件；图片可由SHA定位授权；测试集与�
 
 测试：DatasetManifest Schema、重复Hash检测、切片互斥测试。
 
-### [ ] T01 实现Tuzi模型发现与能力探针
+### [进行中] T01 实现Tuzi模型发现与能力探针
 
 依赖：T00；Windows用户级 `TUZI_API_KEY` 已配置，执行进程需继承该环境变量。
 
@@ -54,7 +54,7 @@ scripts/probe_tuzi_vision.py
 
 DoD：无Key不发网络请求；模型不存在不进视觉路径；日志无Key/Base64/签名URL；能力摘要可审计。
 
-### [ ] T02 冻结VLM输入/输出契约
+### [x] T02 冻结VLM输入/输出契约
 
 依赖：T00。
 
@@ -73,7 +73,7 @@ tests/test_vision_contracts.py
 
 DoD：有效Fixture同时通过Pydantic和JSON Schema；无效Fixture均有明确Reason Code。
 
-### [ ] T03 实现Tuzi Responses Adapter
+### [x] T03 实现Tuzi Chat Completions Adapter
 
 依赖：T01、T02。
 
@@ -85,11 +85,11 @@ backend/pano_platform/vision/tuzi_responses.py
 tests/test_tuzi_responses_adapter.py
 ```
 
-任务：实现Provider Protocol；构造 `/v1/responses`；使用严格JSON Schema；解析结构化结果；记录请求ID/实际模型/usage/延迟/响应Hash；有限重试；禁止从Markdown猜JSON。
+任务：实现Provider Protocol；构造 `/v1/chat/completions`；使用严格JSON Schema；解析结构化结果；记录请求ID/实际模型/usage/延迟/响应Hash；有限重试；禁止从自由文本猜JSON。
 
 DoD：Mock测试覆盖成功、429、5xx、超时、审核、模型不存在、截断和Schema错误；真实Smoke仅本地Key存在时运行，CI默认跳过。
 
-### [ ] T04 冻结视觉输入和Prompt版本
+### [进行中] T04 冻结视觉输入和Prompt版本
 
 依赖：T02、T03。
 
@@ -106,7 +106,7 @@ tests/test_vision_input.py
 
 DoD：同图同版本生成相同工件和JobKey；Prompt或预处理变化必定换键。
 
-### [ ] T05 实现证据、缓存、幂等与错误信封
+### [进行中] T05 实现证据、缓存、幂等与错误信封
 
 依赖：T03、T04。
 
@@ -126,7 +126,7 @@ DoD：并发同请求只有一个有效任务；模型/Prompt/Schema变化不复
 
 ## 2. 几何融合
 
-### [ ] T06 实现F1吸附与F2比例尺/面积自洽
+### [进行中] T06 实现F1吸附与F2比例尺/面积自洽
 
 依赖：T02；复用现有 `wall_graph.py`、`rooms.py`、`calibrate_scale()`。
 
@@ -143,7 +143,7 @@ tests/test_floorplan_fusion_rooms.py
 
 DoD：Golden Fixture达到吸附/比例/面积阈值；失败结果只进复核。
 
-### [ ] T07 实现F3开口仲裁与F4房间闭合
+### [进行中] T07 实现F3开口仲裁与F4房间闭合
 
 依赖：T06。
 
@@ -162,7 +162,7 @@ DoD：未经WallEdge/Room验证的开口不会进入LayoutRevision；房间不�
 
 ## 3. 端到端与评测
 
-### [ ] T08 实现parse命令编排
+### [进行中] T08 实现parse命令编排
 
 依赖：T01–T07。
 
@@ -181,7 +181,7 @@ tests/test_parse_pipeline.py
 
 DoD：单命令产出完整工件谱系；任一阶段失败都不会发布错误Revision。
 
-### [ ] T09 建立离线基准与Prompt回归
+### [进行中] T09 建立离线基准与Prompt回归
 
 依赖：T08、完整真值。
 
@@ -197,7 +197,7 @@ docs/data/floorplan-v2-benchmark.json
 
 DoD：融合留出集达到方案全部门槛，否则保持SHADOW/ASSISTED。
 
-### [ ] T10 完成安全、隐私和成本控制
+### [进行中] T10 完成安全、隐私和成本控制
 
 依赖：T03、T05、T08。
 
@@ -207,7 +207,7 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 
 ## 4. 发布阶段
 
-### [ ] T11 Shadow运行
+### [未开始] T11 Shadow运行
 
 依赖：T08–T10。
 
@@ -217,7 +217,7 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 
 退出标准：Schema有效率100%，无泄密/错Revision，融合稳定优于纯CV。
 
-### [ ] T12 Assisted发布门
+### [未开始] T12 Assisted发布门
 
 依赖：T11。
 
@@ -234,9 +234,20 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 
 - [x] Windows用户级 `TUZI_API_KEY` 已配置；部署环境仍需用Secret注入；
 - [x] `/v1/models` 已确认当前Key可见 `gemini-2.5-pro/gemini-2.5-flash`（2026-08-28）；
-- [ ] 对上述两模型完成 `input_image + strict json_schema` 能力探针；
+- [x] 当前部署模型 `gemini-3.5-flash` 完成图片 + strict json_schema 探针，并用 `fp-101` 完成一次真实严格草案 Smoke；Tuzi 网络/上游仍存在间歇性 SSL/400，继续按不可用降级处理；
 - [ ] 墙、房间、窗真值补足；
 - [ ] 样本扩到30张PoC，发布前独立集≥200张。
+
+## 6. 2026-08-29 实施快照
+
+- `POST /api/v1/commands/parse` 已注册；接收 `imageBase64`、`visionMode` 和显式 `allowExternalVision`；未授权时只跑本地CV；
+- Parse结果按 `projectId/taskId` 原子保存，可由 `GET /api/v1/projects/{projectId}/parse-results/{taskId}` 查询；
+- Tuzi Adapter 对缺失的模型自报 `confidence` 保守记为0，坐标范围、枚举、自交、数量和额外字段仍严格拒绝；`confidence` 不参与发布门；
+- Schema失败会带不含模型原文的结构化错误摘要，并进行一次带校验反馈的有限纠错；
+- 付费真实Smoke改为显式 `RUN_TUZI_LIVE_TEST=1`，常规测试不再意外调用第三方；
+- 当前验证：`175 passed, 2 skipped`；Viewer生产构建通过；
+- 当前离线基准仍只有1个Golden：Room mIoU `0.489`、Room Count Accuracy `0`、Openings F1 `0`，因此 `releaseReady=false`；
+- 桌面9图已有来源、SHA和训练/验证/测试切片，但原58门标注源文件当前不在桌面或仓库，无法诚实补齐墙/房间/窗真值。
 
 明确不做：
 

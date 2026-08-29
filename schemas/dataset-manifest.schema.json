@@ -55,6 +55,16 @@
         "reasonCodes": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
       }
     },
+    "sourceGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowExternalVision"],
+      "properties": {
+        "allowExternalVision": { "type": "boolean" },
+        "suppliedAt": { "type": "string", "format": "date-time" },
+        "origin": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
     "sample": {
       "type": "object",
       "additionalProperties": false,
@@ -73,6 +83,8 @@
       ],
       "properties": {
         "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "split": { "enum": ["train", "val", "test"] },
+        "sourceGrant": { "$ref": "#/$defs/sourceGrant" },
         "pairGroupId": { "type": "string", "minLength": 1, "maxLength": 128 },
         "floorIndex": { "type": "integer", "minimum": 0 },
         "floorCount": { "type": "integer", "minimum": 1 },

@@ -7,3 +7,8 @@ dist/
 .env
 *.log
 tmp/
+
+# Reproducible debug outputs; the authorised desktop-9 fixture itself is versioned.
+datasets/debug/desktop9/
+datasets/debug/vision-capability-profile*.json
+datasets/derived/*/parse/

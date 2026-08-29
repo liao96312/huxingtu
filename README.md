@@ -1,18 +1,19 @@
 # Pano platform
 
-户型图到 360°全景的自主实现工程。当前处于 Gate A：先冻结架构与数据契约，再进入解析、布局、捕获和 AI 实现。
+户型图到 360°全景的自主实现工程。当前处于通用户型识别与几何融合 Gate：Viewer、单户型3D/全景和识别原型可运行，发布准确率门尚未通过。
 
 ## 当前可运行内容
 
 - FastAPI 健康检查与版本化 Command Facade
+- `parse` 命令：Base64图片输入、CV/Tuzi模式、显式第三方授权、阶段证据持久化和结果查询
 - `LayoutRevision`、`ArtifactManifest`、`CommandEnvelope` JSON Schema
-- `PanoManifest` 与 2 房间/8 视角 Golden Viewer
+- `PanoManifest` 与 fp-001 五房间结构/AI全景 Viewer
 - React + Three.js 全屏 Viewer：拖拽、滚轮/双指缩放、场景条、键盘切换和分享 URL
 - 多尺寸比例尺校准、像素↔毫米仿射往返和工件依赖失效
 - Pydantic 几何引用和门窗区间校验
 - 契约、Facade 与 API Smoke Test
 
-尚未实现的业务命令会明确返回 `501 COMMAND_NOT_IMPLEMENTED`，不会生成假任务。
+`layout/buildScene/capture/render/queryResult` 等尚未实现的业务命令会明确返回 `501 COMMAND_NOT_IMPLEMENTED`。通用户型发布门当前仍为 `releaseReady=false`。
 
 ## 本地验证
 

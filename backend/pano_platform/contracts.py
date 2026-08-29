@@ -32,7 +32,7 @@ class CommandEnvelope(StrictModel):
     schemaVersion: Literal["0.1.0"] = SCHEMA_VERSION
     requestId: UUID
     command: CommandName
-    projectId: str = Field(min_length=1, max_length=128)
+    projectId: str = Field(min_length=1, max_length=128, pattern=r"^[a-zA-Z0-9_-]+$")
     layoutRevision: int | None = Field(default=None, ge=1)
     roomId: str | None = Field(default=None, min_length=1, max_length=128)
     payload: dict[str, Any] = Field(default_factory=dict)
@@ -351,6 +351,18 @@ class DatasetSourceGrant(StrictModel):
     allowTraining: bool
 
 
+class VisionDataGrant(StrictModel):
+    """Explicit authorisation to send this image to an external vision provider.
+
+    ``allowExternalVision`` gates third-party processing (Tuzi/upstream model).
+    An image without this flag set to ``True`` must never be sent off-box.
+    """
+
+    allowExternalVision: bool
+    suppliedAt: str | None = None
+    origin: str | None = Field(default=None, min_length=1, max_length=128)
+
+
 class ExpectedGate(StrictModel):
     decision: GateDecision
     reasonCodes: list[str] = Field(default_factory=list)
@@ -371,6 +383,8 @@ class FloorplanSample(StrictModel):
     scopeTier: ScopeTier
     image: DatasetImage
     source: DatasetSourceGrant
+    split: Literal["train", "val", "test"] | None = None
+    sourceGrant: VisionDataGrant | None = None
     dimensionUnitHint: Literal["mm", "cm", "unknown"]
     roomHints: list[str] = Field(default_factory=list)
     expectedGate: ExpectedGate

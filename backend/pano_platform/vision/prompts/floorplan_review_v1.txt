@@ -1,0 +1,30 @@
+You are given a floorplan drawing and a set of ALREADY-PROPOSED candidate
+openings from an earlier parse pass. Your job is ONLY to re-classify those given
+candidates — not to find new ones, not to re-parse the whole image.
+
+Return ONLY the JSON object matching the schema. Do not add prose.
+
+Input
+-----
+- The image, normalised so coordinates are [0,1] relative to the drawn figure.
+- A list of candidate openings, each with: type, evidence, pixelStart,
+  pixelEnd, confidence.
+
+Rules
+-----
+- For each candidate, decide the most defensible type and evidence from what is
+  actually visible at that wall gap.
+- type MUST be one of: door, window, doorway.
+- evidence MUST be a subset of: none, doorArc, doorLeaf, parallelLines.
+- Keep the SAME two endpoints you were given — only adjust type / evidence /
+  confidence. Do not move or add endpoints.
+- If a candidate's wall gap is not actually an opening, set type to doorway and
+  evidence to none, and note it in warnings.
+- Do not invent new candidates. Do not change room or scale output.
+
+Constraints
+-----------
+- No extra fields beyond the schema.
+- Keep the provided candidates' count; your output must cover exactly the
+  candidates given.
+- Normalised coordinates are mandatory; never emit raw pixels.

@@ -1,0 +1,55 @@
+You are parsing a clear, single-storey, orthogonally-walled floorplan drawing
+into a strict JSON draft. Return ONLY the JSON object matching the schema. Do not
+add any prose, markdown, or explanation.
+
+Coordinate system
+-----------------
+- The original input image has a width and height (given in the request).
+- Every coordinate MUST be normalised to [0, 1] relative to that image:
+    nx = pixel_x / image_width
+    ny = pixel_y / image_height
+- Origin is the top-left corner; y increases DOWNWARD. An image of width 800 and
+  height 600 maps pixel (400, 150) to nx=0.5, ny=0.25.
+- Polygon vertices and opening endpoints must all use this normalised form.
+- Never emit raw pixel integers.
+
+Rooms
+-----
+- One entry per visually enclosed space, walking the polygon along the INTERIOR
+  wall centreline.
+- type MUST be one of: bedroom, living, dining, livingDining, kitchen, bathroom,
+  balcony, study, other.
+- Use livingDining when living and dining form a single open space with no door or
+  wall between them; otherwise split them into living and dining.
+- polygon: at least 3 vertices, no repeated first point, no self-intersection,
+  close enough to form a sensible area.
+- areaLabelM2: the printed area printed on the drawing, if readable, in m^2.
+
+Openings
+--------
+- One entry per door / window / doorway opening in a wall.
+- type MUST be one of: door, window, doorway.
+- An opening is defined by two normalised endpoints lying along the SAME wall
+  gap: pixelStart and pixelEnd.
+- evidence: list of zero or more of none, doorArc, doorLeaf, parallelLines.
+- Use doorway for a wall gap with a door neither leaf nor arc (an open passage).
+
+Scale candidates
+----------------
+- Read any printed dimension strings (e.g. "3600" mm) you can find.
+- For each, give lengthMm (the printed number), the two normalised endpoints of
+  that dimension line, the text, and a confidence.
+- If no dimension is readable, return an empty scaleCandidates array.
+
+Warnings
+--------
+- If the image is not a legible single-storey orthogonal floorplan, return empty
+  rooms/openings/scaleCandidates and put a short explanation in warnings.
+- Otherwise warnings is an empty array.
+
+Prohibitions
+------------
+- No extra fields beyond the schema.
+- No confidence thresholds: report your own confidence 0..1 for each item, but
+  the down-stream geometry gate decides whether it is published.
+- Do not invent rooms or dimension numbers you cannot see.

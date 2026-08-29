@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi import FastAPI, HTTPException, Path, status
 from fastapi.responses import JSONResponse
@@ -18,13 +18,14 @@ from .contracts import (
     ScaleCalibrationRequest,
     ScaleCalibrationResult,
 )
-from .facade import CommandFacade, CommandNotImplementedError
+from .facade import CommandFacade, CommandNotImplementedError, load_parse_result, parse_command
 from .geometry import calibrate_scale
 from .opening_review import complete_opening_review, load_derived_rooms, load_latest_reviewed_layout, load_opening_candidates
 from .scene_geometry import build_scene_geometry
 
 app = FastAPI(title="Pano Platform API", version=__version__)
 facade = CommandFacade()
+facade.register_parse(parse_command)
 
 
 @app.get("/api/health")
@@ -68,6 +69,16 @@ async def get_scene_geometry(project_id: str = Path(pattern=r"^[a-zA-Z0-9_-]+$")
         raise HTTPException(status_code=409, detail=str(error)) from error
 
 
+@app.get("/api/v1/projects/{project_id}/parse-results/{task_id}")
+async def get_parse_result(
+    project_id: str = Path(pattern=r"^[a-zA-Z0-9_-]+$"), task_id: UUID = Path()
+) -> dict:
+    try:
+        return load_parse_result(project_id, task_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="parse result not found") from error
+
+
 @app.post(
     "/api/v1/commands/{command}",
     status_code=status.HTTP_202_ACCEPTED,
@@ -89,6 +100,13 @@ async def dispatch_command(
 
     try:
         task = await facade.dispatch(envelope)
+    except ValueError as error:
+        detail = ErrorEnvelope(
+            code="INVALID_COMMAND_PAYLOAD",
+            message=str(error),
+            traceId=trace_id,
+        )
+        return JSONResponse(status_code=422, content=detail.model_dump(mode="json"))
     except CommandNotImplementedError:
         error = ErrorEnvelope(
             code="COMMAND_NOT_IMPLEMENTED",

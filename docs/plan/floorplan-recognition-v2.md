@@ -11,7 +11,9 @@
 
 1. **Tuzi 是视觉 Provider，不是几何真值源。**视觉模型只输出 `VlmDraft`；墙、房间、门窗必须经过 Schema、几何吸附、比例尺/面积自洽和拓扑门禁才能进入事实工件。
 2. **不写死 Gemini 或任何未经当前 Key 验证的模型名。**启动时从 Tuzi `/v1/models` 获取候选模型，并对图片输入、严格 JSON Schema、最大输出长度做能力探针。
-3. **使用 Tuzi OpenAI Responses 兼容接口。**图片理解调用 `/v1/responses`；结构化输出使用 `text.format.type=json_schema`，不使用 Gemini 原生 `responseMimeType/responseSchema`。
+3. **使用 Tuzi OpenAI 兼容接口（图片理解 + 结构化输出）。** 结构化输出走 `POST /v1/chat/completions` + `response_format.type=json_schema`。
+   - **实测（2026-08-28）**：本机 Tuzi 网关对 `POST /v1/responses` 返回 `500 not implemented / convert_request_failed`——该端点在网关侧未接通上游（即便纯文本也 500）。而 `/v1/chat/completions` 实测 200，`gemini-3.5-flash` 能正确收图并返回严格 JSON（`finish_reason=stop`）。
+   - 因此**改走 chat/completions**；给模型的结构化 schema 必须是**展平的 OpenAPI 子集**（Gemini 的 `response_schema` 不认 `$id`/`$defs`/`$ref`），见 `vision/contracts.vlm_draft_openai_schema`。
 4. **低置信结果不进入 `LayoutRevision`。**只进入 `OpeningCandidateSet`、`VlmDraftArtifact` 或项目 `NEEDS_REVIEW`。
 5. **Provider 不可用时仍可交付确定性降级。**纯 CV 输出可审计候选；不得发布自由文本、半截 JSON 或旧缓存冒充当前结果。
 6. **Tuzi 中转不消除第三方数据风险。**户型图会发送到 Tuzi 及其上游模型；必须执行服务端密钥、短时输入、日志脱敏、保留/删除策略和用户授权边界。
@@ -102,8 +104,8 @@ TUZI_MAX_IMAGE_BYTES=10485760
 启动或模型配置变化时，对每个模型执行一次小图探针：
 
 1. `/v1/models` 中存在该模型；
-2. `/v1/responses` 接受 `input_image`；
-3. 接受严格 `json_schema`；
+2. `/v1/chat/completions` 接受 `image_url`（或 Data URI）图片输入；
+3. 接受严格 `json_schema`（`response_format.type=json_schema`，展平 OpenAPI 子集）；
 4. 返回可解析JSON且字段服从Schema；
 5. 返回或响应头中可取得请求ID；
 6. 记录实际模型ID、延迟、usage结构和最大输出限制。
@@ -115,30 +117,26 @@ TUZI_MAX_IMAGE_BYTES=10485760
 ```json
 {
   "model": "<TUZI_VISION_PRIMARY_MODEL>",
-  "input": [
+  "messages": [
     {
       "role": "user",
       "content": [
-        {"type": "input_text", "text": "<versioned prompt>"},
-        {"type": "input_image", "image_url": "<data-uri-or-short-lived-url>", "detail": "high"}
+        {"type": "text", "text": "<versioned prompt, 写明坐标归一化>"},
+        {"type": "image_url", "image_url": {"url": "<data-uri>"}}
       ]
     }
   ],
-  "text": {
-    "format": {
-      "type": "json_schema",
-      "name": "floorplan_draft_v1",
-      "strict": true,
-      "schema": {"$ref": "VlmDraft schema content"}
-    }
-  }
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {"name": "floorplan_draft_v1", "strict": true, "schema": {"<flattened OpenAPI schema>"}}
+  },
+  "max_tokens": 16384
 }
 ```
 
 图片传输策略：
 
-- 优先使用内存构造的Data URI，但必须先通过Tuzi能力探针；
-- 若不接受Data URI，则使用只读、单对象、短时效签名URL；
+- 使用内存构造的 Data URI（实测本网关接受 `image_url.data:image/png;base64,...`）；
 - URL、Base64、原图和签名参数均不得进入普通日志；
 - 输入图片先清除EXIF，限制MIME、像素、字节和解压后尺寸。
 

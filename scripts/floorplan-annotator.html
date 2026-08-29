@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>户型图标注器</title>
+<style>
+  :root {
+    --panel: #1e2228; --panel-border: #333a44; --bg: #14161a;
+    --text: #d8dee6; --text-dim: #9aa4b2; --accent: #4f9cf9;
+    --danger: #e5534b; --ok: #3fb96f; --warn: #ffb020;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { display: flex; flex-direction: column; background: var(--bg); color: var(--text);
+    font: 14px/1.6 "Microsoft YaHei", "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+  #app { display: flex; flex: 1; min-height: 0; }
+
+  /* ---------- top wizard bar ---------- */
+  #wizard { height: 52px; flex: none; display: flex; align-items: center;
+    gap: 4px; padding: 0 16px; background: var(--panel); border-bottom: 1px solid var(--panel-border); }
+  #wizard .wstep { display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+    border-radius: 6px; color: var(--text-dim); font-size: 13px; }
+  #wizard .wstep b { font-size: 16px; font-weight: 700; }
+  #wizard .wstep.active { background: #2a3a52; color: var(--text); }
+  #wizard .wstep.active b { color: var(--accent); }
+  #wizard .wstep.done b { color: var(--ok); }
+  #wizard .warrow { color: #4a4f58; }
+  #wizard .spacer { flex: 1; }
+  #wizard .wtitle { font-size: 13px; color: var(--text-dim); }
+
+  /* ---------- side panel ---------- */
+  #panel { width: 320px; flex: none; overflow-y: auto; background: var(--panel);
+    border-right: 1px solid var(--panel-border); padding: 16px; }
+  .section { margin-bottom: 18px; }
+  .section > .label { font-size: 12px; color: var(--text-dim); margin-bottom: 8px;
+    border-bottom: 1px solid var(--panel-border); padding-bottom: 4px; }
+  .section > .label b { color: var(--accent); margin-right: 6px; }
+  input[type=text], input[type=number] { width: 100%; background: #161a20; color: var(--text);
+    border: 1px solid var(--panel-border); border-radius: 5px; padding: 8px 10px; font-size: 14px; }
+  input:focus { outline: 2px solid var(--accent); }
+  .btn { border: 1px solid var(--panel-border); border-radius: 5px; background: #262c35;
+    color: var(--text); padding: 9px 12px; cursor: pointer; font-size: 14px; user-select: none; }
+  .btn:hover { background: #2f3742; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #0b0e12; font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.1); }
+  .btn.danger { color: var(--danger); }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { flex: 1; text-align: center; }
+  #fileImg, #fileJson { display: none; }
+
+  /* mode cards */
+  .mode-card { border: 1px solid var(--panel-border); border-radius: 6px; padding: 10px 12px;
+    margin-bottom: 8px; cursor: pointer; background: #1a1f26; display: flex; gap: 10px; align-items: flex-start; }
+  .mode-card:hover { background: #232a33; }
+  .mode-card.sel { border-color: var(--accent); background: #24354d; }
+  .mode-card .ic { font-size: 20px; line-height: 1.2; }
+  .mode-card .tt { font-weight: 600; font-size: 14px; }
+  .mode-card .ds { font-size: 12px; color: var(--text-dim); line-height: 1.45; }
+  .mode-card .dot { margin-left: auto; width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--text-dim); flex: none; margin-top: 3px; }
+  .mode-card.sel .dot { border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 2px #24354d; }
+
+  .type-group { margin-top: 10px; }
+  .type-group .tt { font-size: 13px; color: var(--text-dim); margin-bottom: 6px; }
+  .type-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { padding: 5px 11px; border-radius: 15px; border: 1px solid var(--panel-border);
+    background: #1a1f26; color: var(--text); cursor: pointer; font-size: 13px; }
+  .chip:hover { background: #232a33; }
+  .chip.sel { background: var(--accent); border-color: var(--accent); color: #0b0e12; font-weight: 600; }
+  .chip input { display: none; }
+
+  /* live instruction banner */
+  #instruct { padding: 10px 14px; border-radius: 6px; background: #24354d; border: 1px solid #3a5578;
+    font-size: 13px; line-height: 1.55; margin-bottom: 12px; display: none; }
+  #instruct.show { display: block; }
+  #instruct b { color: #9cc4ff; }
+
+  #imgInfo { font-size: 12px; color: var(--text-dim); margin-top: 8px; word-break: break-all; }
+  #imgInfo .ok { color: var(--ok); } #imgInfo .err { color: var(--danger); }
+  .stat { display: flex; gap: 12px; font-size: 12px; margin-top: 6px; color: var(--text-dim); }
+  .stat b { color: var(--accent); font-size: 14px; }
+  #objList { max-height: 210px; overflow-y: auto; margin-top: 8px; }
+  .obj-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 4px;
+    cursor: pointer; font-size: 13px; }
+  .obj-item:hover { background: #262c35; }
+  .obj-item.sel { background: #2a3a52; outline: 1px solid var(--accent); }
+  .obj-item .tag { font-size: 11px; padding: 1px 7px; border-radius: 3px; background: #333a44; flex: none; }
+  .obj-item .tag.door { background: #1d3d66; color: #9cc4ff; }
+  .obj-item .tag.window { background: #1d4d36; color: #7fe0ae; }
+  .obj-item .tag.doorway { background: #4a4a4a; color: #c8c8c8; }
+  .obj-item .tag.scale { background: #5a3d1d; color: #ffd28a; }
+  .obj-item .del { margin-left: auto; color: var(--text-dim); cursor: pointer; padding: 0 4px; }
+  .obj-item .del:hover { color: var(--danger); }
+  .hint { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+  kbd { background: #333a44; border-radius: 3px; padding: 0 5px; font-size: 12px; border: 1px solid #454e5c; }
+  #exportMsg { font-size: 12px; margin-top: 8px; color: var(--ok); line-height: 1.5; }
+
+  /* ---------- canvas ---------- */
+  #stage { flex: 1; position: relative; min-width: 0; }
+  #canvas { width: 100%; height: 100%; display: block; cursor: crosshair; }
+  #statusbar { height: 28px; flex: none; display: flex; align-items: center; gap: 18px;
+    background: var(--panel); border-top: 1px solid var(--panel-border); padding: 0 14px; font-size: 12px; color: var(--text-dim); }
+  #statusbar .mode-hint { color: var(--accent); font-weight: 600; }
+  /* empty-state overlay */
+  #empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 14px; color: var(--text-dim); text-align: center; padding: 24px; }
+  #empty .big { font-size: 44px; }
+  #empty .t { font-size: 17px; color: var(--text); }
+  #empty .btn { font-size: 15px; padding: 10px 20px; }
+</style>
+</head>
+<body>
+<div id="wizard">
+  <div class="wstep" id="ws1"><b>1</b> 载入户型图</div>
+  <span class="warrow">›</span>
+  <div class="wstep" id="ws2"><b>2</b> 填标注者</div>
+  <span class="warrow">›</span>
+  <div class="wstep" id="ws3"><b>3</b> 标注</div>
+  <span class="warrow">›</span>
+  <div class="wstep" id="ws4"><b>4</b> 导出 JSON</div>
+  <div class="spacer"></div>
+  <div class="wtitle" id="wtitle">先选一张户型图开始</div>
+</div>
+
+<div id="app">
+  <div id="panel">
+    <div id="instruct"></div>
+
+    <div class="section">
+      <div class="label"><b>1</b> 载入户型图</div>
+      <div class="btn-row">
+        <button class="btn primary" id="btnPickImg">📂 选择户型图</button>
+        <button class="btn" id="btnPickJson">载入标注</button>
+      </div>
+      <input type="file" id="fileImg" accept="image/png,image/jpeg,image/webp">
+      <input type="file" id="fileJson" accept=".json,application/json">
+      <div id="imgInfo">还没选图片</div>
+    </div>
+
+    <div class="section">
+      <div class="label"><b>2</b> 标注者</div>
+      <input type="text" id="inpAnnotator" placeholder="你的名字（必填）">
+      <input type="text" id="inpSampleId" placeholder="图号（自动填，如 fp-101）" style="margin-top:8px">
+    </div>
+
+    <div class="section">
+      <div class="label"><b>3</b> 标什么</div>
+      <div class="mode-card sel" data-mode="opening">
+        <div class="ic">🚪</div>
+        <div><div class="tt">门 / 窗 / 垭口</div>
+          <div class="ds">墙上开的洞：门、窗、没有门的通道口。<br>在洞口两端各点一下。</div></div>
+        <div class="dot"></div>
+      </div>
+      <div class="mode-card" data-mode="room">
+        <div class="ic">🏠</div>
+        <div><div class="tt">房间</div>
+          <div class="ds">沿墙的中间线，把每个房间围一圈。<br>点顶点，双击收尾。</div></div>
+        <div class="dot"></div>
+      </div>
+      <div class="mode-card" data-mode="scale">
+        <div class="ic">📏</div>
+        <div><div class="tt">比例尺</div>
+          <div class="ds">图上标注的尺寸数字，比如 3600。<br>点那条线两端 + 填毫米数。</div></div>
+        <div class="dot"></div>
+      </div>
+
+      <div id="modeOpts"></div>
+    </div>
+
+    <div class="section">
+      <div class="label"><b>4</b> 已标内容 <span id="statText"></span></div>
+      <div id="objList"></div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn" id="btnUndo" title="Ctrl+Z">↩ 撤销</button>
+        <button class="btn danger" id="btnDelSel" title="Delete">✕ 删选中</button>
+        <button class="btn danger" id="btnClear">清空</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="label"><b>5</b> 导出</div>
+      <button class="btn primary" id="btnExport" style="width:100%">💾 导出标注 JSON</button>
+      <div id="exportMsg"></div>
+    </div>
+
+    <div class="hint">
+      <b>鼠标</b>：滚轮放大 · 按住空格+左键拖 = 移动 · 左键拖已标的小方点可微调<br>
+      <b>快捷键</b>：<kbd>Esc</kbd>取消 · <kbd>Backspace</kbd>删最后一点 · <kbd>Enter</kbd>/双击＝房间闭合 · <kbd>Del</kbd>删选中<br>
+      <b>进度</b>：自动保存在本浏览器（按图号）
+    </div>
+  </div>
+
+  <div id="stage">
+    <div id="empty">
+      <div class="big">🏠</div>
+      <div class="t">把户型图拖进来，或点左边「选择户型图」</div>
+      <button class="btn primary" id="emptyPick">选择户型图</button>
+    </div>
+    <canvas id="canvas"></canvas>
+  </div>
+</div>
+<div id="statusbar">
+  <span class="mode-hint" id="modeHint">模式：门/窗/垭口</span>
+  <span id="posInfo">x: – , y: –</span>
+  <span id="zoomInfo">100%</span>
+  <span id="shaInfo">SHA-256: –</span>
+</div>
+
+<script>
+"use strict";
+/* ============================== constants ============================== */
+const MAX_UNDO = 50;
+const MODES = {
+  opening: { label: "门/窗/垭口", value: "door" },
+  room:    { label: "房间",       value: "bedroom" },
+  scale:   { label: "比例尺",     value: null },
+};
+// 中文类型名 -> 规范枚举值（导出用），符合 docs/plan/annotation-spec-v1.md
+const OPENING_TYPES = [["门","door"],["窗","window"],["垭口","doorway"]];
+const EVIDENCES = [["无证据","none"],["门弧","doorArc"],["门扇","doorLeaf"],["平行细线","parallelLines"]];
+const ROOM_TYPES = [["卧室","bedroom"],["客厅","living"],["餐厅","dining"],["客餐厅","livingDining"],["厨房","kitchen"],
+                    ["卫生间","bathroom"],["阳台","balcony"],["书房","study"],["其他","other"]];
+
+const state = {
+  image: null, sampleId: "", annotator: "",
+  mode: "opening",
+  openingType: "door", openingEvidence: "none", roomType: "bedroom", scaleMm: 3600,
+  openings: [], rooms: [], scales: [],
+  pending: null, selected: null, undoStack: [],
+  view: { scale: 1, ox: 0, oy: 0 },
+  panning: false, lastPan: null, dragging: null, dirty: false, counter: 1,
+  mouseImg: null, spaceKey: false,
+};
+
+const $ = id => document.getElementById(id);
+const canvas = $("canvas"), ctx = canvas.getContext("2d");
+const modeOpts = $("modeOpts");
+
+/* ============================== wizard / instruction ============================== */
+const STEP_TITLES = [
+  "先选一张户型图开始",
+  "填一下你的名字，然后到第 3 步选要标什么",
+  "在图上点鼠标标注（提示见下方）",
+  "核对无误后点「导出标注 JSON」",
+];
+function setStep(n, title) {
+  for (const id of ["ws1","ws2","ws3","ws4"]) {
+    const el = $(id), i = +id.slice(2);
+    el.classList.toggle("active", i === n);
+    el.classList.toggle("done", i < n);
+  }
+  if (title) $("wtitle").textContent = title;
+}
+function showInstruct(html) {
+  const el = $("instruct");
+  if (html) { el.innerHTML = html; el.classList.add("show"); }
+  else el.classList.remove("show");
+}
+
+/* ============================== instruction by mode ============================== */
+function instructionFor(mode) {
+  if (!state.image) return `<b>第1步</b>：点左上「选择户型图」，选一张 png。<br>然后按下面提示操作。`;
+  if (mode === "opening")
+    return `第 3 步：选<b>门 / 窗 / 垭口</b>，再点下面类型。<br>
+      👉 <b>在墙的缺口两端各点一下</b>，两点连成一条，就是一个开口。<br>
+      门→标门；窗→标窗；只有通道没门→垭口。`;
+  if (mode === "room")
+    return `第 3 步：选<b>房间</b>和房间类型。<br>
+      👉 <b>沿墙的中间线，绕着房间依次点顶点</b>，点满一圈后按<b>回车</b>或<b>双击</b>闭合。<br>
+      每个房间标一个多边形。`;
+  return `第 3 步：选<b>比例尺</b>，填好毫米数。<br>
+    👉 找图上标尺寸的线（如 <b>3600</b>），<b>点它的两端各一下</b>。`;
+}
+
+/* ============================== image ============================== */
+async function computeSha256(file) {
+  try {
+    const buf = await file.arrayBuffer();
+    const digest = await crypto.subtle.digest("SHA-256", buf);
+    return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, "0")).join("");
+  } catch (e) { return null; }
+}
+function loadImage(file) {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = async () => {
+    state.image = { file, url, _img: img, width: img.naturalWidth, height: img.naturalHeight, sha256: "", shaStatus: "computing" };
+    if (!state.sampleId) {
+      state.sampleId = file.name.replace(/\.[^.]+$/, "").replace(/[^\w-]/g, "_");
+      $("inpSampleId").value = state.sampleId;
+      $("wtitle").textContent = "已加载：" + file.name;
+    }
+    $("empty").style.display = "none";
+    fitView(); renderImageInfo(); loadLocalDraft();
+    setStep(2); showInstruct(instructionFor(state.mode));
+    const sha = await computeSha256(file);
+    state.image.sha256 = sha || ""; state.image.shaStatus = sha ? "ok" : "unsupported";
+    renderImageInfo(); draw();
+  };
+  img.src = url;
+}
+function renderImageInfo() {
+  const el = $("imgInfo");
+  if (!state.image) { el.textContent = "还没选图片"; return; }
+  const { width, height, shaStatus } = state.image;
+  let sha = shaStatus === "ok" ? `<span class="ok">SHA ${state.image.sha256.slice(0,12)}…</span>`
+    : shaStatus === "computing" ? "计算哈希中…" : `<span class="err">哈希不可用</span>`;
+  el.innerHTML = `${width} × ${height}px · ${sha} · ${state.openings.length}开口 ${state.rooms.length}房间`;
+}
+
+/* ============================== view ============================== */
+function fitView() {
+  const w = canvas.clientWidth, h = canvas.clientHeight, iw = state.image.width, ih = state.image.height;
+  const s = Math.min((w * 0.92) / iw, (h * 0.92) / ih);
+  state.view.scale = s; state.view.ox = (w - iw * s) / 2; state.view.oy = (h - ih * s) / 2;
+}
+function toScreen(p) { return { x: p.x * state.view.scale + state.view.ox, y: p.y * state.view.scale + state.view.oy }; }
+function toImage(sx, sy) { return { x: (sx - state.view.ox) / state.view.scale, y: (sy - state.view.oy) / state.view.scale }; }
+function round2(v) { return Math.round(v * 100) / 100; }
+
+/* ============================== undo ============================== */
+function pushUndo() {
+  state.undoStack.push(JSON.stringify({ openings: state.openings, rooms: state.rooms, scales: state.scales, pending: state.pending, counter: state.counter }));
+  if (state.undoStack.length > MAX_UNDO) state.undoStack.shift();
+  state.dirty = true;
+}
+function undo() {
+  const snap = state.undoStack.pop(); if (!snap) return;
+  const d = JSON.parse(snap);
+  state.openings = d.openings; state.rooms = d.rooms; state.scales = d.scales;
+  state.pending = d.pending; state.counter = d.counter;
+  state.selected = null; state.dragging = null; draw();
+}
+
+/* ============================== object ops ============================== */
+function nextId(kind) {
+  const prefix = { opening: "op", room: "room", scale: "scale" }[kind];
+  return `${prefix}_${String(state.counter++).padStart(3, "0")}`;
+}
+function addPoint(imgPt) {
+  const p = { x: round2(imgPt.x), y: round2(imgPt.y) };
+  if (!state.pending) { state.pending = { kind: state.mode, points: [] }; pushUndo(); }
+  state.pending.points.push(p);
+  const k = state.pending.kind;
+  if ((k === "opening" || k === "scale") && state.pending.points.length === 2) finishPending();
+}
+function finishPending() {
+  const pend = state.pending; if (!pend) return;
+  if (pend.kind === "room") {
+    if (pend.points.length < 3) { state.pending = null; return; }
+    state.rooms.push({ id: nextId("room"), type: state.roomType, polygon: pend.points.slice() });
+  } else if (pend.kind === "opening") {
+    state.openings.push({ id: nextId("opening"), type: state.openingType, evidence: state.openingEvidence, a: pend.points[0], b: pend.points[1] });
+  } else {
+    if (!(state.scaleMm > 0)) { state.pending = null; return; }
+    state.scales.push({ id: nextId("scale"), a: pend.points[0], b: pend.points[1], lengthMm: state.scaleMm });
+  }
+  state.pending = null;
+  setStep(3); showInstruct(instructionFor(state.mode)); draw();
+}
+function cancelPending() { if (state.pending) { state.pending = null; draw(); } }
+function popPendingPoint() {
+  if (!state.pending) return;
+  state.pending.points.pop();
+  if (!state.pending.points.length) state.pending = null;
+  draw();
+}
+function deleteSelected() {
+  if (!state.selected) return;
+  const { kind, index } = state.selected;
+  pushUndo();
+  ({ opening: state.openings, room: state.rooms, scale: state.scales })[kind].splice(index, 1);
+  state.selected = null; draw();
+}
+function allObjects() {
+  const l = [];
+  state.openings.forEach((o, i) => l.push({ kind: "opening", index: i, obj: o }));
+  state.rooms.forEach((o, i) => l.push({ kind: "room", index: i, obj: o }));
+  state.scales.forEach((o, i) => l.push({ kind: "scale", index: i, obj: o }));
+  return l;
+}
+function objPoints(kind, obj) {
+  if (kind === "opening") return [obj.a, obj.b];
+  if (kind === "room") return obj.polygon;
+  return [obj.a, obj.b];
+}
+
+/* ============================== hit test ============================== */
+function hitTest(imgPt, tol) {
+  if (state.selected) {
+    const { kind, index } = state.selected;
+    const arr = ({ opening: state.openings, room: state.rooms, scale: state.scales })[kind];
+    if (arr && arr[index]) {
+      const pts = objPoints(kind, arr[index]);
+      for (let i = 0; i < pts.length; i++) if (Math.hypot(pts[i].x - imgPt.x, pts[i].y - imgPt.y) <= tol) return { kind, index, pointIdx: i };
+    }
+  }
+  for (const it of allObjects()) {
+    const pts = objPoints(it.kind, it.obj);
+    for (let i = 0; i < pts.length; i++) if (Math.hypot(pts[i].x - imgPt.x, pts[i].y - imgPt.y) <= tol) return { kind: it.kind, index: it.index, pointIdx: i };
+  }
+  return null;
+}
+
+/* ============================== rendering ============================== */
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function COLOR(type) {
+  return ({ door: "#4f9cf9", window: "#3fb96f", doorway: "#b8b8b8", room: "#f9c74f", scale: "#ff8a5c" })[type] || "#b8b8b8";
+}
+function dot(p, color, r = 4) {
+  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#111"; ctx.lineWidth = 1; ctx.stroke();
+}
+function label(p, text, color) {
+  ctx.font = "12px 'Microsoft YaHei',sans-serif";
+  const w = ctx.measureText(text).width + 8;
+  ctx.fillStyle = "rgba(0,0,0,0.72)"; ctx.fillRect(p.x + 6, p.y - 20, w, 17);
+  ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeRect(p.x + 6, p.y - 20, w, 17);
+  ctx.fillStyle = color; ctx.fillText(text, p.x + 10, p.y - 7);
+}
+function cnType(type) {
+  for (const [cn, v] of OPENING_TYPES) if (v === type) return cn;
+  return type;
+}
+function polyArea(poly) {
+  let a = 0;
+  for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; a += p.x * q.y - q.x * p.y; }
+  return a / 2;
+}
+function draw() {
+  if (!canvas.width) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#181b20"; ctx.fillRect(0, 0, W, H);
+  const { scale, ox, oy } = state.view;
+  if (state.image) {
+    ctx.save(); ctx.translate(ox, oy); ctx.scale(scale, scale);
+    ctx.imageSmoothingEnabled = scale < 2 ? false : true;
+    ctx.drawImage(state.image._img, 0, 0); ctx.restore();
+    ctx.strokeStyle = "#3a4048"; ctx.strokeRect(ox, oy, state.image.width * scale, state.image.height * scale);
+  }
+  // pending
+  if (state.pending) {
+    ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+    const pts = state.pending.points.map(toScreen);
+    if (pts.length) { ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y); ctx.stroke(); }
+    ctx.setLineDash([]);
+    for (const p of pts) dot(p, "#ffd166");
+    if (state.pending.kind === "room" && pts.length >= 2) { ctx.strokeStyle = "rgba(255,209,102,0.6)"; ctx.beginPath(); ctx.moveTo(pts[pts.length-1].x, pts[pts.length-1].y); ctx.lineTo(pts[0].x, pts[0].y); ctx.stroke(); }
+  }
+  // objects
+  state.openings.forEach((o, i) => { const c = COLOR(o.type); const a = toScreen(o.a), b = toScreen(o.b), sel = state.selected && state.selected.kind === "opening" && state.selected.index === i;
+    ctx.strokeStyle = c; ctx.lineWidth = sel ? 3 : 2; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; ctx.beginPath(); ctx.arc(mid.x, mid.y, 5, 0, Math.PI * 2); ctx.stroke();
+    dot(a, c); dot(b, c); label(mid, cnType(o.type), c); });
+  state.rooms.forEach((o, i) => { const c = COLOR("room"), pts = o.polygon.map(toScreen), sel = state.selected && state.selected.kind === "room" && state.selected.index === i;
+    if (pts.length < 3) return;
+    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (let j = 1; j < pts.length; j++) ctx.lineTo(pts[j].x, pts[j].y); ctx.closePath();
+    ctx.fillStyle = "rgba(249,199,79,0.12)"; ctx.fill(); ctx.strokeStyle = c; ctx.lineWidth = sel ? 3 : 2; ctx.stroke();
+    const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length, cy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+    label({ x: cx, y: cy }, cnRoomType(o.type) + " " + Math.round(Math.abs(polyArea(o.polygon))) + "px²", c);
+    for (const p of pts) dot(p, c, sel ? 5 : 3.4); });
+  state.scales.forEach((o, i) => { const c = COLOR("scale"), a = toScreen(o.a), b = toScreen(o.b), sel = state.selected && state.selected.kind === "scale" && state.selected.index === i;
+    ctx.strokeStyle = c; ctx.lineWidth = sel ? 3 : 2; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    for (const p of [a, b]) { ctx.beginPath(); ctx.moveTo(p.x - 6, p.y - 6); ctx.lineTo(p.x + 6, p.y + 6); ctx.moveTo(p.x + 6, p.y - 6); ctx.lineTo(p.x - 6, p.y + 6); ctx.stroke(); }
+    label({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, o.lengthMm + "mm", c); });
+  // crosshair
+  if (state.mouseImg) { const s = toScreen(state.mouseImg); ctx.strokeStyle = "rgba(255,255,255,0.22)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(s.x, 0); ctx.lineTo(s.x, H); ctx.moveTo(0, s.y); ctx.lineTo(W, s.y); ctx.stroke(); }
+  renderList(); renderStats();
+}
+function cnRoomType(type) { for (const [cn, v] of ROOM_TYPES) if (v === type) return cn; return type; }
+
+/* ============================== list / stats ============================== */
+function renderList() {
+  const el = $("objList"), items = allObjects();
+  if (!items.length) { el.innerHTML = '<div class="hint">还没有标注，选上面「门/窗/垭口」或「房间」开始点</div>'; return; }
+  el.innerHTML = items.map(it => {
+    const o = it.obj; let tag, desc;
+    if (it.kind === "opening") { tag = `<span class="tag ${o.type}">${cnType(o.type)}</span>`; desc = o.id; }
+    else if (it.kind === "room") { tag = `<span class="tag">房间</span>`; desc = `${cnRoomType(o.type)}`; }
+    else { tag = `<span class="tag scale">比例尺</span>`; desc = `${o.lengthMm}mm`; }
+    const sel = state.selected && state.selected.kind === it.kind && state.selected.index === it.index;
+    return `<div class="obj-item${sel ? " sel" : ""}" data-kind="${it.kind}" data-index="${it.index}">${tag}<span>${desc}</span><span class="del" data-del="1">✕</span></div>`;
+  }).join("");
+}
+function renderStats() { $("statText").textContent = `\u00a0\u00a0开${state.openings.length} · 房${state.rooms.length} · 尺${state.scales.length}`; }
+
+/* ============================== mode options (中文 chips) ============================== */
+function renderModeOpts() {
+  const m = state.mode; modeOpts.innerHTML = "";
+  const mkChips = (group, key, pairs) => {
+    return `<div class="type-group"><div class="tt">${key}</div><div class="type-chips">` +
+      pairs.map(([cn, v]) => `<label class="chip${state[group] === v ? " sel" : ""}" data-group="${group}" data-value="${v}"><input type="radio" ${state[group] === v ? "checked" : ""}>${cn}</label>`).join("") +
+      `</div></div>`;
+  };
+  if (m === "opening") {
+    modeOpts.innerHTML = mkChips("openingType", "开口类型", OPENING_TYPES) +
+      mkChips("openingEvidence", "证据（可加）", EVIDENCES) +
+      `<div class="hint" style="margin-top:8px">👆 选好类型，去图上在<b>缺口两端各点一下</b>。</div>`;
+  } else if (m === "room") {
+    modeOpts.innerHTML = mkChips("roomType", "房间类型", ROOM_TYPES) +
+      `<div class="hint" style="margin-top:8px">👆 选好房间类型，去图上<b>沿墙中线圈一圈</b>，回车收尾。</div>`;
+  } else {
+    modeOpts.innerHTML = `<div class="type-group"><div class="tt">这根尺寸线的毫米值是多少</div>
+      <input type="number" id="inpMm" min="1" step="1" value="${state.scaleMm}"></div>
+      <div class="hint" style="margin-top:8px">👆 填图上写着的数字（如 3600），去图上点<b>那条线两端</b>。</div>`;
+    const inp = $("inpMm"); if (inp) inp.onchange = e => state.scaleMm = parseFloat(e.target.value) || 0;
+  }
+  modeOpts.querySelectorAll(".chip").forEach(c => c.onclick = () => {
+    const g = c.dataset.group, v = c.dataset.value;
+    state[g] = v;
+    modeOpts.querySelectorAll(".chip").forEach(x => x.classList.toggle("sel", x.dataset.group === g && x.dataset.value === v));
+  });
+}
+
+/* ============================== persistence ============================== */
+function localKey() { return "fp-annotator:" + (state.sampleId || "unsaved"); }
+function saveLocalDraft() {
+  if (!state.image) return;
+  try { localStorage.setItem(localKey(), JSON.stringify({ sampleId: state.sampleId, annotator: state.annotator, imageName: state.image.file.name, imageSha256: state.image.sha256, openings: state.openings, rooms: state.rooms, scales: state.scales, counter: state.counter })); } catch (e) {}
+}
+function loadLocalDraft() {
+  if (!state.image) return;
+  try {
+    const raw = localStorage.getItem(localKey()); if (!raw) return;
+    const d = JSON.parse(raw);
+    state.sampleId = d.sampleId || state.sampleId; $("inpSampleId").value = state.sampleId;
+    state.annotator = d.annotator || ""; $("inpAnnotator").value = state.annotator;
+    state.openings = d.openings || []; state.rooms = d.rooms || []; state.scales = d.scales || [];
+    state.counter = d.counter || state.counter; draw();
+  } catch (e) {}
+}
+
+/* ============================== export ============================== */
+function exportJSON() {
+  if (!state.image) { $("exportMsg").textContent = "还没加载图片，先选一张。"; return; }
+  if (!state.annotator.trim()) { $("exportMsg").textContent = "⚠️ 请先在左边填「标注者」名字。"; $("inpAnnotator").focus(); return; }
+  if (!state.sampleId.trim()) { $("exportMsg").textContent = "⚠️ 请填「图号」。"; return; }
+  const out = {
+    schemaVersion: "0.1.0", sampleId: state.sampleId.trim(), imageSha256: state.image.sha256 || "",
+    annotator: state.annotator.trim(), annotatedAt: new Date().toISOString(), notes: "",
+    openings: state.openings.map(o => ({ id: o.id, type: o.type, pixelStart: o.a, pixelEnd: o.b, evidence: o.evidence || "none" })),
+    rooms: state.rooms.map(r => ({ id: r.id, type: r.type, polygon: r.polygon })),
+    scales: state.scales.map(s => ({ id: s.id, pixelStart: s.a, pixelEnd: s.b, lengthMm: s.lengthMm })),
+  };
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${out.sampleId}.annotation.json`; a.click();
+  URL.revokeObjectURL(a.href);
+  $("exportMsg").textContent = `✅ 已导出 ${out.sampleId}.annotation.json（打开下载目录另存到 datasets\\annotations\\）。`;
+  saveLocalDraft(); setStep(4);
+}
+function loadJSONFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const d = JSON.parse(reader.result);
+      state.sampleId = d.sampleId || state.sampleId; $("inpSampleId").value = state.sampleId;
+      state.annotator = d.annotator || ""; $("inpAnnotator").value = state.annotator;
+      state.openings = (d.openings || []).map(o => ({ id: o.id || nextId("opening"), type: o.type || "door", evidence: o.evidence || "none", a: o.pixelStart || { x: 0, y: 0 }, b: o.pixelEnd || { x: 0, y: 0 } }));
+      state.rooms = (d.rooms || []).map(r => ({ id: r.id || nextId("room"), type: r.type || "other", polygon: r.polygon || [] }));
+      state.scales = (d.scales || []).map(s => ({ id: s.id || nextId("scale"), a: s.pixelStart || { x: 0, y: 0 }, b: s.pixelEnd || { x: 0, y: 0 }, lengthMm: s.lengthMm || 0 }));
+      state.selected = null; state.pending = null; draw();
+      $("exportMsg").textContent = `已载入 ${d.sampleId || "?"}：${state.openings.length}开 ${state.rooms.length}房 ${state.scales.length}尺`;
+    } catch (e) { $("exportMsg").textContent = "JSON 解析失败：" + e.message; }
+  };
+  reader.readAsText(file);
+}
+
+/* ============================== events ============================== */
+function canvasPos(e) { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+canvas.addEventListener("wheel", e => {
+  e.preventDefault(); if (!state.image) return;
+  const pos = canvasPos(e), imgPt = toImage(pos.x, pos.y), factor = e.deltaY < 0 ? 1.18 : 1 / 1.18;
+  const ns = Math.min(40, Math.max(0.05, state.view.scale * factor));
+  state.view.ox = pos.x - imgPt.x * ns; state.view.oy = pos.y - imgPt.y * ns; state.view.scale = ns; draw();
+}, { passive: false });
+canvas.addEventListener("mousedown", e => {
+  const pos = canvasPos(e);
+  if (e.button === 1 || e.button === 2 || state.spaceKey) { e.preventDefault(); state.panning = true; state.lastPan = pos; return; }
+  if (e.button !== 0 || !state.image) return;
+  const imgPt = toImage(pos.x, pos.y);
+  if (imgPt.x < 0 || imgPt.y < 0 || imgPt.x > state.image.width || imgPt.y > state.image.height) return;
+  const hit = hitTest(imgPt, 8 / state.view.scale);
+  if (hit) { state.selected = { kind: hit.kind, index: hit.index }; state.dragging = hit; draw(); return; }
+  addPoint(imgPt); draw();
+});
+canvas.addEventListener("mousemove", e => {
+  const pos = canvasPos(e);
+  state.mouseImg = state.image ? toImage(pos.x, pos.y) : null;
+  if (state.panning && state.lastPan) { state.view.ox += pos.x - state.lastPan.x; state.view.oy += pos.y - state.lastPan.y; state.lastPan = pos; }
+  if (state.dragging) {
+    const imgPt = toImage(pos.x, pos.y), { kind, index, pointIdx } = state.dragging;
+    const arr = ({ opening: state.openings, room: state.rooms, scale: state.scales })[kind];
+    if (arr && arr[index]) { const pts = objPoints(kind, arr[index]); if (pts[pointIdx]) { pts[pointIdx].x = round2(imgPt.x); pts[pointIdx].y = round2(imgPt.y); } state.dirty = true; }
+  }
+  if (state.mouseImg) $("posInfo").textContent = `x: ${Math.round(state.mouseImg.x * 10) / 10} , y: ${Math.round(state.mouseImg.y * 10) / 10}`;
+  $("zoomInfo").textContent = Math.round(state.view.scale * 100) + "%";
+  draw();
+});
+window.addEventListener("mouseup", () => {
+  if (state.panning) { state.panning = false; state.lastPan = null; }
+  if (state.dragging) { if (state.dirty) { pushUndo(); state.dirty = false; } state.dragging = null; draw(); }
+});
+canvas.addEventListener("dblclick", e => {
+  if (state.pending && state.pending.kind === "room") { e.preventDefault(); if (state.pending.points.length > 0) state.pending.points.pop(); finishPending(); }
+});
+canvas.addEventListener("contextmenu", e => e.preventDefault());
+window.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") { if (e.key === "Enter") e.target.blur(); return; }
+  if (e.key === " ") { e.preventDefault(); state.spaceKey = true; canvas.style.cursor = "grab"; }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); return; }
+  if (e.key === "Escape") cancelPending();
+  if (e.key === "Backspace") { e.preventDefault(); popPendingPoint(); }
+  if (e.key === "Delete") deleteSelected();
+  if (e.key === "Enter" && state.pending && state.pending.kind === "room") finishPending();
+});
+window.addEventListener("keyup", e => { if (e.key === " ") { state.spaceKey = false; canvas.style.cursor = "crosshair"; } });
+
+/* ============================== wiring ============================== */
+const pickImg = () => $("fileImg").click();
+$("btnPickImg").onclick = pickImg; $("emptyPick").onclick = pickImg;
+$("fileImg").onchange = e => { if (e.target.files[0]) loadImage(e.target.files[0]); e.target.value = ""; };
+$("btnPickJson").onclick = () => $("fileJson").click();
+$("fileJson").onchange = e => { if (e.target.files[0]) loadJSONFile(e.target.files[0]); e.target.value = ""; };
+$("inpAnnotator").oninput = e => { state.annotator = e.target.value.trim(); setStep(3); };
+$("inpSampleId").oninput = e => { state.sampleId = e.target.value.trim(); };
+$("btnUndo").onclick = undo;
+$("btnDelSel").onclick = deleteSelected;
+$("btnClear").onclick = () => { if (!confirm("清空当前全部标注？")) return; pushUndo(); state.openings = []; state.rooms = []; state.scales = []; state.selected = null; state.pending = null; draw(); };
+$("btnExport").onclick = exportJSON;
+document.querySelectorAll(".mode-card").forEach(c => c.onclick = () => {
+  state.mode = c.dataset.mode; state.pending = null;
+  document.querySelectorAll(".mode-card").forEach(x => x.classList.toggle("sel", x === c));
+  $("modeHint").textContent = "模式：" + MODES[state.mode].label;
+  renderModeOpts(); showInstruct(instructionFor(state.mode)); draw();
+});
+$("objList").addEventListener("click", e => {
+  const del = e.target.closest("[data-del]"), item = e.target.closest(".obj-item");
+  if (!item) return;
+  const kind = item.dataset.kind, index = +item.dataset.index;
+  if (del) { pushUndo(); ({ opening: state.openings, room: state.rooms, scale: state.scales })[kind].splice(index, 1); state.selected = null; draw(); return; }
+  state.selected = { kind, index }; draw();
+});
+window.addEventListener("resize", () => { resizeCanvas(); draw(); });
+// drag & drop image
+const stage = $("stage");
+stage.addEventListener("dragover", e => { e.preventDefault(); });
+stage.addEventListener("drop", e => { e.preventDefault(); if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]); });
+
+renderModeOpts(); resizeCanvas(); setStep(1); showInstruct(instructionFor("opening")); draw();
+setInterval(() => { if (state.image) saveLocalDraft(); }, 3000);
+window.addEventListener("beforeunload", () => { if (state.image) saveLocalDraft(); });
+</script>
+</body>
+</html>
