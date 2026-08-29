@@ -8,6 +8,8 @@ type PipelineResult = {
   warning?: string;
   viewerUrl?: string | null;
   roomCount?: number;
+  aiGeneratedCount?: number;
+  aiFailedRooms?: string[];
   stages: { stage: string; status: string; detail: string }[];
 };
 
@@ -15,7 +17,7 @@ export default function UploadPipeline() {
   const [file, setFile] = useState<File | null>(null);
   const [projectId, setProjectId] = useState("");
   const [externalVision, setExternalVision] = useState(true);
-  const [generateAi, setGenerateAi] = useState(false);
+  const [generateAi, setGenerateAi] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<PipelineResult | null>(null);
@@ -65,7 +67,7 @@ export default function UploadPipeline() {
         </label>
         <label className="pipeline-check">
           <input type="checkbox" checked={generateAi} onChange={(event) => setGenerateAi(event.target.checked)} />
-          对最大房间调用 image-2 生成装修预览（付费、耗时更久）
+          对所有闭合房间调用 image-2 生成装修全景（默认开启，会按房间计费）
         </label>
         <button className="pipeline-submit" type="submit" disabled={!file || busy}>
           {busy ? "识别和生成中，请勿关闭页面…" : "开始生成全景"}
@@ -75,7 +77,7 @@ export default function UploadPipeline() {
         {result && (
           <section className="pipeline-result">
             <h2>{result.viewerUrl ? "全景预览已生成" : "识别未达到生成条件"}</h2>
-            <p>项目：{result.projectId} · Parse：{result.parseStatus} · 房间：{result.roomCount ?? 0}</p>
+            <p>项目：{result.projectId} · Parse：{result.parseStatus} · 房间：{result.roomCount ?? 0} · AI成功：{result.aiGeneratedCount ?? 0}</p>
             {(result.message || result.warning) && <p>{result.message ?? result.warning}</p>}
             <ol>{result.stages.map((stage) => <li key={stage.stage}><b>{stage.stage}</b>：{stage.status} — {stage.detail}</li>)}</ol>
             {result.viewerUrl && <a className="pipeline-open" href={result.viewerUrl}>打开可拖动360°全景</a>}

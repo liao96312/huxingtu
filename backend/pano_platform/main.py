@@ -88,7 +88,7 @@ async def upload_floorplan_pipeline(
     file: UploadFile = File(...),
     projectId: str | None = Form(default=None),
     allowExternalVision: bool = Form(default=True),
-    generateAi: bool = Form(default=False),
+    generateAi: bool = Form(default=True),
 ) -> dict:
     if file.content_type not in ("image/png", "image/jpeg", "image/webp"):
         raise HTTPException(status_code=415, detail="only PNG/JPEG/WebP floorplans are supported")

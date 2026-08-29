@@ -31,8 +31,8 @@ npm run dev
 
 该页面会依次执行上传门禁、CV墙图、Tuzi视觉草案、几何融合、预览
 `LayoutRevision/SceneGeometry`、2:1结构ERP和动态`PanoManifest`，最后给出可拖动的
-360°Viewer链接。Tuzi image-2装修是显式付费选项，只处理面积最大的首个房间；失败时
-自动保留结构全景。未过几何质量门的输出只标为“预览/待复核”，不会冒充正式Revision。
+360°Viewer链接。Tuzi image-2装修默认开启并逐个处理所有闭合房间；单个房间失败时
+只回退该房间结构全景，不阻断其他房间。未过几何质量门的输出只标为“预览/待复核”，不会冒充正式Revision。
 
 ## 容器启动
 

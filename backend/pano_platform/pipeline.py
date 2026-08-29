@@ -44,7 +44,7 @@ def run_upload_pipeline(
     *,
     project_id: str,
     allow_external_vision: bool,
-    generate_ai: bool = False,
+    generate_ai: bool = True,
 ) -> dict[str, Any]:
     """Run the vertical slice synchronously and return user-facing evidence."""
 
@@ -76,7 +76,7 @@ def run_upload_pipeline(
 
     try:
         layout, rooms, scene = _publish_preview(project_id, image_bytes, run)
-        manifest, ai_generated, warning = _render_panoramas(
+        manifest, ai_generated_count, ai_failed_rooms = _render_panoramas(
             project_id, layout, rooms, generate_ai=generate_ai
         )
     except PipelineNotReady as error:
@@ -92,10 +92,12 @@ def run_upload_pipeline(
         "wallSolidCount": len(scene.solids),
         "manifestUrl": manifest_url,
         "viewerUrl": f"/?manifestUrl={manifest_url}",
-        "aiGenerated": ai_generated,
+        "aiGenerated": ai_generated_count > 0,
+        "aiGeneratedCount": ai_generated_count,
+        "aiFailedRooms": ai_failed_rooms,
     })
-    if warning:
-        result["warning"] = warning
+    if ai_failed_rooms:
+        result["warning"] = f"以下房间AI失败，已回退结构全景：{', '.join(ai_failed_rooms)}"
     return result
 
 
@@ -224,10 +226,10 @@ def _render_panoramas(
     rooms: DerivedRoomSet,
     *,
     generate_ai: bool,
-) -> tuple[PanoManifest, bool, str | None]:
+) -> tuple[PanoManifest, int, list[str]]:
     scenes = []
-    ai_generated = False
-    warning = None
+    ai_generated_count = 0
+    ai_failed_rooms: list[str] = []
     ordered_rooms = sorted(rooms.rooms, key=lambda room: room.areaMm2, reverse=True)
     for order, room in enumerate(ordered_rooms):
         scene_id = f"{room.id}-main"
@@ -238,12 +240,12 @@ def _render_panoramas(
         cv2.imwrite(str(structural), image, [cv2.IMWRITE_JPEG_QUALITY, 94])
 
         original = structural
-        if generate_ai and order == 0:
+        if generate_ai:
             try:
                 original = _generate_ai_panorama(structural, folder / "ai-erp-2048x1024.jpg", room.type)
-                ai_generated = True
-            except Exception as error:  # structural preview remains deliverable
-                warning = f"AI装修失败，已回退结构全景：{type(error).__name__}"
+                ai_generated_count += 1
+            except Exception:  # structural preview remains deliverable
+                ai_failed_rooms.append(room.name)
 
         proxy = folder / "proxy-1024x512.jpg"
         thumb = folder / "thumb-320x160.jpg"
@@ -273,7 +275,7 @@ def _render_panoramas(
     payload["contentHash"] = canonical_sha256(payload)
     manifest = PanoManifest.model_validate(payload)
     _write_model(_data_root() / project_id / "pano-manifest.json", manifest)
-    return manifest, ai_generated, warning
+    return manifest, ai_generated_count, ai_failed_rooms
 
 
 def render_structural_erp(layout: LayoutRevision, room: dict, width: int = ERP_WIDTH) -> np.ndarray:
@@ -381,7 +383,7 @@ def _generate_ai_panorama(source: Path, output: Path, room_type: str) -> Path:
             f"{os.environ.get('TUZI_BASE_URL', 'https://api.tu-zi.com').rstrip('/')}/v1/images/edits",
             headers={"Authorization": f"Bearer {key}", "Idempotency-Key": idempotency_key},
             data={"model": "gpt-image-2", "prompt": prompt, "n": "1", "size": "2048x1024", "quality": "2k", "response_format": "url"},
-            files={"image": (source.name, image, "image/jpeg")}, timeout=300,
+            files={"image": (source.name, image, "image/jpeg")}, timeout=(20, 300),
         )
     response.raise_for_status()
     document = response.json()
@@ -390,7 +392,7 @@ def _generate_ai_panorama(source: Path, output: Path, room_type: str) -> Path:
         raise RuntimeError("Tuzi image response has no image")
     item = items[0]
     if item.get("url"):
-        downloaded = session.get(item["url"], timeout=180)
+        downloaded = session.get(item["url"], timeout=(20, 180))
         downloaded.raise_for_status()
         payload = downloaded.content
     elif item.get("b64_json"):
@@ -419,7 +421,9 @@ def load_preview_scene_geometry(project_id: str) -> SceneGeometry:
 def _write_model(path: Path, model: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(model.model_dump_json(indent=2, exclude_none=True), encoding="utf-8")
+    # Preserve exactly the fields that participated in the canonical payload:
+    # explicit nulls stay, optional defaults that were absent stay absent.
+    temporary.write_text(model.model_dump_json(indent=2, exclude_unset=True), encoding="utf-8")
     temporary.replace(path)
 
 

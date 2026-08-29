@@ -245,7 +245,7 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - Tuzi Adapter 对缺失的模型自报 `confidence` 保守记为0，坐标范围、枚举、自交、数量和额外字段仍严格拒绝；`confidence` 不参与发布门；
 - Schema失败会带不含模型原文的结构化错误摘要，并进行一次带校验反馈的有限纠错；
 - 付费真实Smoke改为显式 `RUN_TUZI_LIVE_TEST=1`，常规测试不再意外调用第三方；
-- 当前验证：`179 passed, 2 skipped`；Viewer生产构建通过；
+- 当前验证：`180 passed, 2 skipped`；Viewer生产构建通过；
 - 当前离线基准仍只有1个Golden：Room mIoU `0.489`、Room Count Accuracy `0`、Openings F1 `0`，因此 `releaseReady=false`；
 - 桌面9图已有来源、SHA和训练/验证/测试切片，但原58门标注源文件当前不在桌面或仓库，无法诚实补齐墙/房间/窗真值。
 
@@ -256,7 +256,7 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - [x] 从矢量墙/门窗洞和房间polylabel相机确定性生成每房间 `2048×1024` 结构ERP、1K代理和缩略图；
 - [x] 发布动态 `PanoManifest`，Viewer支持 `?manifestUrl=/artifacts/...` 加载并拖动查看；
 - [x] 新增 `/?pipeline=1` 上传页；显示每个识别阶段、质量状态、房间数和Viewer入口；
-- [x] image-2作为显式可选付费步骤，只装修面积最大房间；失败自动回退结构ERP；
+- [x] image-2默认逐个装修所有闭合房间；允许用户关闭；单房失败只回退该房间结构ERP；
 - [x] 使用 `fp-101` 跑通真实纵向链：视觉草案9房/14开口，融合6个闭合房间/1个严格确认开口，生成6场景全景；结果保持 `needsReview/previewReady`；
 - [ ] Tuzi image-2本轮因中转站持续SSL EOF未完成在线输出验证；结构全景链不受影响。
 
