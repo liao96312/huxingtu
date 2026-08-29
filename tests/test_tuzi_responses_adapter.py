@@ -124,6 +124,14 @@ def test_5xx_then_success_retries() -> None:
     assert result.error is None
 
 
+def test_tuzi_ambiguous_400_is_retried_once() -> None:
+    provider = TuziResponsesVisionProvider(config(), httpx.Client(transport=transport_with(400)))
+    result = provider.parse(parse_request(), b"\x00" * 8)
+    provider.close()
+    assert result.error is None
+    assert result.evidence["attemptCount"] == 2
+
+
 def test_5xx_exhausted_returns_upstream_error() -> None:
     provider = TuziResponsesVisionProvider(config(), httpx.Client(transport=transport_with(503, 502, 504, 500, 500)))
     result = provider.parse(parse_request(), b"\x00" * 8)

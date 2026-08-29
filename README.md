@@ -27,6 +27,13 @@ npm run dev
 
 健康检查：`GET http://127.0.0.1:8000/api/health`
 
+上传户型图端到端测试：`http://127.0.0.1:5173/?pipeline=1`
+
+该页面会依次执行上传门禁、CV墙图、Tuzi视觉草案、几何融合、预览
+`LayoutRevision/SceneGeometry`、2:1结构ERP和动态`PanoManifest`，最后给出可拖动的
+360°Viewer链接。Tuzi image-2装修是显式付费选项，只处理面积最大的首个房间；失败时
+自动保留结构全景。未过几何质量门的输出只标为“预览/待复核”，不会冒充正式Revision。
+
 ## 容器启动
 
 ```powershell

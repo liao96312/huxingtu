@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import OpeningReview from "./OpeningReview";
 import Floorplan3D from "./Floorplan3D";
+import UploadPipeline from "./UploadPipeline";
 
 type PanoramaAsset = {
   url: string;
@@ -229,12 +230,15 @@ function PanoramaViewer() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    const manifestName = new URLSearchParams(window.location.search).get("manifest");
+    const params = new URLSearchParams(window.location.search);
+    const manifestUrl = params.get("manifestUrl");
+    const manifestName = params.get("manifest");
     const manifestFile = manifestName === "visual"
       ? "visual-manifest.json"
       : manifestName === "structural" ? "structural-manifest.json"
       : manifestName === "ai" ? "ai-manifest.json" : "pano-manifest.json";
-    fetch(`/demo/${manifestFile}`)
+    const source = manifestUrl?.startsWith("/artifacts/") ? manifestUrl : `/demo/${manifestFile}`;
+    fetch(source)
       .then((response) => {
         if (!response.ok) throw new Error(`Manifest HTTP ${response.status}`);
         return response.json() as Promise<PanoManifest>;
@@ -316,6 +320,7 @@ function PanoramaViewer() {
       <button className="share-button" type="button" onClick={share} aria-label="分享当前全景">
         <span aria-hidden="true">↗</span> 分享
       </button>
+      <a className="upload-button" href="/?pipeline=1">上传户型图</a>
 
       {(loading || error) && <div className={`load-state ${error ? "is-error" : ""}`}>{error || "正在加载当前视角…"}</div>}
       {notice && <div className="notice" role="status">{notice}</div>}
@@ -356,6 +361,7 @@ export default function App() {
   const params = new URLSearchParams(window.location.search);
   const reviewProject = params.get("review");
   const modelProject = params.get("model");
+  if (params.get("pipeline") === "1") return <UploadPipeline />;
   if (reviewProject) return <OpeningReview projectId={reviewProject} />;
   return modelProject ? <Floorplan3D projectId={modelProject} /> : <PanoramaViewer />;
 }

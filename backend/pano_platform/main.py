@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import asyncio
+import os
+import re
+from pathlib import Path as FilePath
 from uuid import UUID, uuid4
 
-from fastapi import FastAPI, HTTPException, Path, status
+from fastapi import FastAPI, File, Form, HTTPException, Path, UploadFile, status
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from . import __version__
 from .contracts import (
@@ -21,9 +26,15 @@ from .contracts import (
 from .facade import CommandFacade, CommandNotImplementedError, load_parse_result, parse_command
 from .geometry import calibrate_scale
 from .opening_review import complete_opening_review, load_derived_rooms, load_latest_reviewed_layout, load_opening_candidates
+from .pipeline import load_preview_scene_geometry, run_upload_pipeline
 from .scene_geometry import build_scene_geometry
 
 app = FastAPI(title="Pano Platform API", version=__version__)
+artifact_root = FilePath(os.environ.get(
+    "PANO_DATA_ROOT", FilePath(__file__).resolve().parents[2] / "datasets" / "derived"
+))
+artifact_root.mkdir(parents=True, exist_ok=True)
+app.mount("/artifacts", StaticFiles(directory=artifact_root), name="artifacts")
 facade = CommandFacade()
 facade.register_parse(parse_command)
 
@@ -64,9 +75,39 @@ async def get_scene_geometry(project_id: str = Path(pattern=r"^[a-zA-Z0-9_-]+$")
     try:
         return build_scene_geometry(load_latest_reviewed_layout(project_id), load_derived_rooms(project_id))
     except FileNotFoundError as error:
-        raise HTTPException(status_code=404, detail="reviewed layout not found") from error
+        try:
+            return load_preview_scene_geometry(project_id)
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="scene geometry not found") from error
     except ValueError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+@app.post("/api/v1/pipeline/upload")
+async def upload_floorplan_pipeline(
+    file: UploadFile = File(...),
+    projectId: str | None = Form(default=None),
+    allowExternalVision: bool = Form(default=True),
+    generateAi: bool = Form(default=False),
+) -> dict:
+    if file.content_type not in ("image/png", "image/jpeg", "image/webp"):
+        raise HTTPException(status_code=415, detail="only PNG/JPEG/WebP floorplans are supported")
+    image_bytes = await file.read(10 * 1024 * 1024 + 1)
+    if len(image_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="floorplan exceeds 10MB")
+    project_id = projectId or f"upload-{uuid4().hex[:10]}"
+    if not re.fullmatch(r"[a-zA-Z0-9_-]{1,128}", project_id):
+        raise HTTPException(status_code=422, detail="invalid projectId")
+    try:
+        return await asyncio.to_thread(
+            run_upload_pipeline,
+            image_bytes,
+            project_id=project_id,
+            allow_external_vision=allowExternalVision,
+            generate_ai=generateAi,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
 @app.get("/api/v1/projects/{project_id}/parse-results/{task_id}")

@@ -153,6 +153,18 @@ class TuziResponsesVisionProvider(VisionProvider):
                         evidence=last_evidence,
                         error=VisionError.VISION_SCHEMA_INVALID,
                     )
+                # Tuzi intermittently returns HTTP 400 for the same validated
+                # image/schema request that succeeds moments later. Retry this
+                # gateway-specific ambiguity, but preserve INPUT_UNSUPPORTED if
+                # all bounded attempts fail.
+                if (
+                    error.response.status_code == 400
+                    and last_error is VisionError.VISION_INPUT_UNSUPPORTED
+                    and attempt < MAX_ATTEMPTS
+                ):
+                    last_evidence = evidence
+                    time.sleep(2.0 * attempt)
+                    continue
                 if is_retryable(last_error) and attempt < MAX_ATTEMPTS:
                     last_evidence = evidence
                     time.sleep(self._backoff(attempt))

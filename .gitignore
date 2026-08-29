@@ -12,3 +12,4 @@ tmp/
 datasets/debug/desktop9/
 datasets/debug/vision-capability-profile*.json
 datasets/derived/*/parse/
+datasets/derived/upload-*/
