@@ -75,6 +75,7 @@ class WallGraph:
     segments: tuple[WallSegment, ...]
     gaps: tuple[GapCandidate, ...]
     mm_per_px: float
+    wall_width_px: float = 0.0
 
     @property
     def solid_segments(self) -> tuple[WallSegment, ...]:
@@ -151,6 +152,7 @@ def build_wall_graph(
         segments=tuple(segments),
         gaps=tuple(gaps),
         mm_per_px=strokes.mm_per_px,
+        wall_width_px=strokes.wall_width_px,
     )
 
 
