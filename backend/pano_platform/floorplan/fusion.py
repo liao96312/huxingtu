@@ -278,8 +278,8 @@ def _snap_point(
     tolerance_factor: float,
 ) -> tuple[float, float]:
     x, y = point
-    nx = _snap_to_axis(x, graph.vertical_axes, tolerance_factor, fallback=x)
-    ny = _snap_to_axis(y, graph.horizontal_axes, tolerance_factor, fallback=y)
+    ny = _snap_to_axis(y, graph.horizontal_axes, tolerance_factor, fallback=y, wall_width_px=graph.wall_width_px)
+    nx = _snap_to_axis(x, graph.vertical_axes, tolerance_factor, fallback=x, wall_width_px=graph.wall_width_px)
     return (nx, ny)
 
 
@@ -288,6 +288,7 @@ def _snap_to_axis(
     axes: tuple[float, ...],
     tolerance_factor: float,
     fallback: float,
+    wall_width_px: float = 0.0,
 ) -> float:
     """Snap ``coordinate`` to the nearest axis if it is within tolerance.
 
@@ -300,14 +301,14 @@ def _snap_to_axis(
         return fallback
     nearest = min(axes, key=lambda axis: abs(axis - coordinate))
     tolerance = tolerance_factor * _axis_tolerance_px(
-        abs(axes[1] - axes[0]) if len(axes) > 1 else abs(nearest) + 1.0
+        abs(axes[1] - axes[0]) if len(axes) > 1 else abs(nearest) + 1.0,
+        wall_width_px,
     )
     if abs(nearest - coordinate) <= tolerance:
         return nearest
     return fallback
 
 
-def _axis_tolerance_px(reference: float) -> float:
-    # In the absence of a passed stroke profile, derive a sane tolerance from the
-    # spacing between canonical axes (a multiple of the typical wall width).
-    return max(1.0, reference * 0.2)
+def _axis_tolerance_px(reference: float, wall_width_px: float = 0.0) -> float:
+    # Prefer measured wall width; axis spacing is only a legacy fallback.
+    return max(1.0, wall_width_px * 1.5 if wall_width_px > 0 else reference * 0.2)

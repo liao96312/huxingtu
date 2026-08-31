@@ -89,8 +89,8 @@ def _orthogonalize(
         return polygon
     snapped: list[tuple[float, float]] = []
     for (x, y) in polygon:
-        nx = _nearest(x, graph.vertical_axes) if graph.vertical_axes else x
-        ny = _nearest(y, graph.horizontal_axes) if graph.horizontal_axes else y
+        nx = _nearest(x, graph.vertical_axes, graph.wall_width_px) if graph.vertical_axes else x
+        ny = _nearest(y, graph.horizontal_axes, graph.wall_width_px) if graph.horizontal_axes else y
         point = (nx, ny)
         if not snapped or point != snapped[-1]:
             snapped.append(point)
@@ -100,8 +100,10 @@ def _orthogonalize(
     return tuple(snapped)
 
 
-def _nearest(value: float, axes: tuple[float, ...]) -> float:
-    return min(axes, key=lambda axis: abs(axis - value))
+def _nearest(value: float, axes: tuple[float, ...], wall_width_px: float = 0.0) -> float:
+    nearest = min(axes, key=lambda axis: abs(axis - value))
+    tolerance = max(1.0, wall_width_px * 1.5 if wall_width_px > 0 else 20.0)
+    return nearest if abs(nearest - value) <= tolerance else value
 
 
 def _drop_collinear(points: list[tuple[float, float]]) -> list[tuple[float, float]]:

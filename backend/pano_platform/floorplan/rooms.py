@@ -108,8 +108,8 @@ def _region_polygon(region: np.ndarray, graph: WallGraph) -> tuple[tuple[float, 
 
 def _snap(point: tuple[float, float], graph: WallGraph) -> tuple[float, float]:
     x, y = point
-    nx = _nearest(y, graph.vertical_axes) if graph.vertical_axes else x
-    ny = _nearest(x, graph.horizontal_axes) if graph.horizontal_axes else y
+    nx = _nearest(x, graph.vertical_axes) if graph.vertical_axes else x
+    ny = _nearest(y, graph.horizontal_axes) if graph.horizontal_axes else y
     return (nx, ny)
 
 

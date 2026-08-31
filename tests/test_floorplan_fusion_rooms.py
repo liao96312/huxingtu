@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from pano_platform.floorplan.fusion import fuse
+from pano_platform.floorplan.rooms import _snap
 from pano_platform.floorplan.wall_graph import WallGraph
 from pano_platform.vision.contracts import RoomDraft, VlmDraft
 
@@ -110,3 +111,11 @@ def test_zone_vertices_outside_tolerance_stay_put() -> None:
     # points (10,10),(20,10),(20,20),(10,20) are far from the 1000/2000 axes -> no snap
     # so the denormalised vertices stay exactly where they were
     assert room.polygon_px == ((10.0, 10.0), (20.0, 10.0), (20.0, 20.0), (10.0, 20.0))
+
+
+def test_room_snap_uses_x_for_vertical_and_y_for_horizontal_axes() -> None:
+    graph_with_distinct_axes = WallGraph(
+        horizontal_axes=(100.0, 400.0), vertical_axes=(10.0, 20.0),
+        segments=(), gaps=(), mm_per_px=10.0,
+    )
+    assert _snap((14.0, 390.0), graph_with_distinct_axes) == (10.0, 400.0)

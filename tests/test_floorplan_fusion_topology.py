@@ -48,9 +48,10 @@ def test_vertices_snap_to_axes() -> None:
     closed = result.closed[0]
     xs = [p[0] for p in closed.polygon_px]
     ys = [p[1] for p in closed.polygon_px]
-    # every snapped vertex x should be one of the vertical axes (100/200/300)
-    assert all(abs(x - 100) < 1 or abs(x - 200) < 1 or abs(x - 300) < 1 for x in xs)
-    assert all(abs(y - 100) < 1 or abs(y - 200) < 1 or abs(y - 300) < 1 for y in ys)
+    # near-axis vertices snap; points 40px away stay put under the wall-width
+    # tolerance, preventing a room from jumping to a distant parallel wall.
+    assert (xs[0], ys[0]) == (100.0, 200.0)
+    assert (xs[1], ys[1]) == (240.0, 100.0)
 
 
 def test_collinear_duplicate_vertices_removed() -> None:
