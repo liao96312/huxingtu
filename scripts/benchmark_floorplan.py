@@ -94,28 +94,54 @@ def hungarian_room_iou(predicted: list, truth: list) -> float:
     return matched / max(len(predicted), len(truth))
 
 
-def opening_f1(predicted_openings: list, truth_openings: list) -> float:
-    """Classification-by-type F1 for openings (door/window/doorway)."""
+def opening_f1(predicted_openings: list, truth_openings: list, tolerance_px: float = 20.0) -> float:
+    """One-to-one type + endpoint-location F1 for openings."""
 
     if not truth_openings and not predicted_openings:
         return 1.0
     if not truth_openings:
         return 0.0
-    categories = {"door", "window", "doorway"}
-    tp = fp = fn = 0
-    predicted_by_type: dict[str, list] = {"door": [], "window": [], "doorway": []}
-    truth_by_type: dict[str, list] = {"door": [], "window": [], "doorway": []}
-    for opening in predicted_openings:
-        predicted_by_type.setdefault(opening.get("type"), []).append(opening)
-    for opening in truth_openings:
-        truth_by_type.setdefault(opening.get("type"), []).append(opening)
-    for category in categories:
-        tp += min(len(predicted_by_type.get(category, [])), len(truth_by_type.get(category, [])))
-        fp += max(0, len(predicted_by_type.get(category, [])) - len(truth_by_type.get(category, [])))
-        fn += max(0, len(truth_by_type.get(category, [])) - len(predicted_by_type.get(category, [])))
+    matches = []
+    for predicted_index, predicted in enumerate(predicted_openings):
+        for truth_index, truth in enumerate(truth_openings):
+            if predicted.get("type") != truth.get("type"):
+                continue
+            distance = _opening_endpoint_distance(predicted, truth)
+            if distance is not None and distance <= tolerance_px:
+                matches.append((distance, predicted_index, truth_index))
+    matched_predicted, matched_truth = set(), set()
+    for _, predicted_index, truth_index in sorted(matches):
+        if predicted_index in matched_predicted or truth_index in matched_truth:
+            continue
+        matched_predicted.add(predicted_index)
+        matched_truth.add(truth_index)
+    tp = len(matched_predicted)
+    fp = len(predicted_openings) - tp
+    fn = len(truth_openings) - tp
     precision = tp / (tp + fp) if tp + fp else 0.0
     recall = tp / (tp + fn) if tp + fn else 0.0
     return 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+
+
+def _opening_endpoint_distance(predicted: dict, truth: dict) -> float | None:
+    predicted_start = predicted.get("startPx") or predicted.get("pixelStart")
+    predicted_end = predicted.get("endPx") or predicted.get("pixelEnd")
+    truth_start, truth_end = truth.get("pixelStart"), truth.get("pixelEnd")
+    if None in (predicted_start, predicted_end, truth_start, truth_end):
+        return None
+    ps, pe = _xy(predicted_start), _xy(predicted_end)
+    ts, te = _xy(truth_start), _xy(truth_end)
+    direct = (_point_distance(ps, ts) + _point_distance(pe, te)) / 2
+    reversed_distance = (_point_distance(ps, te) + _point_distance(pe, ts)) / 2
+    return min(direct, reversed_distance)
+
+
+def _xy(value) -> tuple[float, float]:
+    return (float(value["x"]), float(value["y"])) if isinstance(value, dict) else (float(value[0]), float(value[1]))
+
+
+def _point_distance(left, right) -> float:
+    return ((left[0] - right[0]) ** 2 + (left[1] - right[1]) ** 2) ** 0.5
 
 
 def json_effective_rate(drafts: list) -> float:
@@ -166,7 +192,9 @@ def predict_one(image_path: Path, truth: dict, mode: str, vision_config=None) ->
             draft = None
 
     fused = fuse(draft, graph, width, height) if draft is not None else None
-    openings = arbitrate_openings(draft, graph, width, height) if draft is not None else None
+    openings = arbitrate_openings(
+        draft, graph, width, height, annotation_mask=layers.annotation
+    ) if draft is not None else None
 
     # CV-only baseline: when no VLM draft is available, still measure the
     # deterministic room polygonization so the benchmark compares CV too.
@@ -178,7 +206,10 @@ def predict_one(image_path: Path, truth: dict, mode: str, vision_config=None) ->
 
     pred_openings = []
     if openings is not None:
-        pred_openings = [{"type": o.type, "wall_edge_id": o.wall_edge_id} for o in openings.confirmed]
+        pred_openings = [
+            {"type": o.type, "wallEdgeId": o.wall_edge_id, "startPx": o.start_px, "endPx": o.end_px}
+            for o in openings.confirmed
+        ]
     truth_openings = truth.get("openings", [])
     openings_f1 = opening_f1(pred_openings, truth_openings)
 

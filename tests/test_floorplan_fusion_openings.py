@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import numpy as np
+
 from pano_platform.floorplan.fusion_openings import arbitrate_openings
 from pano_platform.floorplan.wall_graph import GapCandidate, WallGraph, WallSegment
 from pano_platform.vision.contracts import OpeningDraft, VlmDraft
@@ -22,7 +24,7 @@ def graph(mm_per_px=10.0) -> WallGraph:
 
 
 def door_opening(sx, sy, ex, ey) -> OpeningDraft:
-    return OpeningDraft(type="door", pixelStart=[sx, sy], pixelEnd=[ex, ey], confidence=0.9)
+    return OpeningDraft(type="door", evidence=["doorArc"], pixelStart=[sx, sy], pixelEnd=[ex, ey], confidence=0.9)
 
 
 def rooms() -> list[dict]:
@@ -99,7 +101,26 @@ def test_opening_without_adjacent_room_is_rejected() -> None:
 
 
 def test_window_between_two_rooms_is_rejected() -> None:
-    opening = OpeningDraft(type="window", pixelStart=[0.21, 0.10], pixelEnd=[0.29, 0.10], confidence=0.9)
+    opening = OpeningDraft(type="window", evidence=["parallelLines"], pixelStart=[0.21, 0.10], pixelEnd=[0.29, 0.10], confidence=0.9)
     result = arbitrate_openings(draft_with([opening]), graph(), 1000, 1000)
     assert not result.confirmed
     assert any("WINDOW_BETWEEN_INTERIOR_ROOMS" in item.reason_codes for item in result.candidates)
+
+
+def test_exterior_window_requires_parallel_line_evidence() -> None:
+    opening = OpeningDraft(type="window", pixelStart=[0.21, 0.10], pixelEnd=[0.29, 0.10], confidence=0.9)
+    one_side = VlmDraft(openings=[opening], rooms=rooms()[:1], scaleCandidates=[], warnings=[])
+    result = arbitrate_openings(one_side, graph(), 1000, 1000)
+    assert not result.confirmed
+    assert any("NO_WINDOW_PARALLEL_LINE_EVIDENCE" in item.reason_codes for item in result.candidates)
+
+
+def test_cv_parallel_lines_can_confirm_exterior_window() -> None:
+    opening = OpeningDraft(type="window", pixelStart=[0.21, 0.10], pixelEnd=[0.29, 0.10], confidence=0.9)
+    one_side = VlmDraft(openings=[opening], rooms=rooms()[:1], scaleCandidates=[], warnings=[])
+    annotation = np.zeros((1000, 1000), np.uint8)
+    annotation[92, 200:301] = 1
+    annotation[108, 200:301] = 1
+    result = arbitrate_openings(one_side, graph(), 1000, 1000, annotation_mask=annotation)
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].type == "window"

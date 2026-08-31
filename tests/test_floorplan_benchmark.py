@@ -44,15 +44,33 @@ def test_hungarian_room_iou_handles_count_mismatch() -> None:
 
 
 def test_opening_f1_by_type() -> None:
-    pred = [{"type": "door"}, {"type": "door"}, {"type": "window"}]
-    truth = [{"type": "door"}, {"type": "door"}, {"type": "window"}]
+    pred = [
+        {"type": "door", "startPx": [0, 0], "endPx": [10, 0]},
+        {"type": "door", "startPx": [30, 0], "endPx": [40, 0]},
+        {"type": "window", "startPx": [60, 0], "endPx": [90, 0]},
+    ]
+    truth = [
+        {"type": "door", "pixelStart": {"x": 0, "y": 0}, "pixelEnd": {"x": 10, "y": 0}},
+        {"type": "door", "pixelStart": {"x": 30, "y": 0}, "pixelEnd": {"x": 40, "y": 0}},
+        {"type": "window", "pixelStart": {"x": 60, "y": 0}, "pixelEnd": {"x": 90, "y": 0}},
+    ]
     assert opening_f1(pred, truth) == 1.0
 
 
 def test_opening_f1_penalises_missing() -> None:
-    pred = [{"type": "door"}]
-    truth = [{"type": "door"}, {"type": "door"}, {"type": "window"}]
+    pred = [{"type": "door", "startPx": [0, 0], "endPx": [10, 0]}]
+    truth = [
+        {"type": "door", "pixelStart": [0, 0], "pixelEnd": [10, 0]},
+        {"type": "door", "pixelStart": [30, 0], "pixelEnd": [40, 0]},
+        {"type": "window", "pixelStart": [60, 0], "pixelEnd": [90, 0]},
+    ]
     assert 0.0 < opening_f1(pred, truth) < 1.0
+
+
+def test_opening_f1_rejects_same_type_at_wrong_location() -> None:
+    pred = [{"type": "door", "startPx": [200, 200], "endPx": [210, 200]}]
+    truth = [{"type": "door", "pixelStart": [0, 0], "pixelEnd": [10, 0]}]
+    assert opening_f1(pred, truth) == 0.0
 
 
 def test_benchmark_end_to_end_on_golden() -> None:

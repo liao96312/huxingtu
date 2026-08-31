@@ -322,7 +322,9 @@ def _fuse_from_vlm(draft_data, cv_data, image_bytes, project_id) -> StageGraph:
     if not isinstance(draft, VlmDraft):
         raise VisionUnavailable("draft missing")
     fused = fuse(draft, graph, width, height)
-    openings_result = arbitrate_openings(draft, graph, width, height)
+    openings_result = arbitrate_openings(
+        draft, graph, width, height, annotation_mask=layers.annotation
+    )
     rooms_result = close_rooms(fused.rooms, graph)
 
     can_publish_rooms = _rooms_publishable(fused, rooms_result)

@@ -51,7 +51,9 @@ class OpeningsFusionResult:
     reason_codes: tuple[str, ...] = field(default_factory=tuple)
 
 
-def arbitrate_openings(draft, graph: WallGraph, image_width: int, image_height: int) -> OpeningsFusionResult:
+def arbitrate_openings(
+    draft, graph: WallGraph, image_width: int, image_height: int, *, annotation_mask=None
+) -> OpeningsFusionResult:
     """Arbitrate the VLM draft's openings against the CV wall graph.
 
     ``draft`` is a ``VlmDraft``; only its ``openings`` list is consumed here.
@@ -68,7 +70,7 @@ def arbitrate_openings(draft, graph: WallGraph, image_width: int, image_height: 
         opening_id = f"vlm_opening_{index:03d}"
         start_px = _denorm(opening.pixelStart, image_width, image_height)
         end_px = _denorm(opening.pixelEnd, image_width, image_height)
-        edge = _nearest_edge(start_px, end_px, graph)
+        edge = _nearest_edge(start_px, end_px, graph, annotation_mask)
         if edge is None:
             rejected.append(
                 FusedOpening(opening_id, opening.type.value, "", start_px, end_px, None, "rejected", ("NO_MATCHING_WALL_EDGE",))
@@ -84,7 +86,7 @@ def arbitrate_openings(draft, graph: WallGraph, image_width: int, image_height: 
         width_min, width_max = _width_bounds(opening.type.value)
         width_ok = width_mm is not None and width_min <= width_mm <= width_max
 
-        gap_ok = edge["has_gap"] or edge["has_arc_evidence"] or edge["has_window_evidence"]
+        visual_evidence = {item.value for item in opening.evidence}
         same_edge_ok = True  # guaranteed by _nearest_edge returning a single edge
         side_a, side_b = _adjacent_room_ids(draft, edge, image_width, image_height)
 
@@ -94,8 +96,16 @@ def arbitrate_openings(draft, graph: WallGraph, image_width: int, image_height: 
             reasons.append("ENDPOINTS_ON_DIFFERENT_EDGES")
         if not width_ok:
             reasons.append("WIDTH_OUT_OF_PROFILE")
-        if not gap_ok:
-            reasons.append("NO_CV_GAP_OR_EVIDENCE")
+        if not edge["has_gap"]:
+            reasons.append("NO_CV_PHYSICAL_GAP")
+        elif opening.type.value == "door" and not (
+            edge["has_arc_evidence"] or {"doorArc", "doorLeaf"} & visual_evidence
+        ):
+            reasons.append("NO_DOOR_ARC_OR_LEAF_EVIDENCE")
+        elif opening.type.value == "window" and not (
+            edge["has_window_evidence"] or "parallelLines" in visual_evidence
+        ):
+            reasons.append("NO_WINDOW_PARALLEL_LINE_EVIDENCE")
         if overlap:
             reasons.append("OVERLAPS_CONFIRMED_OPENING")
         if not side_a and not side_b:
@@ -138,7 +148,7 @@ def _denorm(point, image_width: int, image_height: int) -> tuple[float, float]:
     return px * image_width, py * image_height
 
 
-def _nearest_edge(start, end, graph: WallGraph) -> dict | None:
+def _nearest_edge(start, end, graph: WallGraph, annotation_mask=None) -> dict | None:
     """Find the single wall edge both VLM endpoints can project onto."""
 
     start_px = _to_px(start)
@@ -164,7 +174,7 @@ def _nearest_edge(start, end, graph: WallGraph) -> dict | None:
                 "width_px": width_px,
                 "has_gap": segment.virtual,
                 "has_arc_evidence": _has_arc_evidence(graph, segment, s["projected"], e["projected"]),
-                "has_window_evidence": _has_window_evidence(graph, segment),
+                "has_window_evidence": _has_window_evidence(annotation_mask, segment),
                 "axis": segment.axis,
                 "thickness_px": segment.thickness_px,
                 "_score": (0 if segment.virtual else 1, s["distance"] + e["distance"]),
@@ -227,9 +237,34 @@ def _has_arc_evidence(graph: WallGraph, segment, start: tuple[float, float], end
     return False
 
 
-def _has_window_evidence(graph: WallGraph, segment) -> bool:
-    # A virtual segment with a gap not near any arc is a window-ish candidate.
-    return segment.virtual
+def _has_window_evidence(annotation_mask, segment) -> bool:
+    """Find two or more long annotation strokes parallel to a physical gap."""
+
+    if annotation_mask is None or not segment.virtual:
+        return False
+    import numpy as np
+
+    height, width = annotation_mask.shape[:2]
+    margin = max(6, int(round(segment.thickness_px * 2)))
+    if segment.axis == "horizontal":
+        x1, x2 = sorted((int(round(segment.start[0])), int(round(segment.end[0]))))
+        y = int(round(segment.start[1]))
+        crop = annotation_mask[max(0, y - margin):min(height, y + margin + 1), max(0, x1):min(width, x2 + 1)]
+        if crop.size == 0 or crop.shape[1] < 3:
+            return False
+        coverage = crop.sum(axis=1) / crop.shape[1]
+    else:
+        y1, y2 = sorted((int(round(segment.start[1])), int(round(segment.end[1]))))
+        x = int(round(segment.start[0]))
+        crop = annotation_mask[max(0, y1):min(height, y2 + 1), max(0, x - margin):min(width, x + margin + 1)]
+        if crop.size == 0 or crop.shape[0] < 3:
+            return False
+        coverage = crop.sum(axis=0) / crop.shape[0]
+    strong = np.flatnonzero(coverage >= 0.55)
+    if strong.size < 2:
+        return False
+    clusters = 1 + int(np.count_nonzero(np.diff(strong) > 1))
+    return clusters >= 2
 
 
 def _segments_near(a1, a2, b1, b2, tolerance: float) -> bool:
