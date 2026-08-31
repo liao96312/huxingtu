@@ -52,6 +52,10 @@ class VisionInputArtifact:
     promptVersion: str
     draftSchemaVersion: str
     jobKey: str
+    processedWidth: int
+    processedHeight: int
+    cropOffsetX: int = 0
+    cropOffsetY: int = 0
 
     def to_dict(self) -> dict:
         return {
@@ -66,6 +70,10 @@ class VisionInputArtifact:
             "promptVersion": self.promptVersion,
             "draftSchemaVersion": self.draftSchemaVersion,
             "jobKey": self.jobKey,
+            "processedWidth": self.processedWidth,
+            "processedHeight": self.processedHeight,
+            "cropOffsetX": self.cropOffsetX,
+            "cropOffsetY": self.cropOffsetY,
         }
 
 
@@ -118,8 +126,10 @@ def prepare_vision_payload(
     cleaned = _strip_exif(image_bytes, content_type)
 
     processed = cleaned
+    crop_left = crop_top = 0
+    crop_width, crop_height = width, height
     if crop_white_margins:
-        processed = _crop_white_margins(image_bytes)
+        processed, (crop_left, crop_top, crop_width, crop_height) = _crop_white_margins_with_box(cleaned)
     if enhance:
         processed = _structure_enhance(processed)
 
@@ -147,6 +157,10 @@ def prepare_vision_payload(
         promptVersion=prompt_version,
         draftSchemaVersion=schema_version,
         jobKey=job_key,
+        processedWidth=crop_width,
+        processedHeight=crop_height,
+        cropOffsetX=crop_left,
+        cropOffsetY=crop_top,
     )
     return artifact, processed
 
@@ -197,19 +211,24 @@ def _crop_white_margins(image_bytes: bytes) -> bytes:
     [0,1] coordinate mapping.
     """
 
+    return _crop_white_margins_with_box(image_bytes)[0]
+
+
+def _crop_white_margins_with_box(image_bytes: bytes) -> tuple[bytes, tuple[int, int, int, int]]:
     decoded = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+    original_height, original_width = decoded.shape[:2]
     gray = cv2.cvtColor(decoded, cv2.COLOR_BGR2GRAY)
     non_white = gray < 245
     ys, xs = np.where(non_white)
     if xs.size == 0 or ys.size == 0:
-        return image_bytes
+        return image_bytes, (0, 0, original_width, original_height)
     top = int(ys.min()); bottom = int(ys.max()) + 1
     left = int(xs.min()); right = int(xs.max()) + 1
     cropped = decoded[top:bottom, left:right]
     if cropped.shape[0] == 0 or cropped.shape[1] == 0:
-        return image_bytes
+        return image_bytes, (0, 0, original_width, original_height)
     ok, encoded = cv2.imencode(".png", cropped)
-    return encoded.tobytes() if ok else image_bytes
+    return (encoded.tobytes(), (left, top, right - left, bottom - top)) if ok else (image_bytes, (0, 0, original_width, original_height))
 
 
 def _structure_enhance(image_bytes: bytes) -> bytes:

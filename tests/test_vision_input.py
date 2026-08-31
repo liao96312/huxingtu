@@ -130,6 +130,17 @@ def test_data_uri_uses_actual_jpeg_magic() -> None:
     assert to_data_uri(_jpeg_bytes()).startswith("data:image/jpeg;base64,")
 
 
+def test_crop_artifact_records_processed_dimensions_and_offset() -> None:
+    image = np.full((100, 140, 3), 255, np.uint8)
+    image[20:80, 30:110] = 0
+    ok, encoded = cv2.imencode(".png", image)
+    assert ok
+    artifact, payload = prepare_vision_payload(encoded.tobytes(), "floorplan_parse_v1", crop_white_margins=True, enhance=False)
+    assert artifact.cropOffsetX == 30 and artifact.cropOffsetY == 20
+    assert artifact.processedWidth == 80 and artifact.processedHeight == 60
+    assert payload
+
+
 def test_prompts_load_and_are_versioned() -> None:
     parse = parse_prompt()
     review = review_prompt()
