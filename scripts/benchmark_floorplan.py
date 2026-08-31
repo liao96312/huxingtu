@@ -199,7 +199,11 @@ def predict_one(image_path: Path, truth: dict, mode: str, vision_config=None) ->
     # CV-only baseline: when no VLM draft is available, still measure the
     # deterministic room polygonization so the benchmark compares CV too.
     cv_rooms = polygonize_rooms(graph, strokes.wall_width_px, (height, width)) if fused is None else ()
-    pred_rooms = [list(room.polygon) for room in (fused.rooms if fused else cv_rooms)]
+    # fused rooms expose polygon_px; cv_rooms expose polygon
+    def room_poly(room):
+        poly = getattr(room, "polygon_px", None) or getattr(room, "polygon", None)
+        return [tuple(p) for p in poly]
+    pred_rooms = [room_poly(room) for room in (fused.rooms if fused else cv_rooms)]
     truth_rooms = [[(pt["x"], pt["y"]) for pt in room["polygon"]] for room in truth.get("rooms", [])]
     room_iou = hungarian_room_iou(pred_rooms, truth_rooms)
     room_count_ok = len(pred_rooms) == len(truth_rooms)
@@ -275,6 +279,9 @@ def main() -> int:
         "--allow-external-vision", action="store_true",
         help="confirm benchmark images may be sent to Tuzi/upstream vision",
     )
+    parser.add_argument("--sample", default=None,
+        help="only benchmark the image with this id (matches <id>.png)",
+    )
     parser.add_argument("--out", default=None, help="write summary JSON here")
     parser.add_argument("--per-sample", default=None, help="write per-sample JSON here")
     args = parser.parse_args()
@@ -293,8 +300,15 @@ def main() -> int:
     truth = load_truth(Path(args.truth))
     image_dir = Path(args.image_dir)
     samples = []
-    for image_path in sorted(image_dir.glob("*.png")):
+    if args.sample:
+        image_path = image_dir / f"{args.sample}.png"
+        if not image_path.is_file():
+            print(f"[error] no image {image_path}", file=sys.stderr)
+            return 2
         samples.append(predict_one(image_path, truth, args.mode, vision_config))
+    else:
+        for image_path in sorted(image_dir.glob("*.png")):
+            samples.append(predict_one(image_path, truth, args.mode, vision_config))
 
     summary = summarize(samples)
     print(json.dumps(summary, indent=2, ensure_ascii=False))
