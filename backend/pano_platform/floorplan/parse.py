@@ -320,6 +320,9 @@ def _fuse_from_vlm(draft_data, cv_data, image_bytes, project_id) -> StageGraph:
             "fusedRooms": rooms_result.closed,
             "roomsNeedingReview": rooms_result.needs_review,
             "confirmedOpenings": openings_result.confirmed,
+            "openingCandidates": openings_result.candidates,
+            "rejectedOpenings": openings_result.rejected,
+            "openingReasonCodes": openings_result.reason_codes,
         },
     )
 

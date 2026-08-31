@@ -59,7 +59,23 @@ def main() -> int:
             "visionMode": run.visionMode.value,
             "roomsPublished": run.rooms_published,
             "openingsCandidatesPublished": run.openings_candidates_published,
-            "stages": [{"stage": s.stage, "status": s.status, "detail": s.detail} for s in run.stages],
+            "stages": [{
+                "stage": s.stage, "status": s.status, "detail": s.detail,
+                "reasonCodes": list(dict.fromkeys([
+                    *s.data.get("reasonCodes", []), *s.data.get("openingReasonCodes", []),
+                ])),
+            } for s in run.stages],
+            "openingDiagnostics": [
+                {
+                    "id": item.id, "type": item.type, "status": item.status,
+                    "wallEdgeId": item.wall_edge_id, "widthMm": item.width_mm,
+                    "reasonCodes": list(item.reason_codes),
+                    "sideRoomIds": [list(side) for side in item.side_room_ids],
+                }
+                for stage in run.stages if stage.stage == "fusion"
+                for key in ("confirmedOpenings", "openingCandidates", "rejectedOpenings")
+                for item in stage.data.get(key, ())
+            ],
             "reasonCodes": list(run.reasonCodes),
         }, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"[write] {args.out}")

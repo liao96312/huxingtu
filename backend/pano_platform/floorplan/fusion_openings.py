@@ -40,6 +40,7 @@ class FusedOpening:
     width_mm: float | None
     status: str  # "confirmed" | "candidate" | "rejected"
     reason_codes: tuple[str, ...]
+    side_room_ids: tuple[tuple[str, ...], tuple[str, ...]] = ((), ())
 
 
 @dataclass(frozen=True)
@@ -85,6 +86,7 @@ def arbitrate_openings(draft, graph: WallGraph, image_width: int, image_height: 
 
         gap_ok = edge["has_gap"] or edge["has_arc_evidence"] or edge["has_window_evidence"]
         same_edge_ok = True  # guaranteed by _nearest_edge returning a single edge
+        side_a, side_b = _adjacent_room_ids(draft, edge, image_width, image_height)
 
         overlap = _overlaps_confirmed(s_px, e_px, confirmed, tolerance_px=OVERLAP_TOLERANCE_PX)
         reasons: list[str] = []
@@ -96,15 +98,29 @@ def arbitrate_openings(draft, graph: WallGraph, image_width: int, image_height: 
             reasons.append("NO_CV_GAP_OR_EVIDENCE")
         if overlap:
             reasons.append("OVERLAPS_CONFIRMED_OPENING")
+        if not side_a and not side_b:
+            reasons.append("NO_ADJACENT_ROOM")
+        elif side_a & side_b:
+            reasons.append("SAME_ROOM_BOTH_SIDES")
+        elif opening.type.value == "window" and side_a and side_b:
+            reasons.append("WINDOW_BETWEEN_INTERIOR_ROOMS")
 
         if not reasons:
             confirmed.append(
-                FusedOpening(opening_id, opening.type.value, wall_edge_id, s_px, e_px, width_mm, "confirmed", ())
+                FusedOpening(
+                    opening_id, opening.type.value, wall_edge_id, s_px, e_px,
+                    width_mm, "confirmed", (),
+                    (tuple(sorted(side_a)), tuple(sorted(side_b))),
+                )
             )
         else:
             status = "candidate" if opening.type.value not in ("door", "window") else "rejected"
             candidates.append(
-                FusedOpening(opening_id, opening.type.value, wall_edge_id, s_px, e_px, width_mm, status, tuple(reasons))
+                FusedOpening(
+                    opening_id, opening.type.value, wall_edge_id, s_px, e_px,
+                    width_mm, status, tuple(reasons),
+                    (tuple(sorted(side_a)), tuple(sorted(side_b))),
+                )
             )
             if status == "rejected":
                 reason_codes.extend(reasons)
@@ -127,7 +143,7 @@ def _nearest_edge(start, end, graph: WallGraph) -> dict | None:
 
     start_px = _to_px(start)
     end_px = _to_px(end)
-    best = None
+    candidates = []
     # gaps (virtual segments) are exactly where doors/windows live, so consider
     # every segment -- solid and virtual -- as a candidate wall edge.
     for segment in graph.segments:
@@ -135,17 +151,55 @@ def _nearest_edge(start, end, graph: WallGraph) -> dict | None:
         e = _project_to_segment(end_px, segment)
         if s["distance"] <= WALL_PROJECTION_TOLERANCE_PX and e["distance"] <= WALL_PROJECTION_TOLERANCE_PX:
             along_center_between = abs(e["along_span"] - s["along_span"])
-            best = {
+            projected_start = segment.start if segment.virtual else s["projected"]
+            projected_end = segment.end if segment.virtual else e["projected"]
+            width_px = (
+                ((segment.end[0] - segment.start[0]) ** 2 + (segment.end[1] - segment.start[1]) ** 2) ** 0.5
+                if segment.virtual else along_center_between
+            )
+            candidates.append({
                 "id": segment.id,
-                "projected_start": s["projected"],
-                "projected_end": e["projected"],
-                "width_px": along_center_between,
+                "projected_start": projected_start,
+                "projected_end": projected_end,
+                "width_px": width_px,
                 "has_gap": segment.virtual,
                 "has_arc_evidence": _has_arc_evidence(graph, segment, s["projected"], e["projected"]),
                 "has_window_evidence": _has_window_evidence(graph, segment),
-            }
-            break
+                "axis": segment.axis,
+                "thickness_px": segment.thickness_px,
+                "_score": (0 if segment.virtual else 1, s["distance"] + e["distance"]),
+            })
+    if not candidates:
+        return None
+    best = min(candidates, key=lambda item: item["_score"])
+    best.pop("_score", None)
     return best
+
+
+def _adjacent_room_ids(draft, edge: dict, image_width: int, image_height: int) -> tuple[set[str], set[str]]:
+    if not draft.rooms:
+        return set(), set()
+    try:
+        from shapely.geometry import Point, Polygon
+    except Exception:
+        return set(), set()
+    start, end = edge["projected_start"], edge["projected_end"]
+    midpoint = ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2)
+    distance = max(8.0, float(edge.get("thickness_px") or 0) * 1.5)
+    normal = (0.0, 1.0) if edge.get("axis") == "horizontal" else (1.0, 0.0)
+    samples = (
+        Point(midpoint[0] + normal[0] * distance, midpoint[1] + normal[1] * distance),
+        Point(midpoint[0] - normal[0] * distance, midpoint[1] - normal[1] * distance),
+    )
+    sides = [set(), set()]
+    for index, room in enumerate(draft.rooms):
+        polygon = Polygon([(point.x * image_width, point.y * image_height) for point in room.polygon])
+        if not polygon.is_valid:
+            continue
+        for side, sample in enumerate(samples):
+            if polygon.covers(sample):
+                sides[side].add(f"vlm_room_{index:03d}")
+    return sides[0], sides[1]
 
 
 def _project_to_segment(point: tuple[float, float], segment) -> dict:

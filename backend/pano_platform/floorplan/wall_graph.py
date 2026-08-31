@@ -84,20 +84,22 @@ class WallGraph:
 def build_wall_graph(
     layers: Layers,
     strokes: StrokeProfile,
-    max_door_width_mm: float = 1500.0,
+    max_corner_snap_mm: float = 300.0,
+    min_opening_width_mm: float = 300.0,
+    max_opening_width_mm: float = 3000.0,
     axis_tolerance_factor: float = 1.5,
 ) -> WallGraph:
     """Vectorize ``layers.wall`` into canonical axes, snapped segments and gaps.
 
-    ``max_door_width_mm`` is the extension budget: a wall segment may be grown
-    toward the next orthogonal axis as long as the added length is below a
-    plausible door width. Anything longer is left as a gap.
+    Short endpoint gaps toward an orthogonal wall are corner cleanup only.
+    Door/window candidates come from missing spans between two collinear solid
+    wall runs on the same canonical axis.
     """
     if layers.wall.sum() == 0 or strokes.wall_width_px <= 0:
         return WallGraph((), (), (), (), strokes.mm_per_px)
 
     axis_tol = max(strokes.wall_width_px, strokes.wall_radius_px) * axis_tolerance_factor
-    extension_budget_px = max_door_width_mm / strokes.mm_per_px if strokes.mm_per_px > 0 else 0.0
+    extension_budget_px = max_corner_snap_mm / strokes.mm_per_px if strokes.mm_per_px > 0 else 0.0
 
     horizontal_runs = _axis_runs(layers.horizontal, same_axis="horizontal")
     vertical_runs = _axis_runs(layers.vertical, same_axis="vertical")
@@ -120,12 +122,8 @@ def build_wall_graph(
         right = _extend_toward(solid_end, axis_value, vertical_axes, "right", extension_budget_px, run.axis)
         start = (left.target, axis_value) if left.axis == "vertical" else (solid_start, axis_value)
         end = (right.target, axis_value) if right.axis == "vertical" else (solid_end, axis_value)
-        segment = WallSegment(segment_id, "horizontal", start, end, thickness, left.virtual or right.virtual)
+        segment = WallSegment(segment_id, "horizontal", start, end, thickness, False)
         segments.append(segment)
-        if left.virtual:
-            gaps.append(GapCandidate(segment_id, "horizontal", (left.reached, axis_value), (solid_start, axis_value), abs(solid_start - left.reached)))
-        if right.virtual:
-            gaps.append(GapCandidate(segment_id, "horizontal", (solid_end, axis_value), (right.reached, axis_value), abs(right.reached - solid_end)))
 
     for run in vertical_runs:
         axis_value = _nearest_axis(run.position, vertical_axes)
@@ -137,12 +135,15 @@ def build_wall_graph(
         bottom = _extend_toward(solid_end, axis_value, horizontal_axes, "right", extension_budget_px, run.axis)
         start = (axis_value, top.target) if top.axis == "horizontal" else (axis_value, solid_start)
         end = (axis_value, bottom.target) if bottom.axis == "horizontal" else (axis_value, solid_end)
-        segment = WallSegment(segment_id, "vertical", start, end, thickness, top.virtual or bottom.virtual)
+        segment = WallSegment(segment_id, "vertical", start, end, thickness, False)
         segments.append(segment)
-        if top.virtual:
-            gaps.append(GapCandidate(segment_id, "vertical", (axis_value, top.reached), (axis_value, solid_start), abs(solid_start - top.reached)))
-        if bottom.virtual:
-            gaps.append(GapCandidate(segment_id, "vertical", (axis_value, solid_end), (axis_value, bottom.reached), abs(bottom.reached - solid_end)))
+
+    gap_segments, collinear_gaps = _collinear_gap_segments(
+        horizontal_runs, vertical_runs, horizontal_axes, vertical_axes,
+        strokes.mm_per_px, counter, min_opening_width_mm, max_opening_width_mm,
+    )
+    segments.extend(gap_segments)
+    gaps.extend(collinear_gaps)
 
     return WallGraph(
         horizontal_axes=horizontal_axes,
@@ -151,6 +152,54 @@ def build_wall_graph(
         gaps=tuple(gaps),
         mm_per_px=strokes.mm_per_px,
     )
+
+
+def _collinear_gap_segments(
+    horizontal_runs: list[_AxisRun],
+    vertical_runs: list[_AxisRun],
+    horizontal_axes: tuple[float, ...],
+    vertical_axes: tuple[float, ...],
+    mm_per_px: float,
+    counter: int,
+    min_width_mm: float,
+    max_width_mm: float,
+) -> tuple[list[WallSegment], list[GapCandidate]]:
+    if mm_per_px <= 0:
+        return [], []
+    minimum_px, maximum_px = min_width_mm / mm_per_px, max_width_mm / mm_per_px
+    virtual_segments: list[WallSegment] = []
+    gaps: list[GapCandidate] = []
+
+    for axis_name, runs, axes in (
+        ("horizontal", horizontal_runs, horizontal_axes),
+        ("vertical", vertical_runs, vertical_axes),
+    ):
+        grouped: dict[float, list[_AxisRun]] = {}
+        for run in runs:
+            grouped.setdefault(_nearest_axis(run.position, axes), []).append(run)
+        for axis_value, axis_runs in grouped.items():
+            ordered = sorted(axis_runs, key=lambda item: (item.start, item.end))
+            if not ordered:
+                continue
+            previous_end = ordered[0].end
+            previous_thickness = ordered[0].thickness_px
+            for run in ordered[1:]:
+                if run.start <= previous_end:
+                    previous_end = max(previous_end, run.end)
+                    previous_thickness = max(previous_thickness, run.thickness_px)
+                    continue
+                width = run.start - previous_end
+                if minimum_px <= width <= maximum_px:
+                    identifier = f"wall_gap{counter}"
+                    counter += 1
+                    start = (previous_end, axis_value) if axis_name == "horizontal" else (axis_value, previous_end)
+                    end = (run.start, axis_value) if axis_name == "horizontal" else (axis_value, run.start)
+                    thickness = (previous_thickness + run.thickness_px) / 2
+                    virtual_segments.append(WallSegment(identifier, axis_name, start, end, thickness, True))
+                    gaps.append(GapCandidate(identifier, axis_name, start, end, width))
+                previous_end = run.end
+                previous_thickness = run.thickness_px
+    return virtual_segments, gaps
 
 
 @dataclass(frozen=True)
