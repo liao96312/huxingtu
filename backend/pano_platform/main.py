@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import os
 import re
 from pathlib import Path as FilePath
@@ -37,6 +38,9 @@ artifact_root.mkdir(parents=True, exist_ok=True)
 app.mount("/artifacts", StaticFiles(directory=artifact_root), name="artifacts")
 facade = CommandFacade()
 facade.register_parse(parse_command)
+_pipeline_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="pano-pipeline")
+_pipeline_tasks: dict[UUID, dict] = {}
+_pipeline_tasks_lock = asyncio.Lock()
 
 
 @app.get("/api/health")
@@ -99,15 +103,53 @@ async def upload_floorplan_pipeline(
     if not re.fullmatch(r"[a-zA-Z0-9_-]{1,128}", project_id):
         raise HTTPException(status_code=422, detail="invalid projectId")
     try:
-        return await asyncio.to_thread(
-            run_upload_pipeline,
-            image_bytes,
-            project_id=project_id,
-            allow_external_vision=allowExternalVision,
-            generate_ai=generateAi,
+        task_id = uuid4()
+        async with _pipeline_tasks_lock:
+            _pipeline_tasks[task_id] = {
+                "taskId": str(task_id), "projectId": project_id,
+                "status": "PROCESSING", "progress": 0,
+                "result": None, "error": None,
+            }
+        _pipeline_executor.submit(
+            _run_pipeline_task, task_id, image_bytes, project_id,
+            allowExternalVision, generateAi,
         )
+        return JSONResponse(status_code=202, content={
+            "taskId": str(task_id), "projectId": project_id,
+            "status": "PROCESSING", "progress": 0,
+            "pollUrl": f"/api/v1/pipeline/tasks/{task_id}",
+        })
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+def _run_pipeline_task(task_id: UUID, image_bytes: bytes, project_id: str, allow_external: bool, generate_ai: bool) -> None:
+    try:
+        result = run_upload_pipeline(
+            image_bytes, project_id=project_id,
+            allow_external_vision=allow_external, generate_ai=generate_ai,
+        )
+        status_value = "DONE" if result.get("viewerUrl") else "NEEDS_REVIEW"
+        _pipeline_tasks[task_id] = {
+            "taskId": str(task_id), "projectId": project_id,
+            "status": status_value, "progress": 100,
+            "result": result, "error": None,
+        }
+    except Exception as error:
+        _pipeline_tasks[task_id] = {
+            "taskId": str(task_id), "projectId": project_id,
+            "status": "FAILED", "progress": 100,
+            "result": None, "error": str(error)[:500],
+        }
+
+
+@app.get("/api/v1/pipeline/tasks/{task_id}")
+async def get_pipeline_task(task_id: UUID) -> dict:
+    async with _pipeline_tasks_lock:
+        task = _pipeline_tasks.get(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="pipeline task not found")
+    return task
 
 
 @app.get("/api/v1/projects/{project_id}/parse-results/{task_id}")

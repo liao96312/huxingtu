@@ -29,7 +29,7 @@ npm run dev
 
 上传户型图端到端测试：`http://127.0.0.1:5173/?pipeline=1`
 
-该页面会依次执行上传门禁、CV墙图、Tuzi视觉草案、几何融合、预览
+该页面提交后立即获得 `202 + taskId`，前端轮询任务状态；后台依次执行上传门禁、CV墙图、Tuzi视觉草案、几何融合、预览
 `LayoutRevision/SceneGeometry`、2:1结构ERP和动态`PanoManifest`，最后给出可拖动的
 360°Viewer链接。Tuzi image-2装修默认开启并逐个处理所有闭合房间；单个房间失败时
 只回退该房间结构全景，不阻断其他房间。未过几何质量门的输出只标为“预览/待复核”，不会冒充正式Revision。

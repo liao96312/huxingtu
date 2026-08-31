@@ -118,7 +118,7 @@ def test_one_ai_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> Non
     assert sum(scene.title.endswith("AI+超分预览") for scene in manifest.scenes) == 1
 
 
-def test_upload_endpoint_returns_viewer_link(monkeypatch) -> None:
+def test_upload_endpoint_returns_pollable_task(monkeypatch) -> None:
     from pano_platform import main
 
     monkeypatch.setattr(main, "run_upload_pipeline", lambda image, **kwargs: {
@@ -137,5 +137,18 @@ def test_upload_endpoint_returns_viewer_link(monkeypatch) -> None:
             )
 
     response = asyncio.run(run())
-    assert response.status_code == 200
-    assert response.json()["viewerUrl"].startswith("/?manifestUrl=/artifacts/")
+    assert response.status_code == 202
+    payload = response.json()
+    assert payload["status"] == "PROCESSING"
+    assert payload["pollUrl"].startswith("/api/v1/pipeline/tasks/")
+    import time
+
+    time.sleep(0.05)
+    async def poll() -> httpx.Response:
+        transport = httpx.ASGITransport(app=main.app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            return await client.get(payload["pollUrl"])
+
+    task = asyncio.run(poll())
+    assert task.status_code == 200
+    assert task.json()["status"] == "DONE"

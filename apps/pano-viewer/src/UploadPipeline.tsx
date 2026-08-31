@@ -39,7 +39,21 @@ export default function UploadPipeline() {
       const response = await fetch("/api/v1/pipeline/upload", { method: "POST", body });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.detail ?? `HTTP ${response.status}`);
-      setResult(payload as PipelineResult);
+      if (response.status === 202 && payload.pollUrl) {
+        for (;;) {
+          await new Promise((resolve) => window.setTimeout(resolve, 1200));
+          const poll = await fetch(payload.pollUrl);
+          const task = await poll.json();
+          if (!poll.ok) throw new Error(task.detail ?? `任务查询 HTTP ${poll.status}`);
+          if (["DONE", "NEEDS_REVIEW", "FAILED"].includes(task.status)) {
+            if (task.result) setResult(task.result as PipelineResult);
+            else throw new Error(task.error ?? "流水线失败");
+            break;
+          }
+        }
+      } else {
+        setResult(payload as PipelineResult);
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "上传处理失败");
     } finally {
