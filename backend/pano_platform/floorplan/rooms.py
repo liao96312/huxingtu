@@ -54,6 +54,12 @@ def polygonize_rooms(
     for gap in graph.gaps:
         _draw_wall(barrier, gap.gap_start, gap.gap_end, thickness)
 
+    # Seal only scan/morphology corner micro-gaps. The kernel is tied to the
+    # measured wall stroke, so it cannot close a physical 300mm+ opening.
+    close_radius = max(1, int(round(thickness * 0.75)))
+    close_kernel = np.ones((close_radius * 2 + 1, close_radius * 2 + 1), np.uint8)
+    barrier = cv2.morphologyEx(barrier, cv2.MORPH_CLOSE, close_kernel)
+
     # Free space that is not connected to the image border is a room. Label
     # background components; those touching the border are exterior.
     num, labels = cv2.connectedComponents((barrier == 0).astype(np.uint8), connectivity=4)
