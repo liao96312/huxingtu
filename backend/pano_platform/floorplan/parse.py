@@ -143,6 +143,10 @@ def run_cv_structure(image_bytes: bytes) -> StageGraph:
                 "mmPerPx": graph.mm_per_px,
                 "segments": len(graph.segments),
                 "gaps": len(graph.gaps),
+                "wallGraph": graph,
+                "wallWidthPx": strokes.wall_width_px,
+                "imageWidth": decoded.shape[1],
+                "imageHeight": decoded.shape[0],
             },
         )
     except Exception as error:
