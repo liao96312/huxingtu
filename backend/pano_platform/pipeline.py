@@ -114,14 +114,39 @@ def _publish_preview(
     project_id: str, image_bytes: bytes, run: ParseRun
 ) -> tuple[LayoutRevision, DerivedRoomSet, SceneGeometry]:
     fusion = next((stage for stage in run.stages if stage.stage == "fusion"), None)
+    cv_stage = next((stage for stage in run.stages if stage.stage == "cv_structure"), None)
     if fusion is None:
-        raise PipelineNotReady("视觉草案未进入几何融合，当前没有可生成全景的房间")
-    graph = fusion.data.get("wallGraph")
-    closed_rooms = tuple(fusion.data.get("fusedRooms") or ())
+        # CV-only fallback keeps the upload flow useful when Tuzi is down. It
+        # is always a preview with generic room labels, never a confirmed layout.
+        if cv_stage is None:
+            raise PipelineNotReady("视觉草案未进入几何融合，当前没有可生成全景的房间")
+        graph = cv_stage.data.get("wallGraph")
+        if graph is None:
+            raise PipelineNotReady("CV墙图不可用，当前没有可生成全景的房间")
+        from .floorplan.fusion import FusedRoom
+        from .floorplan.rooms import polygonize_rooms
+
+        cv_rooms = polygonize_rooms(
+            graph, float(cv_stage.data.get("wallWidthPx") or 0),
+            (int(cv_stage.data.get("imageHeight") or 0), int(cv_stage.data.get("imageWidth") or 0)),
+        )
+        closed_rooms = tuple(
+            FusedRoom(
+                room.id, "other", room.polygon, room.area_mm2,
+                room.area_px2, "review", ("CV_ONLY_ROOM",),
+            )
+            for room in cv_rooms
+        )
+        confirmed_openings = ()
+    else:
+        graph = fusion.data.get("wallGraph")
+        closed_rooms = tuple(fusion.data.get("fusedRooms") or ())
+        confirmed_openings = fusion.data.get("confirmedOpenings") or ()
     if graph is None or len(graph.segments) < 3 or not closed_rooms:
         raise PipelineNotReady("墙图或闭合房间不足，结果保留为待复核")
 
-    mm_per_px = float(fusion.data.get("mmPerPx") or graph.mm_per_px or 0)
+    source_data = fusion.data if fusion is not None else cv_stage.data
+    mm_per_px = float(source_data.get("mmPerPx") or graph.mm_per_px or 0)
     if not math.isfinite(mm_per_px) or mm_per_px <= 0:
         raise PipelineNotReady("比例尺不可用，不能构建3D场景")
 
@@ -153,7 +178,7 @@ def _publish_preview(
 
     segments = {segment.id: segment for segment in graph.segments}
     openings = []
-    for item in fusion.data.get("confirmedOpenings") or ():
+    for item in confirmed_openings:
         segment = segments.get(item.wall_edge_id)
         if segment is None or item.width_mm is None:
             continue

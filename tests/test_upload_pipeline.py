@@ -7,6 +7,7 @@ import httpx
 
 from pano_platform.floorplan.fusion_rooms import ClosedRoom
 from pano_platform.floorplan.parse import ParseRun, ParseStatus, StageGraph, VisionMode
+from pano_platform.floorplan.parse import orchestrate
 from pano_platform.floorplan.wall_graph import WallGraph, WallSegment
 from pano_platform.contracts import DerivedRoomSet, LayoutRevision, PanoManifest, SceneGeometry
 from pano_platform.pipeline import _publish_preview, _render_panoramas
@@ -57,6 +58,18 @@ def test_preview_geometry_and_erp_are_published(tmp_path, monkeypatch) -> None:
     DerivedRoomSet.model_validate_json((folder / "rooms.preview-v1.json").read_text(encoding="utf-8"))
     SceneGeometry.model_validate_json((folder / "scene-geometry.preview-v1.json").read_text(encoding="utf-8"))
     PanoManifest.model_validate_json((folder / "pano-manifest.json").read_text(encoding="utf-8"))
+
+
+def test_cv_only_run_still_builds_automatic_preview(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
+    image_path = Path(__file__).parents[1] / "tests/fixtures/floorplan-golden/fp-golden.png"
+    payload = image_path.read_bytes()
+    run = orchestrate(payload, vision_mode=VisionMode.OFF, project_id="cv-only")
+    layout, rooms, scene = _publish_preview("cv-only", payload, run)
+    assert run.status is ParseStatus.NEEDS_REVIEW
+    assert layout.id == "cv-only_preview_r1"
+    assert rooms.rooms
+    assert scene.solids
 
 
 def test_ai_renders_every_room(tmp_path, monkeypatch) -> None:

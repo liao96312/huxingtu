@@ -245,7 +245,7 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - Tuzi Adapter 对缺失的模型自报 `confidence` 保守记为0，坐标范围、枚举、自交、数量和额外字段仍严格拒绝；`confidence` 不参与发布门；
 - Schema失败会带不含模型原文的结构化错误摘要，并进行一次带校验反馈的有限纠错；
 - 付费真实Smoke改为显式 `RUN_TUZI_LIVE_TEST=1`，常规测试不再意外调用第三方；
-- 当前验证：`197 passed, 2 skipped`；Viewer生产构建通过；
+- 当前验证：`198 passed, 2 skipped`；Viewer生产构建通过；
 - 当前离线基准仍只有1个Golden：Room mIoU `0.489`、Room Count Accuracy `0`、Openings F1 `0`，因此 `releaseReady=false`；
 - 桌面9图已有来源、SHA和训练/验证/测试切片，但原58门标注源文件当前不在桌面或仓库，无法诚实补齐墙/房间/窗真值。
 
@@ -287,6 +287,13 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - [x] 同一服务进程内缓存已验证`VlmDraft`与响应Hash，命中时不再调用Tuzi；缓存证据记录`jobKey/cacheHit/inputArtifact`；
 - [ ] 当前缓存仍为单进程、最多256项、TTL 6小时；多Worker并发共享、租约、等待同一in-flight结果和重启恢复仍归T05/P0-11异步任务批次；
 - [ ] 裁白边/结构增强仍未进入生产，因为必须同时持久化Crop Transform并把VLM坐标映射回原图后才能开启。
+
+## 12. 2026-08-31 CV-only自动预览兜底
+
+- [x] `run_cv_structure`持久化WallGraph、墙宽、比例尺和原图尺寸证据；
+- [x] Tuzi不可用或显式OFF时，自动用`polygonize_rooms`闭合CV房间，生成Preview Layout/Rooms/SceneGeometry和结构ERP，不再因视觉服务波动直接无结果；
+- [x] CV-only房间统一标记`CV_ONLY_ROOM`和`needsReview`，不进入确认Revision；
+- [ ] CV-only只提供结构兜底，不代表房间类型、门窗和比例尺正确；仍需多图真值和T11 Shadow对照。
 
 ## 11. 2026-08-31 上传任务异步化PoC
 
