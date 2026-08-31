@@ -14,3 +14,11 @@ datasets/debug/vision-capability-profile*.json
 datasets/derived/*/parse/
 datasets/derived/upload-*/
 tools/realesrgan/
+
+# one-off verification / benchmark outputs (not source)
+datasets/debug/bench-*.json
+datasets/debug/fp101-*.png
+datasets/debug/fp101-*.json
+datasets/debug/*.pid
+datasets/debug/upscale-test/
+datasets/derived/verify-*/
