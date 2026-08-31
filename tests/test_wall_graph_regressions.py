@@ -7,6 +7,7 @@ from pano_platform.floorplan.wall_graph import (
     _AxisRun,
     _collinear_gap_segments,
     _extend_toward,
+    _ensure_outer_boundary,
     _modal_run,
 )
 
@@ -62,3 +63,22 @@ def test_collinear_noise_gap_below_physical_minimum_is_ignored() -> None:
         runs, [], (100.0,), (), 10.0, 3, 300.0, 3000.0
     )
     assert segments == [] and gaps == []
+
+
+def test_missing_outer_boundary_is_closed_from_wall_mask_bbox() -> None:
+    mask = np.zeros((200, 240), np.uint8)
+    mask[30:34, 40:200] = 1
+    mask[160:164, 40:200] = 1
+    mask[30:164, 40:44] = 1
+    mask[30:164, 196:200] = 1
+    boundaries = _ensure_outer_boundary(mask, 4.0, (30.0, 160.0), (40.0, 196.0), 1)
+    assert boundaries == []
+
+
+def test_outer_boundary_adds_only_missing_edges() -> None:
+    mask = np.zeros((200, 240), np.uint8)
+    mask[30:34, 40:200] = 1
+    mask[30:164, 40:44] = 1
+    boundaries = _ensure_outer_boundary(mask, 4.0, (30.0,), (40.0,), 1)
+    assert len(boundaries) == 2
+    assert {item.axis for item in boundaries} == {"horizontal", "vertical"}

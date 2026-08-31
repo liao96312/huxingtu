@@ -145,6 +145,10 @@ def build_wall_graph(
     )
     segments.extend(gap_segments)
     gaps.extend(collinear_gaps)
+    boundary_segments = _ensure_outer_boundary(
+        layers.wall, strokes.wall_width_px, horizontal_axes, vertical_axes, counter
+    )
+    segments.extend(boundary_segments)
 
     return WallGraph(
         horizontal_axes=horizontal_axes,
@@ -154,6 +158,44 @@ def build_wall_graph(
         mm_per_px=strokes.mm_per_px,
         wall_width_px=strokes.wall_width_px,
     )
+
+
+def _ensure_outer_boundary(
+    wall_mask: np.ndarray,
+    wall_width_px: float,
+    horizontal_axes: tuple[float, ...],
+    vertical_axes: tuple[float, ...],
+    counter: int,
+) -> list[WallSegment]:
+    """Add missing plan perimeter edges so flood-fill can form enclosed rooms."""
+
+    ys, xs = np.where(wall_mask > 0)
+    if xs.size == 0 or ys.size == 0:
+        return []
+    left, right = float(xs.min()), float(xs.max())
+    top, bottom = float(ys.min()), float(ys.max())
+    if right - left < 20 or bottom - top < 20:
+        return []
+    tolerance = max(2.0, wall_width_px * 1.5)
+    horizontal = [
+        segment for segment in horizontal_axes
+        if abs(segment - top) <= tolerance or abs(segment - bottom) <= tolerance
+    ]
+    vertical = [
+        segment for segment in vertical_axes
+        if abs(segment - left) <= tolerance or abs(segment - right) <= tolerance
+    ]
+    result: list[WallSegment] = []
+    next_id = counter
+    if not any(abs(segment - top) <= tolerance for segment in horizontal):
+        result.append(WallSegment(f"wall_boundary_h{next_id}", "horizontal", (left, top), (right, top), wall_width_px, False)); next_id += 1
+    if not any(abs(segment - bottom) <= tolerance for segment in horizontal):
+        result.append(WallSegment(f"wall_boundary_h{next_id}", "horizontal", (left, bottom), (right, bottom), wall_width_px, False)); next_id += 1
+    if not any(abs(segment - left) <= tolerance for segment in vertical):
+        result.append(WallSegment(f"wall_boundary_v{next_id}", "vertical", (left, top), (left, bottom), wall_width_px, False)); next_id += 1
+    if not any(abs(segment - right) <= tolerance for segment in vertical):
+        result.append(WallSegment(f"wall_boundary_v{next_id}", "vertical", (right, top), (right, bottom), wall_width_px, False));
+    return result
 
 
 def _collinear_gap_segments(
