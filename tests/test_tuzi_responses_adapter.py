@@ -17,6 +17,7 @@ import pytest
 from pano_platform.vision.config import VisionConfig
 from pano_platform.vision.contracts import (
     VisionParseRequest,
+    VisionReviewRequest,
     VlmDraft,
 )
 from pano_platform.vision.provider import VisionError
@@ -53,6 +54,34 @@ def valid_draft_text() -> str:
         "rooms": [{"type": "bedroom", "name": "卧室", "areaLabelM2": 12.8,
                    "polygon": [[0.1, 0.1], [0.5, 0.1], [0.5, 0.5]], "confidence": 0.9}],
         "openings": [{"type": "door", "evidence": ["doorArc"], "pixelStart": [0.3, 0.25], "pixelEnd": [0.3, 0.35], "confidence": 0.88}],
+        "warnings": [],
+    })
+
+
+def review_request() -> VisionReviewRequest:
+    return VisionReviewRequest(
+        imageSha256="b" * 64, provider="tuzi", model="gemini-3.5-flash",
+        promptVersion="floorplan_review_v1", draftSchemaVersion="0.1.0",
+        candidates=VlmDraft.model_validate({
+            "scaleCandidates": [], "rooms": [],
+            "openings": [{
+                "type": "door", "evidence": ["doorArc"],
+                "pixelStart": [0.3, 0.25], "pixelEnd": [0.3, 0.35], "confidence": 0.8,
+            }],
+            "warnings": [],
+        }),
+    )
+
+
+def valid_review_text(*, changed=False) -> str:
+    return json.dumps({
+        "scaleCandidates": [], "rooms": [],
+        "openings": [{
+            "type": "door", "evidence": ["doorArc"],
+            "pixelStart": [0.4, 0.25] if changed else [0.3, 0.25],
+            "pixelEnd": [0.4, 0.35] if changed else [0.3, 0.35],
+            "confidence": 0.9,
+        }],
         "warnings": [],
     })
 
@@ -174,13 +203,52 @@ def test_markdown_json_is_not_guessed() -> None:
     assert result.error is VisionError.VISION_SCHEMA_INVALID
 
 
-def test_no_output_text_is_structured_output_unsupported() -> None:
+def test_no_output_with_length_finish_is_truncated() -> None:
     provider = TuziResponsesVisionProvider(
         config(), httpx.Client(transport=transport_with(text=None))
     )
     result = provider.parse(parse_request(), b"\x00" * 8)
     provider.close()
-    assert result.error is VisionError.VISION_STRUCTURED_OUTPUT_UNSUPPORTED
+    assert result.error is VisionError.VISION_OUTPUT_TRUNCATED
+
+
+def test_truncated_finish_reason_is_rejected() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = responses_response(valid_draft_text())
+        payload["choices"][0]["finish_reason"] = "length"
+        return httpx.Response(200, json=payload)
+
+    provider = TuziResponsesVisionProvider(config(), httpx.Client(transport=httpx.MockTransport(handler)))
+    result = provider.parse(parse_request(), b"\x00" * 8)
+    provider.close()
+    assert result.error is VisionError.VISION_OUTPUT_TRUNCATED
+    assert result.draft is None
+
+
+def test_review_sends_candidates_and_preserves_geometry() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        prompt = body["messages"][0]["content"][0]["text"]
+        assert "ALREADY-PROPOSED CANDIDATES JSON" in prompt
+        assert '"pixelStart": [0.3, 0.25]' in prompt
+        return httpx.Response(200, json=responses_response(valid_review_text()))
+
+    provider = TuziResponsesVisionProvider(config(), httpx.Client(transport=httpx.MockTransport(handler)))
+    result = provider.review(review_request(), b"\x00" * 8)
+    provider.close()
+    assert result.error is None
+    assert result.draft is not None
+    assert len(result.draft.openings) == 1
+
+
+def test_review_rejects_moved_candidate_endpoints() -> None:
+    provider = TuziResponsesVisionProvider(
+        config(), httpx.Client(transport=transport_with(text=valid_review_text(changed=True)))
+    )
+    result = provider.review(review_request(), b"\x00" * 8)
+    provider.close()
+    assert result.error is VisionError.VISION_SCHEMA_INVALID
+    assert result.draft is None
 
 
 def test_timeout_is_retried() -> None:

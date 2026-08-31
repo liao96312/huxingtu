@@ -199,16 +199,20 @@ def _modal_run(perp: np.ndarray, along: np.ndarray, along_axis: str) -> float:
     (constant-ish for a straight band) and ``along`` runs along it. We bucket by
     the across-coordinate and take the run extent to recover thickness.
     """
-    if along_axis == "x":
-        counts = np.bincount(np.clip(perp.astype(int), 0, None))
-        counts[0] = 0
-        if counts.sum() == 0:
-            return 0.0
-        return float(np.argmax(counts))
-    counts = np.bincount(np.clip(perp.astype(int), 0, None))
-    counts[0] = 0
-    if counts.sum() == 0:
+    if perp.size == 0 or along.size == 0:
         return 0.0
+    # Measure the across-wall span at each position along the component, then
+    # take the modal span. The old implementation returned the most frequent
+    # absolute x/y coordinate, which made wall thickness depend on page position.
+    along_values = along.astype(int)
+    thicknesses = []
+    for coordinate in np.unique(along_values):
+        cross_section = perp[along_values == coordinate]
+        if cross_section.size:
+            thicknesses.append(max(1, int(round(float(cross_section.max() - cross_section.min() + 1)))))
+    if not thicknesses:
+        return 0.0
+    counts = np.bincount(np.asarray(thicknesses, dtype=int))
     return float(np.argmax(counts))
 
 
@@ -273,7 +277,7 @@ def _extend_toward(
         candidates = [axis for axis in orthogonal_axes if axis >= coordinate]
     if not candidates:
         return _Extension(coordinate, coordinate, this_axis, False)
-    target = min(candidates, key=lambda axis: abs(axis - coordinate)) if side == "left" else max(candidates, key=lambda axis: abs(axis - coordinate))
+    target = min(candidates, key=lambda axis: abs(axis - coordinate))
     gap = abs(target - coordinate)
     if budget_px > 0 and gap <= budget_px:
         return _Extension(target, target, this_axis, False)

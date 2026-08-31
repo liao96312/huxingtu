@@ -141,6 +141,14 @@ def extract_output_text(response: dict) -> str | None:
     return None
 
 
+def extract_finish_reason(response: dict) -> str | None:
+    choices = response.get("choices")
+    if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
+        return None
+    value = choices[0].get("finish_reason")
+    return value if isinstance(value, str) else None
+
+
 def parse_draft(text: str) -> VlmDraft:
     """Parse ``text`` as strict JSON into a ``VlmDraft``.
 

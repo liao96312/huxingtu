@@ -298,7 +298,7 @@ def _fuse_from_vlm(draft_data, cv_data, image_bytes, project_id) -> StageGraph:
     openings_result = arbitrate_openings(draft, graph, width, height)
     rooms_result = close_rooms(fused.rooms, graph)
 
-    can_publish_rooms = bool(rooms_result.closed) and fused.scale_status in ("confirmed", "bootstrap")
+    can_publish_rooms = _rooms_publishable(fused, rooms_result)
     can_publish_openings = bool(openings_result.confirmed)
     reasons: list[str] = []
     if fused.scale_status == "review":
@@ -321,6 +321,17 @@ def _fuse_from_vlm(draft_data, cv_data, image_bytes, project_id) -> StageGraph:
             "roomsNeedingReview": rooms_result.needs_review,
             "confirmedOpenings": openings_result.confirmed,
         },
+    )
+
+
+def _rooms_publishable(fused, rooms_result) -> bool:
+    """Publish only when every proposed room passed snap/area and closure gates."""
+
+    return (
+        bool(rooms_result.closed)
+        and not rooms_result.needs_review
+        and all(room.status == "ok" for room in fused.rooms)
+        and fused.scale_status in ("confirmed", "bootstrap")
     )
 
 

@@ -11,8 +11,8 @@ fusion layer decide whether anything in the draft may become a fact artifact.
 
 from __future__ import annotations
 
+import json
 import time
-from typing import Iterable
 
 import httpx
 
@@ -22,7 +22,6 @@ from .contracts import (
     VisionReviewRequest,
     VlmDraft,
     vlm_draft_openai_schema,
-    vlm_draft_schema,
 )
 from .evidence import build_evidence
 from .prompts import PARSE_PROMPT_ID, REVIEW_PROMPT_ID, parse_prompt, review_prompt
@@ -35,6 +34,7 @@ from .provider import (
     extract_request_id,
     extract_usage,
     extract_output_text,
+    extract_finish_reason,
     is_retryable,
     normalize_http_error,
     parse_draft,
@@ -89,8 +89,13 @@ class TuziResponsesVisionProvider(VisionProvider):
     def review(self, request: VisionReviewRequest, image_bytes: bytes) -> VisionRunResult:
         """Re-classify only the given candidates; never re-parse the whole image."""
 
-        prompt = review_prompt()
-        return self._run(
+        candidates = {
+            "scaleCandidates": [], "rooms": [],
+            "openings": [item.model_dump(mode="json") for item in request.candidates.openings],
+            "warnings": [],
+        }
+        prompt = review_prompt() + "\n\nALREADY-PROPOSED CANDIDATES JSON:\n" + json.dumps(candidates, ensure_ascii=False)
+        result = self._run(
             model=request.model,
             prompt_version=request.promptVersion or REVIEW_PROMPT_ID,
             draft_schema_version=request.draftSchemaVersion,
@@ -99,6 +104,19 @@ class TuziResponsesVisionProvider(VisionProvider):
             schema_name="floorplan_review_v1",
             prompt=prompt,
         )
+        if result.draft is not None and (
+            result.draft.rooms
+            or result.draft.scaleCandidates
+            or not self._same_opening_geometry(request.candidates.openings, result.draft.openings)
+        ):
+            evidence = {
+                **result.evidence,
+                "status": "review",
+                "errorCode": VisionError.VISION_SCHEMA_INVALID.value,
+                "errorDetail": "review changed candidate count or endpoints",
+            }
+            return VisionRunResult(draft=None, evidence=evidence, error=VisionError.VISION_SCHEMA_INVALID)
+        return result
 
     def _run(
         self,
@@ -111,8 +129,6 @@ class TuziResponsesVisionProvider(VisionProvider):
         prompt: str = DEFAULT_PROMPT,
         draft_schema: dict | None = None,
     ) -> VisionRunResult:
-        from .contracts import SCHEMA_VERSION
-
         schema = draft_schema or vlm_draft_openai_schema()
         last_error: VisionError = VisionError.VISION_UPSTREAM_ERROR
         attempt = 0
@@ -178,6 +194,15 @@ class TuziResponsesVisionProvider(VisionProvider):
                 continue
 
             output_text = extract_output_text(payload)
+            finish_reason = extract_finish_reason(payload)
+            if finish_reason in ("content_filter", "safety"):
+                error = VisionError.VISION_CONTENT_FILTERED
+                evidence = self._evidence(attempt, started, image_sha256, prompt_version, draft_schema_version, model, error=error, raw=payload)
+                return VisionRunResult(draft=None, evidence=evidence, error=error)
+            if finish_reason not in (None, "stop"):
+                error = VisionError.VISION_OUTPUT_TRUNCATED
+                evidence = self._evidence(attempt, started, image_sha256, prompt_version, draft_schema_version, model, error=error, raw=payload)
+                return VisionRunResult(draft=None, evidence=evidence, error=error)
             if output_text is None:
                 last_error = VisionError.VISION_STRUCTURED_OUTPUT_UNSUPPORTED
                 last_evidence = self._evidence(attempt, started, image_sha256, prompt_version, draft_schema_version, model, error=last_error, raw=payload)
@@ -272,6 +297,16 @@ class TuziResponsesVisionProvider(VisionProvider):
             ]
             return json.dumps(items, ensure_ascii=False)[:2048]
         return str(error)[:2048]
+
+    @staticmethod
+    def _same_opening_geometry(expected, actual) -> bool:
+        if len(expected) != len(actual):
+            return False
+        return all(
+            left.pixelStart.root == right.pixelStart.root
+            and left.pixelEnd.root == right.pixelEnd.root
+            for left, right in zip(expected, actual)
+        )
 
     @staticmethod
     def _backoff(attempt: int) -> float:
