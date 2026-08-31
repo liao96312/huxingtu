@@ -21,6 +21,11 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from uuid import uuid4
 
+from ..vision.cache import CachedVisionResult, VisionJobKey, VisionResultCache
+
+
+_VISION_CACHE = VisionResultCache()
+
 
 class VisionMode(StrEnum):
     OFF = "off"          # CV only, no VLM call
@@ -231,30 +236,52 @@ def _run_vision(image_bytes, vision_config, prompt_version, vision_mode) -> Stag
 
     from ..vision.provider import VisionProvider
     from ..vision.tuzi_responses import TuziResponsesVisionProvider
+    from ..vision.input_artifact import prepare_vision_payload
 
     config = vision_config
-    width, height = 0, 0
-    try:
-        from ..vision.input_artifact import image_dimensions
+    artifact, provider_bytes = prepare_vision_payload(
+        image_bytes, prompt_version, "0.1.0",
+        crop_white_margins=False, enhance=False,
+    )
+    job = VisionJobKey(
+        imageSha256=artifact.processedSha256,
+        provider="tuzi", baseUrlProfile=config.baseUrl,
+        requestedModel=config.primaryModel, promptVersion=prompt_version,
+        draftSchemaVersion=artifact.draftSchemaVersion,
+        preprocessingVersion=f"{artifact.preprocessingVersion}:crop0:enhance0",
+    )
+    cached = _VISION_CACHE.get(job.jobKey)
+    if cached is not None and cached.draft is not None:
+        evidence = {**cached.evidence, "jobKey": job.jobKey, "cacheHit": True}
+        return StageGraph(
+            "vision", "accepted",
+            detail=f"rooms={len(cached.draft.rooms)}, openings={len(cached.draft.openings)}, cache=hit",
+            data={"draft": cached.draft, "evidence": evidence, "inputArtifact": artifact.to_dict(), "shadow": vision_mode is VisionMode.SHADOW},
+        )
 
-        width, height = image_dimensions(image_bytes)
-    except Exception:
-        pass
-
-    request = _vision_parse_request(config, image_bytes, prompt_version, width, height)
+    request = _vision_parse_request(
+        config, provider_bytes, prompt_version, artifact.width, artifact.height
+    )
     provider: VisionProvider = TuziResponsesVisionProvider(config)
     try:
-        result = provider.parse(request, image_bytes)
+        result = provider.parse(request, provider_bytes)
     finally:
         provider.close()
 
     if result.draft is None:
         raise VisionUnavailable(result.error.value if result.error else "vision unavailable")
     # SHADOW records the draft but does not publish it.
+    evidence = {**result.evidence, "jobKey": job.jobKey, "cacheHit": False}
+    _VISION_CACHE.put(CachedVisionResult(
+        jobKey=job.jobKey,
+        normalizedDraftSha256=evidence.get("normalizedDraftSha256"),
+        rawResponseSha256=evidence.get("rawResponseSha256"),
+        evidence=evidence, createdAt=time.time(), draft=result.draft,
+    ))
     return StageGraph(
         "vision", "accepted",
         detail=f"rooms={len(result.draft.rooms)}, openings={len(result.draft.openings)}",
-        data={"draft": result.draft, "evidence": result.evidence, "shadow": vision_mode is VisionMode.SHADOW},
+        data={"draft": result.draft, "evidence": evidence, "inputArtifact": artifact.to_dict(), "shadow": vision_mode is VisionMode.SHADOW},
     )
 
 

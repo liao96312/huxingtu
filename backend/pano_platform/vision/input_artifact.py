@@ -83,6 +83,23 @@ def prepare_vision_input(
 ) -> VisionInputArtifact:
     """Normalise an image for the vision path and derive its deterministic job key."""
 
+    artifact, _ = prepare_vision_payload(
+        image_bytes, prompt_version, draft_schema_version,
+        crop_white_margins=crop_white_margins, enhance=enhance,
+    )
+    return artifact
+
+
+def prepare_vision_payload(
+    image_bytes: bytes,
+    prompt_version: str,
+    draft_schema_version: str | None = None,
+    *,
+    crop_white_margins: bool = True,
+    enhance: bool = True,
+) -> tuple[VisionInputArtifact, bytes]:
+    """Return the auditable input record and the exact sanitized provider bytes."""
+
     if len(image_bytes) > MAX_BYTES:
         raise VisionInputError("image exceeds byte limit")
     if len(image_bytes) == 0:
@@ -118,7 +135,7 @@ def prepare_vision_input(
         "draftSchemaVersion": schema_version,
     })
 
-    return VisionInputArtifact(
+    artifact = VisionInputArtifact(
         imageSha256=raw_sha,
         width=width,
         height=height,
@@ -131,6 +148,7 @@ def prepare_vision_input(
         draftSchemaVersion=schema_version,
         jobKey=job_key,
     )
+    return artifact, processed
 
 
 def detect_content_type(image_bytes: bytes) -> str:

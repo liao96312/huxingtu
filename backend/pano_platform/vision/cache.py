@@ -19,6 +19,7 @@ from threading import Lock, RLock
 from typing import Any
 
 from .provider import canonical_hash
+from .contracts import VlmDraft
 
 
 @dataclass(frozen=True)
@@ -54,10 +55,11 @@ class CachedVisionResult:
     """A validated, cacheable vision result (hash, never raw secrets)."""
 
     jobKey: str
-    normalizedDraftSha256: str
-    rawResponseSha256: str
+    normalizedDraftSha256: str | None
+    rawResponseSha256: str | None
     evidence: dict
     createdAt: float
+    draft: VlmDraft | None = None
 
 
 class VisionResultCache:

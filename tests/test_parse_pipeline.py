@@ -22,6 +22,8 @@ from pano_platform.floorplan.parse import (
     gate_input,
     new_trace_id,
     orchestrate,
+    _run_vision,
+    _VISION_CACHE,
 )
 
 
@@ -114,3 +116,44 @@ def test_vision_modes_enum() -> None:
     assert VisionMode.OFF.value == "off"
     assert VisionMode.SHADOW.value == "shadow"
     assert VisionMode.ASSISTED.value == "assisted"
+
+
+def test_vision_stage_reuses_validated_draft_cache(monkeypatch) -> None:
+    from pano_platform.vision.config import VisionConfig
+    from pano_platform.vision.contracts import VlmDraft
+    from pano_platform.vision.provider import VisionRunResult
+    from pano_platform.vision import tuzi_responses
+
+    calls = 0
+
+    class FakeProvider:
+        def __init__(self, config): pass
+        def close(self): pass
+        def parse(self, request, image_bytes):
+            nonlocal calls
+            calls += 1
+            draft = VlmDraft.model_validate({
+                "scaleCandidates": [],
+                "rooms": [{
+                    "type": "bedroom", "polygon": [[0.1, 0.1], [0.8, 0.1], [0.8, 0.8]],
+                    "confidence": 0.8,
+                }],
+                "openings": [], "warnings": [],
+            })
+            return VisionRunResult(draft=draft, evidence={
+                "normalizedDraftSha256": "n" * 64,
+                "rawResponseSha256": "r" * 64,
+            })
+
+    monkeypatch.setattr(tuzi_responses, "TuziResponsesVisionProvider", FakeProvider)
+    config = VisionConfig.model_validate({
+        "baseUrl": "https://cache-test.invalid", "apiKey": "secret",
+        "primaryModel": "test-model", "reviewModel": "test-model",
+    })
+    _VISION_CACHE.clear()
+    first = _run_vision(_png(), config, "floorplan_parse_v1", VisionMode.ASSISTED)
+    second = _run_vision(_png(), config, "floorplan_parse_v1", VisionMode.ASSISTED)
+    assert calls == 1
+    assert first.data["evidence"]["cacheHit"] is False
+    assert second.data["evidence"]["cacheHit"] is True
+    assert second.data["inputArtifact"]["processedSha256"]

@@ -111,7 +111,12 @@ def auth_headers(config: VisionConfig) -> dict:
 
 def to_data_uri(image_bytes: bytes) -> str:
     encoded = base64.b64encode(image_bytes).decode("ascii")
-    return f"data:image/png;base64,{encoded}"
+    content_type = (
+        "image/jpeg" if image_bytes.startswith(b"\xff\xd8")
+        else "image/webp" if image_bytes.startswith(b"RIFF") and image_bytes[8:12] == b"WEBP"
+        else "image/png"
+    )
+    return f"data:{content_type};base64,{encoded}"
 
 
 def canonical_hash(value: object) -> str:

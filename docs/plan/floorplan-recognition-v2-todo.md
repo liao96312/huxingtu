@@ -245,7 +245,7 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - Tuzi Adapter 对缺失的模型自报 `confidence` 保守记为0，坐标范围、枚举、自交、数量和额外字段仍严格拒绝；`confidence` 不参与发布门；
 - Schema失败会带不含模型原文的结构化错误摘要，并进行一次带校验反馈的有限纠错；
 - 付费真实Smoke改为显式 `RUN_TUZI_LIVE_TEST=1`，常规测试不再意外调用第三方；
-- 当前验证：`191 passed, 2 skipped`；Viewer生产构建通过；
+- 当前验证：`194 passed, 2 skipped`；Viewer生产构建通过；
 - 当前离线基准仍只有1个Golden：Room mIoU `0.489`、Room Count Accuracy `0`、Openings F1 `0`，因此 `releaseReady=false`；
 - 桌面9图已有来源、SHA和训练/验证/测试切片，但原58门标注源文件当前不在桌面或仓库，无法诚实补齐墙/房间/窗真值。
 
@@ -277,6 +277,15 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - [x] `fp-101`真实ASSISTED回归：CV为17段/3缺口，VLM为9房/15开口，最终1门通过同墙、物理宽度和两侧房间拓扑；其余14个拒绝，整体仍为`needsReview`；
 - [ ] 下一步补窗口细线组/多线证据，并用恢复的9图门窗空间真值计算真正Precision/Recall/F1；当前不得把单图确认1门表述为门窗F1提高；
 - [ ] 单Golden基准仍为Room mIoU `0.489`、Room Count Accuracy `0`、Opening F1 `0`，`releaseReady=false`。
+
+## 9. 2026-08-31 T04/T05主链接入
+
+- [x] Parse视觉阶段强制校验Magic Bytes、字节/像素上限并清除EXIF；本批关闭裁白边和增强，保证VLM归一化坐标仍对应原图，不伪造尚未实现的Crop Transform；
+- [x] Data URI按处理后字节的真实PNG/JPEG/WebP Magic生成MIME，不再把JPEG错误标记为PNG；
+- [x] `VisionJobKey`已串入主Parse，覆盖处理后图Hash、Provider/Base URL、模型、Prompt、Draft Schema和预处理策略；
+- [x] 同一服务进程内缓存已验证`VlmDraft`与响应Hash，命中时不再调用Tuzi；缓存证据记录`jobKey/cacheHit/inputArtifact`；
+- [ ] 当前缓存仍为单进程、最多256项、TTL 6小时；多Worker并发共享、租约、等待同一in-flight结果和重启恢复仍归T05/P0-11异步任务批次；
+- [ ] 裁白边/结构增强仍未进入生产，因为必须同时持久化Crop Transform并把VLM坐标映射回原图后才能开启。
 
 明确不做：
 

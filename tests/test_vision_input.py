@@ -18,6 +18,7 @@ from pano_platform.vision.input_artifact import (
     VisionInputError,
     detect_content_type,
     prepare_vision_input,
+    prepare_vision_payload,
 )
 from pano_platform.vision.prompts import (
     PARSE_PROMPT_ID,
@@ -25,6 +26,7 @@ from pano_platform.vision.prompts import (
     parse_prompt,
     review_prompt,
 )
+from pano_platform.vision.provider import to_data_uri
 
 ROOT = Path(__file__).parents[1]
 
@@ -113,6 +115,19 @@ def test_processed_hash_differs_after_white_margin_crop() -> None:
     artifact = prepare_vision_input(data, "floorplan_parse_v1", crop_white_margins=True)
     # cropping away white page margin should change the processed bytes
     assert artifact.processedSha256 != original_sha
+
+
+def test_provider_payload_matches_recorded_processed_hash() -> None:
+    artifact, payload = prepare_vision_payload(
+        _png_bytes(), "floorplan_parse_v1",
+        crop_white_margins=False, enhance=False,
+    )
+    assert hashlib.sha256(payload).hexdigest() == artifact.processedSha256
+    assert detect_content_type(payload) == artifact.contentType
+
+
+def test_data_uri_uses_actual_jpeg_magic() -> None:
+    assert to_data_uri(_jpeg_bytes()).startswith("data:image/jpeg;base64,")
 
 
 def test_prompts_load_and_are_versioned() -> None:
