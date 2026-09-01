@@ -245,7 +245,7 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - Tuzi Adapter 对缺失的模型自报 `confidence` 保守记为0，坐标范围、枚举、自交、数量和额外字段仍严格拒绝；`confidence` 不参与发布门；
 - Schema失败会带不含模型原文的结构化错误摘要，并进行一次带校验反馈的有限纠错；
 - 付费真实Smoke改为显式 `RUN_TUZI_LIVE_TEST=1`，常规测试不再意外调用第三方；
-- 当前验证：`202 passed, 2 skipped`；Viewer生产构建通过；
+- 当前验证：`204 passed, 2 skipped`；Viewer生产构建通过；
 - 当前离线基准仍只有1个Golden：Room mIoU `0.489`、Room Count Accuracy `0`、Openings F1 `0`，因此 `releaseReady=false`；
 - 桌面9图已有来源、SHA和训练/验证/测试切片，但原58门标注源文件当前不在桌面或仓库，无法诚实补齐墙/房间/窗真值。
 
@@ -318,6 +318,14 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - [x] 外框补边现在要求已有边覆盖包围框长度至少85%，仅存在中段轴时仍补整条Boundary WallEdge；
 - [x] `fp-102`和`fp-108` CV-only均能形成至少1个房间，避免因外框漏检导致整图无结果；
 - [ ] Boundary WallEdge对复杂凹形户型只提供保守外壳，房间分割、房间类型和门窗拓扑仍需VLM/真值共同验证。
+
+## 16. 2026-09-01 房间重叠拓扑门
+
+- [x] F4闭合后计算房间交叠面积；同类型且较小房间85%以上被覆盖时自动抑制重复项；
+- [x] 不同类型房间或非重复房间交叠达到35%时，相关房间全部转`ROOM_OVERLAP_CONFLICT/needsReview`，不得进入3D；
+- [x] Parse工件新增房间级诊断，记录闭合/复核状态及Reason Codes；
+- [x] `fp-101`真实回归遇到Tuzi `VISION_SCHEMA_INVALID`时严格拒绝草案并走CV-only兜底，未放宽Schema；
+- [ ] 阈值仍需冻结真值集校准，尤其是客餐厅开放空间与阳台/厨房嵌套边界。
 
 ## 11. 2026-08-31 上传任务异步化PoC
 

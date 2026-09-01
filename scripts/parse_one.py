@@ -76,6 +76,16 @@ def main() -> int:
                 for key in ("confirmedOpenings", "openingCandidates", "rejectedOpenings")
                 for item in stage.data.get(key, ())
             ],
+            "roomDiagnostics": [
+                {
+                    "id": item.id, "type": item.type,
+                    "status": "review" if key == "roomsNeedingReview" else "closed",
+                    "reasonCodes": list(item.reason_codes),
+                }
+                for stage in run.stages if stage.stage == "fusion"
+                for key in ("fusedRooms", "roomsNeedingReview")
+                for item in stage.data.get(key, ())
+            ],
             "reasonCodes": list(run.reasonCodes),
         }, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"[write] {args.out}")

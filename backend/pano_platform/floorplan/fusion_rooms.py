@@ -8,7 +8,7 @@ the wall graph is reported as ``NEEDS_REVIEW`` and never becomes a final room.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .fusion import FusedRoom
 from .rooms import _polygon_area
@@ -72,11 +72,55 @@ def close_rooms(fused_rooms: tuple[FusedRoom, ...], graph: WallGraph) -> RoomsFu
             needs_review.append(room_state)
             reason_codes.append("ROOM_NOT_CLOSED")
 
+    closed, overlap_review, overlap_codes = _resolve_room_overlaps(closed)
+    needs_review.extend(overlap_review)
+    reason_codes.extend(overlap_codes)
+
     return RoomsFusionResult(
         closed=tuple(closed),
         needs_review=tuple(needs_review),
         reason_codes=tuple(dict.fromkeys(reason_codes)),
     )
+
+
+def _resolve_room_overlaps(
+    rooms: list[ClosedRoom], duplicate_ratio: float = 0.85, conflict_ratio: float = 0.35
+) -> tuple[list[ClosedRoom], list[ClosedRoom], list[str]]:
+    """Suppress same-type duplicates and reject conflicting room overlaps."""
+
+    if len(rooms) < 2:
+        return rooms, [], []
+    from shapely.geometry import Polygon
+
+    ordered = sorted(rooms, key=lambda room: (-Polygon(room.polygon_px).area, room.id))
+    suppressed: set[str] = set()
+    conflicts: set[str] = set()
+    for index, left in enumerate(ordered):
+        if left.id in suppressed:
+            continue
+        left_polygon = Polygon(left.polygon_px)
+        for right in ordered[index + 1:]:
+            if right.id in suppressed:
+                continue
+            right_polygon = Polygon(right.polygon_px)
+            denominator = min(left_polygon.area, right_polygon.area)
+            ratio = left_polygon.intersection(right_polygon).area / denominator if denominator > 0 else 0.0
+            if ratio >= duplicate_ratio and left.type == right.type:
+                suppressed.add(right.id)
+            elif ratio >= conflict_ratio:
+                conflicts.update((left.id, right.id))
+
+    kept = [room for room in ordered if room.id not in suppressed and room.id not in conflicts]
+    review = [
+        replace(room, reason_codes=tuple((*room.reason_codes, "ROOM_OVERLAP_CONFLICT")))
+        for room in ordered if room.id in conflicts
+    ]
+    codes = []
+    if suppressed:
+        codes.append("DUPLICATE_ROOM_SUPPRESSED")
+    if conflicts:
+        codes.append("ROOM_OVERLAP_CONFLICT")
+    return kept, review, codes
 
 
 def _orthogonalize(

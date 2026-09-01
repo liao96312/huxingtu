@@ -19,6 +19,11 @@ def room(polygon, rid="r1") -> FusedRoom:
     return FusedRoom(id=rid, type="bedroom", polygon_px=polygon, area_mm2=1e6, area_px2=10000.0, status="ok", reason_codes=())
 
 
+def typed_room(polygon, rid, room_type) -> FusedRoom:
+    value = room(polygon, rid)
+    return FusedRoom(**{**value.__dict__, "type": room_type})
+
+
 def test_axis_aligned_room_closes() -> None:
     poly = ((100.0, 100.0), (250.0, 100.0), (250.0, 250.0), (100.0, 250.0))
     result = close_rooms((room(poly),), graph())
@@ -59,3 +64,21 @@ def test_collinear_duplicate_vertices_removed() -> None:
     result = close_rooms((room(poly),), graph())
     closed = result.closed[0]
     assert len(closed.polygon_px) == 4  # midpoint (150,100) dropped as collinear
+
+
+def test_same_type_duplicate_room_is_suppressed() -> None:
+    first = room(((100, 100), (300, 100), (300, 300), (100, 300)), "r1")
+    duplicate = room(((105, 105), (295, 105), (295, 295), (105, 295)), "r2")
+    result = close_rooms((first, duplicate), graph())
+    assert len(result.closed) == 1
+    assert not result.needs_review
+    assert "DUPLICATE_ROOM_SUPPRESSED" in result.reason_codes
+
+
+def test_different_room_types_with_large_overlap_need_review() -> None:
+    bedroom = typed_room(((100, 100), (300, 100), (300, 300), (100, 300)), "r1", "bedroom")
+    kitchen = typed_room(((120, 120), (300, 120), (300, 300), (120, 300)), "r2", "kitchen")
+    result = close_rooms((bedroom, kitchen), graph())
+    assert not result.closed
+    assert len(result.needs_review) == 2
+    assert "ROOM_OVERLAP_CONFLICT" in result.reason_codes
