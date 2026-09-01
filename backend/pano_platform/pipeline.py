@@ -280,12 +280,23 @@ def _render_panoramas(
         ai_ready = False
         if generate_ai:
             try:
-                original = _generate_ai_panorama(
+                candidate = _generate_ai_panorama(
                     structural, folder / "ai-erp-2048x1024.jpg", room.type,
                     _opening_hint(layout, room),
                 )
-                ai_generated_count += 1
-                ai_ready = True
+                qa = _qa_ai_panorama_structure(structural, candidate)
+                (folder / "ai-structure-qa.json").write_text(
+                    json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+                if qa["status"] != "accepted":
+                    # A photorealistic result that drifts from the vector
+                    # topology is worse than a clearly labelled structural
+                    # preview: it can visually invent doors or wall breaks.
+                    ai_failed_rooms.append(f"{room.name}（结构校验失败）")
+                else:
+                    original = candidate
+                    ai_generated_count += 1
+                    ai_ready = True
             except Exception:  # structural preview remains deliverable
                 ai_failed_rooms.append(room.name)
 
@@ -331,6 +342,100 @@ def _render_panoramas(
     manifest = PanoManifest.model_validate(payload)
     _write_model(_data_root() / project_id / "pano-manifest.json", manifest)
     return manifest, ai_generated_count, ai_failed_rooms, superres_count, superres_failed_rooms
+
+
+def _qa_ai_panorama_structure(reference: Path, candidate: Path) -> dict[str, Any]:
+    """Check coarse ERP topology before promoting an AI panorama.
+
+    This is deliberately a proxy gate, not semantic segmentation.  It catches
+    blank/malformed outputs and large structural drift while allowing furniture
+    texture that does not dominate the low-frequency edge map.  Horizontal
+    distance wraps at the ERP seam so a seam-adjacent wall is not penalized.
+    """
+
+    reference_image = cv2.imread(str(reference), cv2.IMREAD_COLOR)
+    candidate_image = cv2.imread(str(candidate), cv2.IMREAD_COLOR)
+    if reference_image is None or candidate_image is None:
+        raise ValueError("AI structure QA requires readable reference and candidate images")
+
+    size = (512, 256)
+
+    def low_frequency_edges(image: np.ndarray) -> np.ndarray:
+        resized = cv2.resize(image, size, interpolation=cv2.INTER_AREA)
+        gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+        blurred = cv2.GaussianBlur(gray, (0, 0), 2.2)
+        # Structural ERP uses deliberately soft gradients; low adaptive
+        # thresholds keep those wall boundaries visible after downsampling.
+        return cv2.Canny(blurred, 10, 30) > 0
+
+    reference_edge = low_frequency_edges(reference_image)
+    candidate_edge = low_frequency_edges(candidate_image)
+    # render_structural_erp intentionally includes three visual guide bands;
+    # they are useful to a human but not architectural topology.
+    for ratio in (0.50, 0.72, 0.86):
+        row = int(reference_edge.shape[0] * ratio)
+        for edge in (reference_edge, candidate_edge):
+            edge[max(0, row - 2):min(edge.shape[0], row + 3)] = False
+
+    def long_line_count(edge: np.ndarray) -> int:
+        lines = cv2.HoughLinesP(
+            edge.astype(np.uint8) * 255, 1, np.pi / 180,
+            threshold=20, minLineLength=30, maxLineGap=5,
+        )
+        return 0 if lines is None else int(len(lines))
+
+    def wrapped_distance(edge: np.ndarray) -> np.ndarray:
+        tiled = np.concatenate((edge, edge, edge), axis=1)
+        distance = cv2.distanceTransform((~tiled).astype(np.uint8), cv2.DIST_L2, 3)
+        width = edge.shape[1]
+        return distance[:, width:2 * width]
+
+    reference_density = float(reference_edge.mean())
+    candidate_density = float(candidate_edge.mean())
+    if reference_density <= 0:
+        raise ValueError("AI structure QA reference contains no architectural edges")
+    reference_long_lines = long_line_count(reference_edge)
+    candidate_long_lines = long_line_count(candidate_edge)
+    distance_to_candidate = wrapped_distance(candidate_edge)
+    distance_to_reference = wrapped_distance(reference_edge)
+    tolerance_px = 8
+    reference_recall = float(
+        (distance_to_candidate[reference_edge] <= tolerance_px).mean()
+    ) if reference_edge.any() else 0.0
+    candidate_precision = float(
+        (distance_to_reference[candidate_edge] <= tolerance_px).mean()
+    ) if candidate_edge.any() else 0.0
+    density_ratio = candidate_density / reference_density
+
+    reasons: list[str] = []
+    if reference_recall < 0.25:
+        reasons.append("STRUCTURE_EDGE_RECALL_LOW")
+    if candidate_precision < 0.08:
+        reasons.append("STRUCTURE_EDGE_PRECISION_LOW")
+    if not 0.35 <= density_ratio <= 8.0:
+        reasons.append("STRUCTURE_EDGE_DENSITY_DRIFT")
+    if candidate_long_lines > max(24, reference_long_lines * 5):
+        reasons.append("STRUCTURE_LONG_LINE_DENSITY_DRIFT")
+    return {
+        "schemaVersion": "0.1.0",
+        "method": "low-frequency-wrapped-edge-proxy-v1",
+        "status": "accepted" if not reasons else "rejected",
+        "tolerancePx": tolerance_px,
+        "referenceWidth": int(reference_image.shape[1]),
+        "referenceHeight": int(reference_image.shape[0]),
+        "candidateWidth": int(candidate_image.shape[1]),
+        "candidateHeight": int(candidate_image.shape[0]),
+        "referenceEdgeDensity": round(reference_density, 6),
+        "candidateEdgeDensity": round(candidate_density, 6),
+        "edgeDensityRatio": round(density_ratio, 4),
+        "referenceRecallWithinTolerance": round(reference_recall, 4),
+        "candidatePrecisionWithinTolerance": round(candidate_precision, 4),
+        "referenceLongLineCount": reference_long_lines,
+        "candidateLongLineCount": candidate_long_lines,
+        "reasonCodes": reasons or ["STRUCTURE_PROXY_WITHIN_GATE"],
+        "semanticIoU": None,
+        "semanticF1": None,
+    }
 
 
 def _upscale_with_realesrgan(source: Path, folder: Path) -> dict[str, Path]:

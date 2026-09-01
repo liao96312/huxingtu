@@ -131,6 +131,44 @@ def test_one_ai_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> Non
     assert sum(scene.title.endswith("AI+超分预览") for scene in manifest.scenes) == 1
 
 
+def test_ai_structure_gate_rejects_blank_candidate(tmp_path, monkeypatch) -> None:
+    import cv2
+    import numpy as np
+    from pano_platform.pipeline import _qa_ai_panorama_structure
+
+    reference = tmp_path / "reference.jpg"
+    candidate = tmp_path / "candidate.jpg"
+    source = np.full((256, 512, 3), 235, dtype=np.uint8)
+    cv2.rectangle(source, (40, 30), (470, 220), (80, 80, 80), 8)
+    cv2.imwrite(str(reference), source)
+    cv2.imwrite(str(candidate), np.full_like(source, 235))
+
+    qa = _qa_ai_panorama_structure(reference, candidate)
+    assert qa["status"] == "rejected"
+    assert "STRUCTURE_EDGE_RECALL_LOW" in qa["reasonCodes"]
+    assert qa["semanticIoU"] is None and qa["semanticF1"] is None
+
+
+def test_ai_structure_gate_rejects_excessive_long_lines(tmp_path) -> None:
+    import cv2
+    import numpy as np
+    from pano_platform.pipeline import _qa_ai_panorama_structure
+
+    reference = tmp_path / "reference.jpg"
+    candidate = tmp_path / "candidate.jpg"
+    source = np.full((256, 512, 3), 235, dtype=np.uint8)
+    cv2.rectangle(source, (40, 30), (470, 220), (80, 80, 80), 8)
+    noisy = source.copy()
+    for x in np.linspace(5, 505, 50, dtype=int):
+        cv2.line(noisy, (x, 75), (x, 230), (20, 20, 20), 4)
+    cv2.imwrite(str(reference), source)
+    cv2.imwrite(str(candidate), noisy)
+
+    qa = _qa_ai_panorama_structure(reference, candidate)
+    assert qa["status"] == "rejected"
+    assert "STRUCTURE_LONG_LINE_DENSITY_DRIFT" in qa["reasonCodes"]
+
+
 def test_upload_endpoint_returns_pollable_task(monkeypatch) -> None:
     from pano_platform import main
 
