@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from pano_platform.floorplan.fusion_openings import arbitrate_cv_door_arcs, arbitrate_openings
+from pano_platform.floorplan.fusion_openings import arbitrate_cv_door_arcs, arbitrate_cv_windows, arbitrate_openings
 from pano_platform.floorplan.wall_graph import GapCandidate, WallGraph, WallSegment
 from pano_platform.vision.contracts import OpeningDraft, VlmDraft
 
@@ -195,3 +195,35 @@ def test_two_arcs_subdivide_one_oversized_physical_gap() -> None:
     assert all("CV_ARC_SUBDIVIDED_PHYSICAL_GAP" in item.reason_codes for item in result.confirmed)
     first, second = result.confirmed
     assert first.end_px[0] < second.start_px[0]
+
+
+def test_cv_parallel_lines_confirm_exterior_window_without_vlm() -> None:
+    annotation = np.zeros((1000, 1000), np.uint8)
+    annotation[92, 200:301] = 1
+    annotation[108, 200:301] = 1
+    room_above = SimpleNamespace(
+        id="top", polygon_px=((50, 20), (450, 20), (450, 95), (50, 95))
+    )
+
+    result = arbitrate_cv_windows(graph(), [room_above], annotation)
+
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].type == "window"
+    assert result.confirmed[0].wall_edge_id == "h1g"
+
+
+def test_cv_window_between_two_rooms_stays_rejected() -> None:
+    annotation = np.zeros((1000, 1000), np.uint8)
+    annotation[92, 200:301] = 1
+    annotation[108, 200:301] = 1
+    room_above = SimpleNamespace(
+        id="top", polygon_px=((50, 20), (450, 20), (450, 95), (50, 95))
+    )
+    room_below = SimpleNamespace(
+        id="bottom", polygon_px=((50, 105), (450, 105), (450, 180), (50, 180))
+    )
+
+    result = arbitrate_cv_windows(graph(), [room_above, room_below], annotation)
+
+    assert not result.confirmed
+    assert "CV_WINDOW_BETWEEN_INTERIOR_ROOMS" in result.rejected[0].reason_codes

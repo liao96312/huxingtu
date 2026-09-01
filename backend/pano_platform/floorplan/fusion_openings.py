@@ -52,6 +52,59 @@ class OpeningsFusionResult:
     reason_codes: tuple[str, ...] = field(default_factory=tuple)
 
 
+def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask) -> OpeningsFusionResult:
+    """Confirm exterior windows from CV gap + parallel-line evidence."""
+
+    confirmed: list[FusedOpening] = []
+    rejected: list[FusedOpening] = []
+    reason_codes: list[str] = []
+    room_polygons = []
+    try:
+        from shapely.geometry import Polygon
+
+        for room in rooms:
+            polygon = getattr(room, "polygon_px", None) or getattr(room, "polygon", None)
+            if polygon:
+                room_polygons.append((getattr(room, "id", "room"), Polygon(polygon)))
+    except Exception:
+        room_polygons = []
+
+    for index, segment in enumerate(item for item in graph.segments if item.virtual):
+        if not _has_window_evidence(annotation_mask, segment):
+            continue
+        identifier = f"cv_window_{index:03d}"
+        width_px = hypot(segment.end[0] - segment.start[0], segment.end[1] - segment.start[1])
+        width_mm = width_px * graph.mm_per_px if graph.mm_per_px > 0 else None
+        side_rooms = _room_sides_for_segment(
+            segment.start, segment.end, segment, room_polygons, graph.wall_width_px
+        )
+        reasons: list[str] = []
+        if width_mm is None or not WINDOW_WIDTH_MIN_MM <= width_mm <= WINDOW_WIDTH_MAX_MM:
+            reasons.append("CV_WINDOW_WIDTH_OUT_OF_PROFILE")
+        if not side_rooms[0] and not side_rooms[1]:
+            reasons.append("CV_WINDOW_NO_ADJACENT_ROOM")
+        elif set(side_rooms[0]) & set(side_rooms[1]):
+            reasons.append("CV_WINDOW_SAME_ROOM_BOTH_SIDES")
+        elif side_rooms[0] and side_rooms[1]:
+            reasons.append("CV_WINDOW_BETWEEN_INTERIOR_ROOMS")
+        if reasons:
+            rejected.append(FusedOpening(
+                identifier, "window", segment.id, segment.start, segment.end,
+                width_mm, "rejected", tuple(reasons), side_rooms,
+            ))
+            reason_codes.extend(reasons)
+        else:
+            confirmed.append(FusedOpening(
+                identifier, "window", segment.id, segment.start, segment.end,
+                width_mm, "confirmed", ("CV_WINDOW_AUTOMATIC",), side_rooms,
+            ))
+
+    return OpeningsFusionResult(
+        confirmed=tuple(confirmed), candidates=(), rejected=tuple(rejected),
+        reason_codes=tuple(dict.fromkeys(reason_codes)),
+    )
+
+
 def arbitrate_cv_door_arcs(
     proposals,
     graph: WallGraph,

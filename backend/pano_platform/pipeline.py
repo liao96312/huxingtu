@@ -133,7 +133,12 @@ def run_upload_pipeline(
     cv_opening_path = _data_root() / project_id / "automatic-cv-openings.json"
     if cv_opening_path.is_file():
         cv_opening_evidence = json.loads(cv_opening_path.read_text(encoding="utf-8"))
-        result["automaticCvDoorCount"] = len(cv_opening_evidence["confirmed"])
+        result["automaticCvDoorCount"] = sum(
+            item["type"] == "door" for item in cv_opening_evidence["confirmed"]
+        )
+        result["automaticCvWindowCount"] = sum(
+            item["type"] == "window" for item in cv_opening_evidence["confirmed"]
+        )
     structural_fallback_path = _data_root() / project_id / "structural-fallback-rooms.json"
     if structural_fallback_path.is_file():
         structural_fallback = json.loads(structural_fallback_path.read_text(encoding="utf-8"))
@@ -165,7 +170,7 @@ def _publish_preview(
     # the best available geometry first, then a conservative CV/envelope
     # preview; review status is evidence, not a user-action gate.
     from .floorplan.fusion import FusedRoom
-    from .floorplan.fusion_openings import arbitrate_cv_door_arcs
+    from .floorplan.fusion_openings import arbitrate_cv_door_arcs, arbitrate_cv_windows
     from .floorplan.rooms import polygonize_rooms
     from .floorplan.wall_graph import WallGraph, WallSegment
 
@@ -182,15 +187,19 @@ def _publish_preview(
         image_width = max(1200, int(max((point[0] for point in points), default=0) + 50))
         image_height = max(800, int(max((point[1] for point in points), default=0) + 50))
     wall_mask = cv_data.get("wallMask")
+    annotation_mask = None
     if wall_mask is None and decoded is not None:
         try:
             from .floorplan.preprocess import binarize, measure_strokes, separate_layers, to_grayscale
 
             gray = to_grayscale(decoded)
             binary = binarize(gray)
-            wall_mask = separate_layers(binary.ink, measure_strokes(binary.ink)).wall
+            layers = separate_layers(binary.ink, measure_strokes(binary.ink))
+            wall_mask = layers.wall
+            annotation_mask = layers.annotation
         except Exception:
             wall_mask = None
+            annotation_mask = None
     source_data = fusion.data if fusion is not None else cv_data
     fallback_codes: list[str] = []
 
@@ -238,19 +247,23 @@ def _publish_preview(
         cv_data.get("doorArcProposals") or (), graph, closed_rooms,
         image_width, image_height,
     )
-    if cv_opening_result.confirmed:
-        existing_intervals = tuple(confirmed_openings)
-        confirmed_openings = tuple(existing_intervals) + tuple(
-            candidate for candidate in cv_opening_result.confirmed
-            if not any(
+    cv_window_result = arbitrate_cv_windows(graph, closed_rooms, annotation_mask)
+    existing_intervals = list(confirmed_openings)
+    automatic_cv_confirmed = []
+    for result in (cv_window_result, cv_opening_result):
+        for candidate in result.confirmed:
+            if any(
                 candidate.wall_edge_id == existing.wall_edge_id
                 and _segments_overlap_px(
                     candidate.start_px, candidate.end_px,
                     existing.start_px, existing.end_px,
                 )
                 for existing in existing_intervals
-            )
-        )
+            ):
+                continue
+            existing_intervals.append(candidate)
+            automatic_cv_confirmed.append(candidate)
+    confirmed_openings = tuple(existing_intervals)
 
     mm_per_px = float(source_data.get("mmPerPx") or cv_data.get("mmPerPx") or graph.mm_per_px or 0)
     if not math.isfinite(mm_per_px) or mm_per_px <= 0:
@@ -369,12 +382,12 @@ def _publish_preview(
                  "startPx": item.start_px, "endPx": item.end_px,
                  "widthMm": item.width_mm, "sideRoomIds": item.side_room_ids,
                  "reasonCodes": item.reason_codes}
-                for item in cv_opening_result.confirmed
+                for item in automatic_cv_confirmed
             ],
             "rejected": [
                 {"id": item.id, "wallEdgeId": item.wall_edge_id,
                  "reasonCodes": item.reason_codes}
-                for item in cv_opening_result.rejected
+                for item in (*cv_window_result.rejected, *cv_opening_result.rejected)
             ],
         }, ensure_ascii=False, indent=2, default=list), encoding="utf-8",
     )
