@@ -76,6 +76,16 @@ def run_upload_pipeline(
         "aiGenerated": False,
     }
 
+    input_stage = next((stage for stage in run.stages if stage.stage == "input_gate"), None)
+    if input_stage is not None and input_stage.status != "accepted":
+        # Only a failed input gate is allowed to stop the automatic chain. A
+        # weak CV/VLM stage below it is handled by the preview envelope path.
+        result.update({
+            "pipelineStatus": "failed",
+            "message": f"输入门禁未通过：{input_stage.detail or 'invalid image'}",
+        })
+        return result
+
     try:
         layout, rooms, scene = _publish_preview(project_id, image_bytes, run)
         manifest, ai_generated_count, ai_failed_rooms, superres_count, superres_failed_rooms = _render_panoramas(
@@ -101,6 +111,12 @@ def run_upload_pipeline(
         "superresFailedRooms": superres_failed_rooms,
     })
     warnings = []
+    fallback_path = _data_root() / project_id / "automatic-fallback.json"
+    if fallback_path.is_file():
+        fallback_evidence = json.loads(fallback_path.read_text(encoding="utf-8"))
+        if fallback_evidence["reasonCodes"]:
+            result["automaticFallbackCodes"] = fallback_evidence["reasonCodes"]
+            warnings.append("识别证据不足，已自动降级为可浏览预览：" + ", ".join(fallback_evidence["reasonCodes"]))
     if ai_failed_rooms:
         warnings.append(f"以下房间AI失败，已回退结构全景：{', '.join(ai_failed_rooms)}")
     if superres_failed_rooms:
@@ -115,20 +131,38 @@ def _publish_preview(
 ) -> tuple[LayoutRevision, DerivedRoomSet, SceneGeometry]:
     fusion = next((stage for stage in run.stages if stage.stage == "fusion"), None)
     cv_stage = next((stage for stage in run.stages if stage.stage == "cv_structure"), None)
-    if fusion is None:
-        # CV-only fallback keeps the upload flow useful when Tuzi is down. It
-        # is always a preview with generic room labels, never a confirmed layout.
-        if cv_stage is None:
-            raise PipelineNotReady("视觉草案未进入几何融合，当前没有可生成全景的房间")
-        graph = cv_stage.data.get("wallGraph")
-        if graph is None:
-            raise PipelineNotReady("CV墙图不可用，当前没有可生成全景的房间")
-        from .floorplan.fusion import FusedRoom
-        from .floorplan.rooms import polygonize_rooms
+    # The viewer path must remain automatic even when recognition is weak. Use
+    # the best available geometry first, then a conservative CV/envelope
+    # preview; review status is evidence, not a user-action gate.
+    from .floorplan.fusion import FusedRoom
+    from .floorplan.rooms import polygonize_rooms
+    from .floorplan.wall_graph import WallGraph, WallSegment
 
+    cv_data = cv_stage.data if cv_stage is not None else {}
+    graph = (fusion.data.get("wallGraph") if fusion is not None else None) or cv_data.get("wallGraph")
+    decoded = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+    if decoded is not None:
+        image_height, image_width = decoded.shape[:2]
+    else:
+        # Direct unit callers can provide an already-built graph without image
+        # bytes. The public upload endpoint rejects undecodable input earlier;
+        # infer a canvas here so the automatic preview contract stays intact.
+        points = [point for segment in getattr(graph, "segments", ()) for point in (segment.start, segment.end)]
+        image_width = max(1200, int(max((point[0] for point in points), default=0) + 50))
+        image_height = max(800, int(max((point[1] for point in points), default=0) + 50))
+    source_data = fusion.data if fusion is not None else cv_data
+    fallback_codes: list[str] = []
+
+    if graph is None:
+        graph = _fallback_wall_graph(image_width, image_height)
+        fallback_codes.append("AUTO_ENVELOPE_FALLBACK")
+
+    closed_rooms = tuple(fusion.data.get("fusedRooms") or ()) if fusion is not None else ()
+    confirmed_openings = fusion.data.get("confirmedOpenings") or () if fusion is not None else ()
+    if not closed_rooms:
         cv_rooms = polygonize_rooms(
-            graph, float(cv_stage.data.get("wallWidthPx") or 0),
-            (int(cv_stage.data.get("imageHeight") or 0), int(cv_stage.data.get("imageWidth") or 0)),
+            graph, float(getattr(graph, "wall_width_px", 0) or cv_data.get("wallWidthPx") or 0),
+            (image_height, image_width),
         )
         closed_rooms = tuple(
             FusedRoom(
@@ -138,17 +172,35 @@ def _publish_preview(
             for room in cv_rooms
         )
         confirmed_openings = ()
-    else:
-        graph = fusion.data.get("wallGraph")
-        closed_rooms = tuple(fusion.data.get("fusedRooms") or ())
-        confirmed_openings = fusion.data.get("confirmedOpenings") or ()
-    if graph is None or len(graph.segments) < 3 or not closed_rooms:
-        raise PipelineNotReady("墙图或闭合房间不足，结果保留为待复核")
+        if closed_rooms:
+            fallback_codes.append("CV_ONLY_ROOM")
 
-    source_data = fusion.data if fusion is not None else cv_stage.data
-    mm_per_px = float(source_data.get("mmPerPx") or graph.mm_per_px or 0)
+    if not closed_rooms:
+        # Last-resort envelope keeps a valid image moving through modeling and
+        # panorama generation. It is intentionally generic and review-marked.
+        polygon = _fallback_room_polygon(graph, image_width, image_height)
+        area_px2 = abs(_polygon_area_px(polygon))
+        closed_rooms = (
+            FusedRoom(
+                "auto_room_000", "other", polygon, area_px2,
+                area_px2, "review", ("AUTO_ENVELOPE_FALLBACK",),
+            ),
+        )
+        confirmed_openings = ()
+        fallback_codes.append("AUTO_ENVELOPE_FALLBACK")
+
+    if len(graph.segments) < 3:
+        graph = _fallback_wall_graph(image_width, image_height, graph=graph)
+        fallback_codes.append("AUTO_WALL_ENVELOPE_FALLBACK")
+
+    mm_per_px = float(source_data.get("mmPerPx") or cv_data.get("mmPerPx") or graph.mm_per_px or 0)
     if not math.isfinite(mm_per_px) or mm_per_px <= 0:
-        raise PipelineNotReady("比例尺不可用，不能构建3D场景")
+        mm_per_px = _estimate_preview_scale(image_width, image_height)
+        fallback_codes.append("AUTO_SCALE_ESTIMATE")
+    if fallback_codes:
+        # Preserve diagnostics on the parse stage without promoting this to a
+        # confirmed revision. The generated preview remains fully viewable.
+        fallback_codes = list(dict.fromkeys(fallback_codes))
 
     node_ids: dict[tuple[float, float], str] = {}
     nodes: list[dict] = []
@@ -218,7 +270,8 @@ def _publish_preview(
         "coordinateFrame": "business-z-up-rh",
         "source": {
             "imageArtifactId": f"sha256:{hashlib.sha256(image_bytes).hexdigest()}",
-            "pixelToWorldTransform": transform, "scaleConfidence": 0.5,
+            "pixelToWorldTransform": transform,
+            "scaleConfidence": 0.1 if fallback_codes else 0.5,
         },
         "nodes": nodes, "edges": edges, "openings": openings,
         "roomAnnotations": room_annotations,
@@ -248,10 +301,77 @@ def _publish_preview(
     scene = build_scene_geometry(layout, rooms)
 
     folder = _data_root() / project_id
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "automatic-fallback.json").write_text(
+        json.dumps({
+            "schemaVersion": "0.1.0", "projectId": project_id,
+            "status": "preview", "reasonCodes": fallback_codes,
+        }, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     _write_model(folder / "layout-revision.preview-v1.json", layout)
     _write_model(folder / "rooms.preview-v1.json", rooms)
     _write_model(folder / "scene-geometry.preview-v1.json", scene)
     return layout, rooms, scene
+
+
+def _estimate_preview_scale(width: int, height: int) -> float:
+    """Estimate a display-only scale when neither CV nor VLM has one."""
+
+    return max(1.0, min(10.0, 6000.0 / max(width, height, 1)))
+
+
+def _fallback_room_polygon(graph, width: int, height: int) -> tuple[tuple[float, float], ...]:
+    points = [point for segment in getattr(graph, "segments", ()) for point in (segment.start, segment.end)]
+    if points:
+        left = max(0.0, min(point[0] for point in points))
+        right = min(float(width - 1), max(point[0] for point in points))
+        top = max(0.0, min(point[1] for point in points))
+        bottom = min(float(height - 1), max(point[1] for point in points))
+    else:
+        margin_x, margin_y = width * 0.05, height * 0.05
+        left, right = margin_x, width - margin_x
+        top, bottom = margin_y, height - margin_y
+    if right - left < 40 or bottom - top < 40:
+        margin_x, margin_y = width * 0.05, height * 0.05
+        left, right = margin_x, width - margin_x
+        top, bottom = margin_y, height - margin_y
+    return ((left, top), (right, top), (right, bottom), (left, bottom))
+
+
+def _fallback_wall_graph(width: int, height: int, *, graph=None) -> WallGraph:
+    from .floorplan.wall_graph import WallGraph, WallSegment
+
+    polygon = _fallback_room_polygon(graph, width, height) if graph is not None else (
+        (width * 0.05, height * 0.05),
+        (width * 0.95, height * 0.05),
+        (width * 0.95, height * 0.95),
+        (width * 0.05, height * 0.95),
+    )
+    thickness = max(4.0, min(width, height) * 0.01)
+    segments = tuple(
+        WallSegment(
+            f"auto_boundary_{index + 1}",
+            "horizontal" if start[1] == end[1] else "vertical",
+            start, end, thickness, False,
+        )
+        for index, (start, end) in enumerate(zip(polygon, polygon[1:] + polygon[:1]))
+    )
+    return WallGraph(
+        horizontal_axes=tuple(sorted({point[1] for point in polygon})),
+        vertical_axes=tuple(sorted({point[0] for point in polygon})),
+        segments=segments,
+        gaps=(),
+        mm_per_px=0.0,
+        wall_width_px=thickness,
+    )
+
+
+def _polygon_area_px(points: tuple[tuple[float, float], ...]) -> float:
+    return abs(sum(
+        points[index][0] * points[(index + 1) % len(points)][1]
+        - points[(index + 1) % len(points)][0] * points[index][1]
+        for index in range(len(points))
+    ) / 2.0) if len(points) >= 3 else 0.0
 
 
 def _render_panoramas(

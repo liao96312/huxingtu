@@ -72,6 +72,39 @@ def test_cv_only_run_still_builds_automatic_preview(tmp_path, monkeypatch) -> No
     assert scene.solids
 
 
+def test_weak_recognition_still_publishes_envelope_preview(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
+    run = ParseRun(
+        "22222222-2222-2222-2222-222222222222", ParseStatus.FAILED,
+        (StageGraph("input_gate", "accepted", "image/png 1200x800"),
+         StageGraph("cv_structure", "failed", "wall detector unavailable")),
+        VisionMode.OFF, True, False, False, ("CV_STRUCTURE_FAILED",),
+    )
+    layout, rooms, scene = _publish_preview("weak-recognition", b"not-a-real-image", run)
+
+    assert len(rooms.rooms) == 1
+    assert rooms.rooms[0].type == "other"
+    assert layout.source.scaleConfidence == 0.1
+    assert len(layout.edges) == 4
+    assert scene.solids
+    evidence = tmp_path / "weak-recognition/automatic-fallback.json"
+    assert evidence.is_file()
+    assert "AUTO_ENVELOPE_FALLBACK" in evidence.read_text(encoding="utf-8")
+
+
+def test_rejected_input_does_not_get_an_envelope(tmp_path, monkeypatch) -> None:
+    from pano_platform.pipeline import run_upload_pipeline
+
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
+    result = run_upload_pipeline(
+        b"not-a-real-image", project_id="invalid-upload",
+        allow_external_vision=False, generate_ai=False,
+    )
+
+    assert result["pipelineStatus"] == "failed"
+    assert result["viewerUrl"] is None
+
+
 def test_ai_renders_every_room(tmp_path, monkeypatch) -> None:
     import shutil
     from pano_platform import pipeline
