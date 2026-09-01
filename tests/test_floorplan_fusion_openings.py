@@ -160,3 +160,15 @@ def test_cv_door_arc_can_recover_leaf_that_hides_wall_gap() -> None:
     assert len(result.confirmed) == 1
     assert result.confirmed[0].wall_edge_id == "h1"
     assert 500 <= result.confirmed[0].width_mm <= 1500
+
+
+def test_high_score_arc_on_physical_gap_can_continue_when_cv_rooms_are_nested() -> None:
+    proposal = SimpleNamespace(center=(250.0, 100.0), radius_px=50.0, arc_score=1.0)
+    nested_room = SimpleNamespace(
+        id="outer", polygon_px=((40, 40), (460, 40), (460, 160), (40, 160))
+    )
+
+    result = arbitrate_cv_door_arcs([proposal], graph(), [nested_room], 1000, 1000)
+
+    assert len(result.confirmed) == 1
+    assert "CV_ARC_SHARED_ROOM_PHYSICAL_GAP" in result.confirmed[0].reason_codes
