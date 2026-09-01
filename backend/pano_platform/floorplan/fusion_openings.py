@@ -347,8 +347,16 @@ def _room_sides_for_segment(start, end, segment, room_polygons, wall_width_px: f
         for room_id, polygon in room_polygons:
             for side, sample in enumerate(samples):
                 if polygon.covers(sample):
-                    sides[side].append(room_id)
-        return tuple(sorted(set(sides[0]))), tuple(sorted(set(sides[1])))
+                    # CV fallback can contain a conservative outer envelope
+                    # that nests smaller room polygons. The smallest covering
+                    # polygon is the most specific room for topology sampling;
+                    # retaining every enclosing polygon makes both sides look
+                    # like the same room and rejects real internal doors.
+                    sides[side].append((polygon.area, room_id))
+        return (
+            (min(sides[0])[1],) if sides[0] else (),
+            (min(sides[1])[1],) if sides[1] else (),
+        )
     except Exception:
         return (), ()
 

@@ -181,6 +181,16 @@ def _publish_preview(
         points = [point for segment in getattr(graph, "segments", ()) for point in (segment.start, segment.end)]
         image_width = max(1200, int(max((point[0] for point in points), default=0) + 50))
         image_height = max(800, int(max((point[1] for point in points), default=0) + 50))
+    wall_mask = cv_data.get("wallMask")
+    if wall_mask is None and decoded is not None:
+        try:
+            from .floorplan.preprocess import binarize, measure_strokes, separate_layers, to_grayscale
+
+            gray = to_grayscale(decoded)
+            binary = binarize(gray)
+            wall_mask = separate_layers(binary.ink, measure_strokes(binary.ink)).wall
+        except Exception:
+            wall_mask = None
     source_data = fusion.data if fusion is not None else cv_data
     fallback_codes: list[str] = []
 
@@ -193,7 +203,7 @@ def _publish_preview(
     if not closed_rooms:
         cv_rooms = polygonize_rooms(
             graph, float(getattr(graph, "wall_width_px", 0) or cv_data.get("wallWidthPx") or 0),
-            (image_height, image_width),
+            (image_height, image_width), wall_mask=wall_mask,
         )
         closed_rooms = tuple(
             FusedRoom(

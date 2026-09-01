@@ -36,12 +36,15 @@ def polygonize_rooms(
     wall_thickness_px: float,
     canvas_shape: tuple[int, int],
     min_room_area_mm2: float = 0.5,
+    wall_mask: np.ndarray | None = None,
 ) -> tuple[Room, ...]:
     """Produce room polygons from a closed wall graph.
 
     ``canvas_shape`` is ``(height, width)`` of the original drawing. The barrier
     is drawn at image resolution; free space that is enclosed is a room. Regions
-    below ``min_room_area_mm2`` are dropped as slivers.
+    below ``min_room_area_mm2`` are dropped as slivers. When supplied,
+    ``wall_mask`` preserves wall pixels split by a door leaf or scan artifact
+    before the canonical graph is drawn.
     """
     if graph.mm_per_px <= 0:
         return ()
@@ -49,6 +52,15 @@ def polygonize_rooms(
     thickness = max(2, int(round(wall_thickness_px)))
 
     barrier = np.zeros((height, width), np.uint8)
+    if wall_mask is not None and wall_mask.shape[:2] == (height, width):
+        # Preserve wall pixels that the axis simplifier may have split at a
+        # door leaf or a short scan break; graph segments still supply the
+        # canonical thickness and virtual-gap barriers below.
+        barrier[wall_mask > 0] = 1
+        mask_radius = max(1, int(round(thickness * 0.35)))
+        barrier = cv2.dilate(
+            barrier, np.ones((mask_radius * 2 + 1, mask_radius * 2 + 1), np.uint8)
+        )
     for segment in graph.segments:
         _draw_wall(barrier, segment.start, segment.end, thickness)
     for gap in graph.gaps:
@@ -114,8 +126,13 @@ def _region_polygon(region: np.ndarray, graph: WallGraph) -> tuple[tuple[float, 
 
 def _snap(point: tuple[float, float], graph: WallGraph) -> tuple[float, float]:
     x, y = point
+    tolerance = max(2.0, graph.wall_width_px * 1.5 if graph.wall_width_px > 0 else 20.0)
     nx = _nearest(x, graph.vertical_axes) if graph.vertical_axes else x
     ny = _nearest(y, graph.horizontal_axes) if graph.horizontal_axes else y
+    if graph.vertical_axes and abs(nx - x) > tolerance:
+        nx = x
+    if graph.horizontal_axes and abs(ny - y) > tolerance:
+        ny = y
     return (nx, ny)
 
 
