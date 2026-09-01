@@ -22,3 +22,4 @@ datasets/debug/fp101-*.json
 datasets/debug/*.pid
 datasets/debug/upscale-test/
 datasets/derived/verify-*/
+datasets/derived/door-window-review/
