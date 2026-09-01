@@ -139,7 +139,9 @@ def arbitrate_cv_door_arcs(
         side_rooms = _room_sides_for_segment(start_px, end_px, segment, room_polygons, graph.wall_width_px)
         if not side_rooms[0] and not side_rooms[1]:
             reasons.append("CV_ARC_NO_ADJACENT_ROOM")
-        elif set(side_rooms[0]) & set(side_rooms[1]):
+        elif set(side_rooms[0]) & set(side_rooms[1]) and not (
+            segment.virtual and proposal.arc_score >= 0.96
+        ):
             reasons.append("CV_ARC_SAME_ROOM_BOTH_SIDES")
         if any(
             existing.wall_edge_id == segment.id
@@ -155,9 +157,12 @@ def arbitrate_cv_door_arcs(
             ))
             reason_codes.extend(reasons)
             continue
+        confirmation_codes = ["CV_ARC_AUTOMATIC"]
+        if set(side_rooms[0]) & set(side_rooms[1]):
+            confirmation_codes.append("CV_ARC_SHARED_ROOM_PHYSICAL_GAP")
         confirmed.append(FusedOpening(
             opening_id, "door", segment.id, start_px, end_px, width_mm,
-            "confirmed", ("CV_ARC_AUTOMATIC",), side_rooms,
+            "confirmed", tuple(confirmation_codes), side_rooms,
         ))
 
     return OpeningsFusionResult(
