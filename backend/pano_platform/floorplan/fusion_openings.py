@@ -16,6 +16,7 @@ candidate set rather than the ``LayoutRevision``. Nothing is published silently.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from math import hypot
 
 from .fusion_evidence import FusionEvidence
 from .wall_graph import WallGraph
@@ -49,6 +50,120 @@ class OpeningsFusionResult:
     candidates: tuple[FusedOpening, ...]
     rejected: tuple[FusedOpening, ...]
     reason_codes: tuple[str, ...] = field(default_factory=tuple)
+
+
+def arbitrate_cv_door_arcs(
+    proposals,
+    graph: WallGraph,
+    rooms,
+    image_width: int,
+    image_height: int,
+    *,
+    min_arc_score: float = 0.88,
+) -> OpeningsFusionResult:
+    """Turn existing CV door-arc proposals into topology-checked openings.
+
+    This is the CV-only complement to :func:`arbitrate_openings`: an arc may
+    open a solid WallEdge when a door leaf has covered the wall centreline, but
+    it must still project to one edge, fit the door width profile, and have a
+    room on at least one side. The result is deliberately door-only; windows
+    still require their parallel-line evidence path.
+    """
+
+    confirmed: list[FusedOpening] = []
+    rejected: list[FusedOpening] = []
+    reason_codes: list[str] = []
+    room_polygons = []
+    try:
+        from shapely.geometry import Polygon
+
+        for room in rooms:
+            polygon = getattr(room, "polygon_px", None) or getattr(room, "polygon", None)
+            if polygon:
+                room_polygons.append((getattr(room, "id", "room"), Polygon(polygon)))
+    except Exception:
+        room_polygons = []
+
+    for index, proposal in enumerate(proposals):
+        opening_id = f"cv_opening_{index:03d}"
+        center = tuple(float(value) for value in proposal.center)
+        if proposal.arc_score < min_arc_score:
+            rejected.append(FusedOpening(
+                opening_id, "door", "", center, center, None, "rejected",
+                ("CV_ARC_SCORE_LOW",),
+            ))
+            reason_codes.append("CV_ARC_SCORE_LOW")
+            continue
+
+        nearest = []
+        for segment in graph.segments:
+            projected = _project_to_segment(center, segment)
+            if projected["distance"] <= max(12.0, graph.wall_width_px * 2.5):
+                nearest.append((projected["distance"], 0 if segment.virtual else 1, segment, projected))
+        if not nearest:
+            rejected.append(FusedOpening(
+                opening_id, "door", "", center, center, None, "rejected",
+                ("CV_ARC_NO_WALL_EDGE",),
+            ))
+            reason_codes.append("CV_ARC_NO_WALL_EDGE")
+            continue
+
+        _, _, segment, projected = min(nearest, key=lambda item: (item[1], item[0]))
+        length = hypot(segment.end[0] - segment.start[0], segment.end[1] - segment.start[1])
+        if length <= 0:
+            continue
+        if segment.virtual:
+            start_px, end_px = segment.start, segment.end
+            width_px = length
+        else:
+            # A door leaf radius is the best available interval estimate when
+            # the leaf has obscured the wall gap. Centre the interval at the
+            # projected arc and keep it on the physical wall edge.
+            # The detected circle radius is the leaf sweep, while the door
+            # opening spans both sides of the projected centreline. Use the
+            # full sweep as the half-width estimate and clamp it to the wall.
+            half = max(1.0, float(proposal.radius_px))
+            start_along = max(0.0, projected["along_span"] - half)
+            end_along = min(length, projected["along_span"] + half)
+            width_px = end_along - start_along
+            unit = ((segment.end[0] - segment.start[0]) / length, (segment.end[1] - segment.start[1]) / length)
+            start_px = (segment.start[0] + unit[0] * start_along, segment.start[1] + unit[1] * start_along)
+            end_px = (segment.start[0] + unit[0] * end_along, segment.start[1] + unit[1] * end_along)
+
+        width_mm = width_px * graph.mm_per_px if graph.mm_per_px > 0 else None
+        reasons: list[str] = []
+        if width_mm is None or not DOOR_WIDTH_MIN_MM <= width_mm <= DOOR_WIDTH_MAX_MM:
+            reasons.append("CV_ARC_WIDTH_OUT_OF_PROFILE")
+        if not segment.virtual and proposal.arc_score < 0.96:
+            reasons.append("CV_ARC_SOLID_WALL_SCORE_LOW")
+        side_rooms = _room_sides_for_segment(start_px, end_px, segment, room_polygons, graph.wall_width_px)
+        if not side_rooms[0] and not side_rooms[1]:
+            reasons.append("CV_ARC_NO_ADJACENT_ROOM")
+        elif set(side_rooms[0]) & set(side_rooms[1]):
+            reasons.append("CV_ARC_SAME_ROOM_BOTH_SIDES")
+        if any(
+            existing.wall_edge_id == segment.id
+            and _segments_overlap(start_px, end_px, existing.start_px, existing.end_px, OVERLAP_TOLERANCE_PX)
+            for existing in confirmed
+        ):
+            reasons.append("CV_ARC_DUPLICATE_OPENING")
+
+        if reasons:
+            rejected.append(FusedOpening(
+                opening_id, "door", segment.id, start_px, end_px, width_mm,
+                "rejected", tuple(reasons), side_rooms,
+            ))
+            reason_codes.extend(reasons)
+            continue
+        confirmed.append(FusedOpening(
+            opening_id, "door", segment.id, start_px, end_px, width_mm,
+            "confirmed", ("CV_ARC_AUTOMATIC",), side_rooms,
+        ))
+
+    return OpeningsFusionResult(
+        confirmed=tuple(confirmed), candidates=(), rejected=tuple(rejected),
+        reason_codes=tuple(dict.fromkeys(reason_codes)),
+    )
 
 
 def arbitrate_openings(
@@ -210,6 +325,32 @@ def _adjacent_room_ids(draft, edge: dict, image_width: int, image_height: int) -
             if polygon.covers(sample):
                 sides[side].add(f"vlm_room_{index:03d}")
     return sides[0], sides[1]
+
+
+def _room_sides_for_segment(start, end, segment, room_polygons, wall_width_px: float) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Sample room polygons on both sides of a pixel wall segment."""
+
+    length = hypot(end[0] - start[0], end[1] - start[1])
+    if length <= 0:
+        return (), ()
+    midpoint = ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2)
+    normal = (-(end[1] - start[1]) / length, (end[0] - start[0]) / length)
+    offset = max(8.0, wall_width_px * 1.5)
+    try:
+        from shapely.geometry import Point
+
+        samples = (
+            Point(midpoint[0] + normal[0] * offset, midpoint[1] + normal[1] * offset),
+            Point(midpoint[0] - normal[0] * offset, midpoint[1] - normal[1] * offset),
+        )
+        sides = [[], []]
+        for room_id, polygon in room_polygons:
+            for side, sample in enumerate(samples):
+                if polygon.covers(sample):
+                    sides[side].append(room_id)
+        return tuple(sorted(set(sides[0]))), tuple(sorted(set(sides[1])))
+    except Exception:
+        return (), ()
 
 
 def _project_to_segment(point: tuple[float, float], segment) -> dict:

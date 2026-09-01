@@ -130,6 +130,10 @@ def run_upload_pipeline(
         "superresFailedRooms": superres_failed_rooms,
     })
     warnings = []
+    cv_opening_path = _data_root() / project_id / "automatic-cv-openings.json"
+    if cv_opening_path.is_file():
+        cv_opening_evidence = json.loads(cv_opening_path.read_text(encoding="utf-8"))
+        result["automaticCvDoorCount"] = len(cv_opening_evidence["confirmed"])
     structural_fallback_path = _data_root() / project_id / "structural-fallback-rooms.json"
     if structural_fallback_path.is_file():
         structural_fallback = json.loads(structural_fallback_path.read_text(encoding="utf-8"))
@@ -161,6 +165,7 @@ def _publish_preview(
     # the best available geometry first, then a conservative CV/envelope
     # preview; review status is evidence, not a user-action gate.
     from .floorplan.fusion import FusedRoom
+    from .floorplan.fusion_openings import arbitrate_cv_door_arcs
     from .floorplan.rooms import polygonize_rooms
     from .floorplan.wall_graph import WallGraph, WallSegment
 
@@ -218,6 +223,24 @@ def _publish_preview(
     if len(graph.segments) < 3:
         graph = _fallback_wall_graph(image_width, image_height, graph=graph)
         fallback_codes.append("AUTO_WALL_ENVELOPE_FALLBACK")
+
+    cv_opening_result = arbitrate_cv_door_arcs(
+        cv_data.get("doorArcProposals") or (), graph, closed_rooms,
+        image_width, image_height,
+    )
+    if cv_opening_result.confirmed:
+        existing_intervals = tuple(confirmed_openings)
+        confirmed_openings = tuple(existing_intervals) + tuple(
+            candidate for candidate in cv_opening_result.confirmed
+            if not any(
+                candidate.wall_edge_id == existing.wall_edge_id
+                and _segments_overlap_px(
+                    candidate.start_px, candidate.end_px,
+                    existing.start_px, existing.end_px,
+                )
+                for existing in existing_intervals
+            )
+        )
 
     mm_per_px = float(source_data.get("mmPerPx") or cv_data.get("mmPerPx") or graph.mm_per_px or 0)
     if not math.isfinite(mm_per_px) or mm_per_px <= 0:
@@ -328,6 +351,23 @@ def _publish_preview(
 
     folder = _data_root() / project_id
     folder.mkdir(parents=True, exist_ok=True)
+    (folder / "automatic-cv-openings.json").write_text(
+        json.dumps({
+            "schemaVersion": "0.1.0", "projectId": project_id,
+            "confirmed": [
+                {"id": item.id, "type": item.type, "wallEdgeId": item.wall_edge_id,
+                 "startPx": item.start_px, "endPx": item.end_px,
+                 "widthMm": item.width_mm, "sideRoomIds": item.side_room_ids,
+                 "reasonCodes": item.reason_codes}
+                for item in cv_opening_result.confirmed
+            ],
+            "rejected": [
+                {"id": item.id, "wallEdgeId": item.wall_edge_id,
+                 "reasonCodes": item.reason_codes}
+                for item in cv_opening_result.rejected
+            ],
+        }, ensure_ascii=False, indent=2, default=list), encoding="utf-8",
+    )
     (folder / "automatic-fallback.json").write_text(
         json.dumps({
             "schemaVersion": "0.1.0", "projectId": project_id,
@@ -398,6 +438,13 @@ def _polygon_area_px(points: tuple[tuple[float, float], ...]) -> float:
         - points[(index + 1) % len(points)][0] * points[index][1]
         for index in range(len(points))
     ) / 2.0) if len(points) >= 3 else 0.0
+
+
+def _segments_overlap_px(left_start, left_end, right_start, right_end, tolerance: float = 8.0) -> bool:
+    axis = 0 if abs(left_end[0] - left_start[0]) >= abs(left_end[1] - left_start[1]) else 1
+    left = sorted((left_start[axis], left_end[axis]))
+    right = sorted((right_start[axis], right_end[axis]))
+    return min(left[1], right[1]) - max(left[0], right[0]) > tolerance
 
 
 def _render_panoramas(

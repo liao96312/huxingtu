@@ -125,6 +125,7 @@ def run_cv_structure(image_bytes: bytes) -> StageGraph:
         from ..vision.input_artifact import image_dimensions
         from ..floorplan.preprocess import assess_legibility, binarize, measure_strokes, separate_layers, to_grayscale
         from ..floorplan.wall_graph import build_wall_graph
+        from ..opening_detection import detect_door_arc_proposals
 
         decoded = cv2.imdecode(image_bytes_from_cv2(image_bytes), cv2.IMREAD_COLOR)
         if decoded is None:
@@ -135,6 +136,11 @@ def run_cv_structure(image_bytes: bytes) -> StageGraph:
         layers = separate_layers(binz.ink, strokes)
         gate = assess_legibility(binz, strokes, layers)
         graph = build_wall_graph(layers, strokes)
+        try:
+            direct_gray = cv2.imdecode(image_bytes_from_cv2(image_bytes), cv2.IMREAD_GRAYSCALE)
+            door_arcs = tuple(detect_door_arc_proposals(direct_gray)) if direct_gray is not None else ()
+        except Exception:
+            door_arcs = ()
         return StageGraph(
             "cv_structure", "accepted" if gate.accepted else "needsReview",
             detail=f"mm/px={graph.mm_per_px:.3f}, segments={len(graph.segments)}, gaps={len(graph.gaps)}",
@@ -146,6 +152,7 @@ def run_cv_structure(image_bytes: bytes) -> StageGraph:
                 "gaps": len(graph.gaps),
                 "wallGraph": graph,
                 "wallWidthPx": strokes.wall_width_px,
+                "doorArcProposals": door_arcs,
                 "imageWidth": decoded.shape[1],
                 "imageHeight": decoded.shape[0],
             },

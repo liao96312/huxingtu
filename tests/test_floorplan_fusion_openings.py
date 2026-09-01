@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import numpy as np
 
-from pano_platform.floorplan.fusion_openings import arbitrate_openings
+from pano_platform.floorplan.fusion_openings import arbitrate_cv_door_arcs, arbitrate_openings
 from pano_platform.floorplan.wall_graph import GapCandidate, WallGraph, WallSegment
 from pano_platform.vision.contracts import OpeningDraft, VlmDraft
 
@@ -124,3 +126,37 @@ def test_cv_parallel_lines_can_confirm_exterior_window() -> None:
     result = arbitrate_openings(one_side, graph(), 1000, 1000, annotation_mask=annotation)
     assert len(result.confirmed) == 1
     assert result.confirmed[0].type == "window"
+
+
+def test_cv_door_arc_can_confirm_physical_gap_with_room_topology() -> None:
+    proposal = SimpleNamespace(center=(250.0, 100.0), radius_px=50.0, arc_score=1.0)
+    room_polygons = [
+        SimpleNamespace(id="top", polygon_px=((50, 50), (450, 50), (450, 95), (50, 95))),
+        SimpleNamespace(id="bottom", polygon_px=((50, 105), (450, 105), (450, 150), (50, 150))),
+    ]
+
+    result = arbitrate_cv_door_arcs([proposal], graph(), room_polygons, 1000, 1000)
+
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].wall_edge_id == "h1g"
+    assert result.confirmed[0].width_mm == 1000
+    assert result.confirmed[0].side_room_ids == (("bottom",), ("top",))
+
+
+def test_cv_door_arc_can_recover_leaf_that_hides_wall_gap() -> None:
+    solid_graph = WallGraph(
+        horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
+        segments=(WallSegment("h1", "horizontal", (50.0, 100.0), (450.0, 100.0), 13.0, False),),
+        gaps=(), mm_per_px=10.0, wall_width_px=13.0,
+    )
+    proposal = SimpleNamespace(center=(250.0, 100.0), radius_px=70.0, arc_score=1.0)
+    room_polygons = [
+        SimpleNamespace(id="top", polygon_px=((50, 50), (450, 50), (450, 95), (50, 95))),
+        SimpleNamespace(id="bottom", polygon_px=((50, 105), (450, 105), (450, 150), (50, 150))),
+    ]
+
+    result = arbitrate_cv_door_arcs([proposal], solid_graph, room_polygons, 1000, 1000)
+
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].wall_edge_id == "h1"
+    assert 500 <= result.confirmed[0].width_mm <= 1500
