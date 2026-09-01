@@ -4,6 +4,7 @@ import json
 import cv2
 
 from pano_platform.opening_detection import (
+    DoorArcProposal,
     Line2D,
     PixelWallSegment,
     choose_single_door_origin,
@@ -77,6 +78,31 @@ def test_compass_inner_ring_in_lower_left_margin_is_not_reported() -> None:
     proposals = detect_door_arc_proposals(image)
 
     assert not any(item.center[0] < image.shape[1] * 0.28 and item.center[1] > image.shape[0] * 0.76 for item in proposals)
+
+
+def test_nearby_same_score_arc_candidates_are_stably_deduplicated() -> None:
+    from pano_platform.opening_detection import _deduplicate_proposals
+
+    proposals = [
+        DoorArcProposal((118.0, 100.0), 35.0, 1.0),
+        DoorArcProposal((100.0, 100.0), 40.0, 1.0),
+        DoorArcProposal((250.0, 200.0), 35.0, 1.0),
+    ]
+
+    result = _deduplicate_proposals(proposals, 1.0)
+    assert [(item.center, item.radius_px) for item in result] == [
+        ((100.0, 100.0), 40.0), ((250.0, 200.0), 35.0)
+    ]
+
+
+def test_lower_hough_threshold_recovers_feedback_missed_openings() -> None:
+    image_103 = cv2.imread(str(ROOT / "datasets/source/desktop-9/fp-103.png"), cv2.IMREAD_GRAYSCALE)
+    image_105 = cv2.imread(str(ROOT / "datasets/source/desktop-9/fp-105.png"), cv2.IMREAD_GRAYSCALE)
+    proposals_103 = detect_door_arc_proposals(image_103)
+    proposals_105 = detect_door_arc_proposals(image_105)
+
+    assert any(abs(item.center[0] - 410) < 15 and abs(item.center[1] - 142) < 15 for item in proposals_103)
+    assert any(abs(item.center[0] - 354) < 15 and abs(item.center[1] - 334) < 15 for item in proposals_105)
 
 
 def test_automatic_detection_artifact_contains_no_manual_annotation() -> None:

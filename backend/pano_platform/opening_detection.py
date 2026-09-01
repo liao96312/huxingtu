@@ -136,6 +136,10 @@ def cluster_collinear_window_lines(
 
 def detect_door_arc_proposals(grayscale: np.ndarray) -> list[DoorArcProposal]:
     """Propose door arcs near long dark wall strokes; topology validation remains mandatory."""
+    # OpenCV's Hough implementation can choose equal-score circles in a
+    # process-dependent order. Freeze its RNG so review IDs and cached evidence
+    # refer to the same geometry across runs.
+    cv2.setRNGSeed(0)
     short_edge = min(grayscale.shape[:2])
     scale = short_edge / 800
     min_radius = max(4, round(8 * scale))
@@ -146,7 +150,9 @@ def detect_door_arc_proposals(grayscale: np.ndarray) -> list[DoorArcProposal]:
         dp=1,
         minDist=max(6, round(10 * scale)),
         param1=100,
-        param2=20,
+        # Recover faint/partly occluded door leaves; wall-distance, arc-score
+        # and circular-marker gates below still reject loose texture circles.
+        param2=18,
         minRadius=min_radius,
         maxRadius=max_radius,
     )
@@ -204,21 +210,29 @@ def _is_closed_map_marker(
         center[0] <= grayscale.shape[1] * 0.28
         and center[1] >= grayscale.shape[0] * 0.76
     )
+    if in_lower_left_margin and radius <= max(18.0, 0.03 * min(grayscale.shape[:2])):
+        return True
     return in_lower_left_margin and coverage >= 0.55
 
 
 def _deduplicate_proposals(proposals: list[DoorArcProposal], scale: float) -> list[DoorArcProposal]:
     kept = []
-    for candidate in sorted(proposals, key=lambda item: -item.arc_score):
+    # HoughCircles does not guarantee a stable order when several candidates
+    # have the same score. Sort by geometry so review IDs remain reproducible.
+    ordered = sorted(
+        proposals,
+        key=lambda item: (-item.arc_score, item.center[1], item.center[0], item.radius_px),
+    )
+    for candidate in ordered:
         duplicate = any(
             hypot(candidate.center[0] - existing.center[0], candidate.center[1] - existing.center[1])
-            <= max(4, 0.5 * min(candidate.radius_px, existing.radius_px))
+            <= max(4, 0.65 * min(candidate.radius_px, existing.radius_px))
             and max(candidate.radius_px, existing.radius_px) / min(candidate.radius_px, existing.radius_px) < 1.7
             for existing in kept
         )
         if not duplicate:
             kept.append(candidate)
-    return kept
+    return sorted(kept, key=lambda item: (item.center[1], item.center[0], item.radius_px))
 
 
 def detect_wall_anchored_door_arcs(

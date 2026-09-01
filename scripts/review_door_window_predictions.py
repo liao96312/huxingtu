@@ -55,6 +55,7 @@ def _draw_arc(image: np.ndarray, center, radius: float, label: str) -> None:
 def render_sample(image_path: Path, output_dir: Path, mode: VisionMode, config, existing: dict | None = None) -> dict:
     payload = image_path.read_bytes()
     image = cv2.imdecode(np.frombuffer(payload, np.uint8), cv2.IMREAD_COLOR)
+    gray_image = cv2.imdecode(np.frombuffer(payload, np.uint8), cv2.IMREAD_GRAYSCALE)
     if image is None:
         raise ValueError(f"cannot decode {image_path}")
     height, width = image.shape[:2]
@@ -82,7 +83,9 @@ def render_sample(image_path: Path, output_dir: Path, mode: VisionMode, config, 
             "reasonCodes": ["CV_PHYSICAL_GAP_PROPOSAL"],
         })
 
-    arcs = detect_door_arc_proposals(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+    if gray_image is None:
+        raise ValueError(f"cannot decode grayscale image {image_path}")
+    arcs = detect_door_arc_proposals(gray_image)
     for index, arc in enumerate(arcs, 1):
         _draw_arc(arc_overlay, arc.center, arc.radius_px, f"A{index}")
         predictions.append({
@@ -152,7 +155,7 @@ def _html(report: dict) -> str:
 body{{margin:0;background:#111827;color:#e5e7eb;font:14px/1.45 system-ui,'Microsoft YaHei';}}main{{max-width:1800px;margin:auto;padding:24px}}h1{{margin:0 0 8px}}.muted{{color:#9ca3af}}.legend{{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0}}.dot{{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:5px}}.card{{background:#1f2937;border:1px solid #374151;border-radius:14px;padding:16px;margin:18px 0}}.images{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}}img{{width:100%;background:white;border-radius:8px}}table{{width:100%;border-collapse:collapse;margin-top:12px}}td,th{{border-bottom:1px solid #374151;padding:7px;text-align:left}}select,input{{background:#111827;color:#e5e7eb;border:1px solid #4b5563;border-radius:6px;padding:6px}}button{{position:sticky;bottom:18px;background:#2563eb;color:white;border:0;border-radius:9px;padding:12px 18px;font-weight:700;cursor:pointer}}@media(max-width:1000px){{.images{{grid-template-columns:1fr 1fr}}}}@media(max-width:650px){{.images{{grid-template-columns:1fr}}}}
 </style></head><body><main><h1>门窗自动识别人工评价</h1><p class='muted'>左侧原图，右侧算法叠加。P编号用于逐条评价；G是CV物理缺口，只作证据，不等于已确认门窗。评价保存在当前浏览器，可导出JSON。</p>
 <div class='legend'><span><i class='dot' style='background:#28be28'></i>confirmed</span><span><i class='dot' style='background:#ffa500'></i>candidate</span><span><i class='dot' style='background:#dc2828'></i>rejected</span><span><i class='dot' style='background:#dc3cdc'></i>视觉原始提议</span><span><i class='dot' style='background:#00b4ff'></i>A：CV门弧</span><span><i class='dot' style='background:#ffdc00'></i>G：CV物理缺口</span></div><div id='cards'></div><button id='export'>导出评价 JSON</button>
-<script>const REPORT={data};const KEY='door-window-review-v1';let feedback=JSON.parse(localStorage.getItem(KEY)||'{{}}');
+<script>const REPORT={data};const KEY='door-window-review-v2-'+REPORT.reportHash;let feedback=JSON.parse(localStorage.getItem(KEY)||'{{}}');
 const esc=s=>String(s??'').replace(/[&<>\"]/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}}[c]));
 function save(){{localStorage.setItem(KEY,JSON.stringify(feedback));}}
 function setv(sample,id,value){{feedback[sample]??={{predictions:{{}},overall:'',notes:''}};if(id==='overall'||id==='notes')feedback[sample][id]=value;else feedback[sample].predictions[id]=value;save();}}
