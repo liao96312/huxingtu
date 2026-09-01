@@ -112,9 +112,40 @@ def arbitrate_cv_door_arcs(
         length = hypot(segment.end[0] - segment.start[0], segment.end[1] - segment.start[1])
         if length <= 0:
             continue
+        unit = ((segment.end[0] - segment.start[0]) / length, (segment.end[1] - segment.start[1]) / length)
+        subdivided_gap = False
         if segment.virtual:
-            start_px, end_px = segment.start, segment.end
-            width_px = length
+            full_width_mm = length * graph.mm_per_px if graph.mm_per_px > 0 else None
+            if full_width_mm is not None and DOOR_WIDTH_MIN_MM * 0.9 <= full_width_mm <= DOOR_WIDTH_MAX_MM:
+                start_px, end_px = segment.start, segment.end
+                width_px = length
+            else:
+                # One graph gap can span two adjacent door leaves when the
+                # narrow wall post between them was lost. Use each arc radius
+                # as its own interval instead of treating the entire gap as one
+                # oversized door.
+                width_px = min(length, max(1.0, float(proposal.radius_px)))
+                start_along = max(0.0, min(length - width_px, projected["along_span"] - width_px / 2.0))
+                end_along = start_along + width_px
+                for existing in confirmed:
+                    if existing.wall_edge_id != segment.id or not _segments_overlap(
+                        (segment.start[0] + unit[0] * start_along, segment.start[1] + unit[1] * start_along),
+                        (segment.start[0] + unit[0] * end_along, segment.start[1] + unit[1] * end_along),
+                        existing.start_px, existing.end_px, 0.0,
+                    ):
+                        continue
+                    existing_interval = sorted((
+                        _project_to_segment(existing.start_px, segment)["along_span"],
+                        _project_to_segment(existing.end_px, segment)["along_span"],
+                    ))
+                    if projected["along_span"] >= sum(existing_interval) / 2.0:
+                        start_along = max(start_along, existing_interval[1] + 1.0)
+                    else:
+                        end_along = min(end_along, existing_interval[0] - 1.0)
+                width_px = max(0.0, end_along - start_along)
+                start_px = (segment.start[0] + unit[0] * start_along, segment.start[1] + unit[1] * start_along)
+                end_px = (segment.start[0] + unit[0] * end_along, segment.start[1] + unit[1] * end_along)
+                subdivided_gap = True
         else:
             # A door leaf radius is the best available interval estimate when
             # the leaf has obscured the wall gap. Centre the interval at the
@@ -126,13 +157,13 @@ def arbitrate_cv_door_arcs(
             start_along = max(0.0, projected["along_span"] - half)
             end_along = min(length, projected["along_span"] + half)
             width_px = end_along - start_along
-            unit = ((segment.end[0] - segment.start[0]) / length, (segment.end[1] - segment.start[1]) / length)
             start_px = (segment.start[0] + unit[0] * start_along, segment.start[1] + unit[1] * start_along)
             end_px = (segment.start[0] + unit[0] * end_along, segment.start[1] + unit[1] * end_along)
 
         width_mm = width_px * graph.mm_per_px if graph.mm_per_px > 0 else None
         reasons: list[str] = []
-        if width_mm is None or not DOOR_WIDTH_MIN_MM <= width_mm <= DOOR_WIDTH_MAX_MM:
+        minimum_width = DOOR_WIDTH_MIN_MM * 0.9 if segment.virtual else DOOR_WIDTH_MIN_MM
+        if width_mm is None or not minimum_width <= width_mm <= DOOR_WIDTH_MAX_MM:
             reasons.append("CV_ARC_WIDTH_OUT_OF_PROFILE")
         if not segment.virtual and proposal.arc_score < 0.96:
             reasons.append("CV_ARC_SOLID_WALL_SCORE_LOW")
@@ -145,7 +176,7 @@ def arbitrate_cv_door_arcs(
             reasons.append("CV_ARC_SAME_ROOM_BOTH_SIDES")
         if any(
             existing.wall_edge_id == segment.id
-            and _segments_overlap(start_px, end_px, existing.start_px, existing.end_px, OVERLAP_TOLERANCE_PX)
+            and _segments_overlap(start_px, end_px, existing.start_px, existing.end_px, 0.0)
             for existing in confirmed
         ):
             reasons.append("CV_ARC_DUPLICATE_OPENING")
@@ -160,6 +191,8 @@ def arbitrate_cv_door_arcs(
         confirmation_codes = ["CV_ARC_AUTOMATIC"]
         if set(side_rooms[0]) & set(side_rooms[1]):
             confirmation_codes.append("CV_ARC_SHARED_ROOM_PHYSICAL_GAP")
+        if subdivided_gap:
+            confirmation_codes.append("CV_ARC_SUBDIVIDED_PHYSICAL_GAP")
         confirmed.append(FusedOpening(
             opening_id, "door", segment.id, start_px, end_px, width_mm,
             "confirmed", tuple(confirmation_codes), side_rooms,

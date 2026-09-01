@@ -172,3 +172,26 @@ def test_high_score_arc_on_physical_gap_can_continue_when_cv_rooms_are_nested() 
 
     assert len(result.confirmed) == 1
     assert "CV_ARC_SHARED_ROOM_PHYSICAL_GAP" in result.confirmed[0].reason_codes
+
+
+def test_two_arcs_subdivide_one_oversized_physical_gap() -> None:
+    oversized = WallGraph(
+        horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
+        segments=(WallSegment("gap", "horizontal", (150.0, 100.0), (350.0, 100.0), 13.0, True),),
+        gaps=(GapCandidate("gap", "horizontal", (150.0, 100.0), (350.0, 100.0), 200.0),),
+        mm_per_px=10.0, wall_width_px=13.0,
+    )
+    proposals = [
+        SimpleNamespace(center=(220.0, 100.0), radius_px=60.0, arc_score=1.0),
+        SimpleNamespace(center=(270.0, 100.0), radius_px=60.0, arc_score=1.0),
+    ]
+    nested_room = SimpleNamespace(
+        id="outer", polygon_px=((40, 40), (460, 40), (460, 160), (40, 160))
+    )
+
+    result = arbitrate_cv_door_arcs(proposals, oversized, [nested_room], 1000, 1000)
+
+    assert len(result.confirmed) == 2
+    assert all("CV_ARC_SUBDIVIDED_PHYSICAL_GAP" in item.reason_codes for item in result.confirmed)
+    first, second = result.confirmed
+    assert first.end_px[0] < second.start_px[0]
