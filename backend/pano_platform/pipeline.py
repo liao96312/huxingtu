@@ -13,6 +13,7 @@ import math
 import os
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -47,9 +48,21 @@ def run_upload_pipeline(
     project_id: str,
     allow_external_vision: bool,
     generate_ai: bool = True,
+    progress_callback: Callable[[int, str], None] | None = None,
 ) -> dict[str, Any]:
     """Run the vertical slice synchronously and return user-facing evidence."""
 
+    def report(progress: int, stage: str) -> None:
+        if progress_callback is None:
+            return
+        try:
+            progress_callback(progress, stage)
+        except Exception:
+            # Observability must never turn an otherwise deliverable preview
+            # into a failed task.
+            pass
+
+    report(5, "parse")
     config = None
     if allow_external_vision:
         from .vision.config import VisionConfig
@@ -62,6 +75,7 @@ def run_upload_pipeline(
         vision_mode=VisionMode.ASSISTED if allow_external_vision else VisionMode.OFF,
         vision_config=config,
     )
+    report(30, "parse-complete")
     result: dict[str, Any] = {
         "projectId": project_id,
         "traceId": run.traceId,
@@ -84,16 +98,21 @@ def run_upload_pipeline(
             "pipelineStatus": "failed",
             "message": f"输入门禁未通过：{input_stage.detail or 'invalid image'}",
         })
+        report(100, "failed")
         return result
 
     try:
+        report(45, "geometry")
         layout, rooms, scene = _publish_preview(project_id, image_bytes, run)
+        report(60, "structure-preview")
         manifest, ai_generated_count, ai_failed_rooms, superres_count, superres_failed_rooms = _render_panoramas(
             project_id, layout, rooms, generate_ai=generate_ai
         )
+        report(95, "panorama-complete")
     except PipelineNotReady as error:
         result["pipelineStatus"] = "needsReview"
         result["message"] = str(error)
+        report(100, "needs-review")
         return result
 
     manifest_url = f"/artifacts/{project_id}/pano-manifest.json"
@@ -129,6 +148,7 @@ def run_upload_pipeline(
         warnings.append(f"以下房间本地超分失败，保留AI原图：{', '.join(superres_failed_rooms)}")
     if warnings:
         result["warning"] = "；".join(warnings)
+    report(100, "done")
     return result
 
 

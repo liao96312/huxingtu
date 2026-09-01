@@ -107,7 +107,7 @@ async def upload_floorplan_pipeline(
         async with _pipeline_tasks_lock:
             _pipeline_tasks[task_id] = {
                 "taskId": str(task_id), "projectId": project_id,
-                "status": "PROCESSING", "progress": 0,
+                "status": "PROCESSING", "progress": 0, "stage": "queued",
                 "result": None, "error": None,
             }
         _pipeline_executor.submit(
@@ -125,20 +125,29 @@ async def upload_floorplan_pipeline(
 
 def _run_pipeline_task(task_id: UUID, image_bytes: bytes, project_id: str, allow_external: bool, generate_ai: bool) -> None:
     try:
+        def report(progress: int, stage: str) -> None:
+            task = _pipeline_tasks.get(task_id)
+            if task is not None:
+                task["progress"] = progress
+                task["stage"] = stage
+
         result = run_upload_pipeline(
             image_bytes, project_id=project_id,
             allow_external_vision=allow_external, generate_ai=generate_ai,
+            progress_callback=report,
         )
         status_value = "DONE" if result.get("viewerUrl") else "NEEDS_REVIEW"
         _pipeline_tasks[task_id] = {
             "taskId": str(task_id), "projectId": project_id,
             "status": status_value, "progress": 100,
+            "stage": "done" if status_value == "DONE" else "needs-review",
             "result": result, "error": None,
         }
     except Exception as error:
         _pipeline_tasks[task_id] = {
             "taskId": str(task_id), "projectId": project_id,
             "status": "FAILED", "progress": 100,
+            "stage": "failed",
             "result": None, "error": str(error)[:500],
         }
 

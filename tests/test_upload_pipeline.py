@@ -105,6 +105,23 @@ def test_rejected_input_does_not_get_an_envelope(tmp_path, monkeypatch) -> None:
     assert result["viewerUrl"] is None
 
 
+def test_pipeline_reports_monotonic_automatic_progress(tmp_path, monkeypatch) -> None:
+    from pano_platform.pipeline import run_upload_pipeline
+
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
+    image = (Path(__file__).parents[1] / "tests/fixtures/floorplan-golden/fp-golden.png").read_bytes()
+    updates: list[tuple[int, str]] = []
+    result = run_upload_pipeline(
+        image, project_id="progress-check", allow_external_vision=False,
+        generate_ai=False, progress_callback=lambda value, stage: updates.append((value, stage)),
+    )
+
+    assert result["viewerUrl"]
+    assert updates[-1] == (100, "done")
+    assert [value for value, _ in updates] == sorted(value for value, _ in updates)
+    assert {stage for _, stage in updates} >= {"parse", "geometry", "structure-preview", "panorama-complete", "done"}
+
+
 def test_one_structural_room_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> None:
     from pano_platform import pipeline
 

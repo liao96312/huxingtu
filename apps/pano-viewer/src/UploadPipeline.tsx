@@ -3,6 +3,8 @@ import { useState } from "react";
 type PipelineResult = {
   projectId: string;
   pipelineStatus: string;
+  progress?: number;
+  stage?: string;
   parseStatus: string;
   message?: string;
   warning?: string;
@@ -21,6 +23,8 @@ export default function UploadPipeline() {
   const [externalVision, setExternalVision] = useState(true);
   const [generateAi, setGenerateAi] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [processingStage, setProcessingStage] = useState("等待任务");
   const [error, setError] = useState("");
   const [result, setResult] = useState<PipelineResult | null>(null);
 
@@ -28,6 +32,8 @@ export default function UploadPipeline() {
     event.preventDefault();
     if (!file) return;
     setBusy(true);
+    setProgress(0);
+    setProcessingStage("提交任务");
     setError("");
     setResult(null);
     const body = new FormData();
@@ -40,11 +46,15 @@ export default function UploadPipeline() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.detail ?? `HTTP ${response.status}`);
       if (response.status === 202 && payload.pollUrl) {
+        setProgress(payload.progress ?? 0);
+        setProcessingStage(payload.stage ?? "排队中");
         for (;;) {
           await new Promise((resolve) => window.setTimeout(resolve, 1200));
           const poll = await fetch(payload.pollUrl);
           const task = await poll.json();
           if (!poll.ok) throw new Error(task.detail ?? `任务查询 HTTP ${poll.status}`);
+          setProgress(task.progress ?? 0);
+          setProcessingStage(task.stage ?? "处理中");
           if (["DONE", "NEEDS_REVIEW", "FAILED"].includes(task.status)) {
             if (task.result) setResult(task.result as PipelineResult);
             else throw new Error(task.error ?? "流水线失败");
@@ -86,7 +96,7 @@ export default function UploadPipeline() {
           对所有闭合房间调用 image-2 生成装修全景（默认开启，会按房间计费）
         </label>
         <button className="pipeline-submit" type="submit" disabled={!file || busy}>
-          {busy ? "识别和生成中，请勿关闭页面…" : "开始生成全景"}
+          {busy ? `识别和生成中 ${progress}% · ${processingStage}…` : "开始生成全景"}
         </button>
 
         {error && <div className="pipeline-error" role="alert">{error}</div>}
