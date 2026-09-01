@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from pano_platform.floorplan.fusion import fuse
+from pano_platform.floorplan.fusion import _resolve_room_type, fuse
 from pano_platform.floorplan.rooms import _snap
 from pano_platform.floorplan.wall_graph import WallGraph
 from pano_platform.vision.contracts import RoomDraft, VlmDraft
@@ -119,3 +119,9 @@ def test_room_snap_uses_x_for_vertical_and_y_for_horizontal_axes() -> None:
         segments=(), gaps=(), mm_per_px=10.0,
     )
     assert _snap((14.0, 390.0), graph_with_distinct_axes) == (10.0, 400.0)
+
+
+def test_printed_room_label_corrects_conflicting_model_type() -> None:
+    assert _resolve_room_type("bedroom", "厨房 5.2㎡") == ("kitchen", True)
+    assert _resolve_room_type("living", "客餐厅") == ("livingDining", True)
+    assert _resolve_room_type("bedroom", None) == ("bedroom", False)

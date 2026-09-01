@@ -70,8 +70,11 @@ def fuse(
 
     fused_rooms: list[FusedRoom] = []
     room_evidence: list[RoomSnapEvidence] = []
+    semantic_corrections = False
     for index, room in enumerate(draft.rooms):
         room_id = f"vlm_room_{index:03d}"
+        room_type, corrected = _resolve_room_type(room.type.value, room.name)
+        semantic_corrections = semantic_corrections or corrected
         polygon_px = _denormalize_polygon(room.polygon, image_width, image_height)
         snapped = _snap_polygon(polygon_px, graph, snap_tolerance_factor)
         snapped_count = sum(
@@ -95,7 +98,7 @@ def fuse(
         fused_rooms.append(
             FusedRoom(
                 id=room_id,
-                type=room.type.value,
+                type=room_type,
                 polygon_px=snapped,
                 area_mm2=area_mm2,
                 area_px2=area_px2,
@@ -124,6 +127,8 @@ def fuse(
         reason_codes.append("SCALE_UNCERTAIN")
     if any(room.status == "review" for room in fused_rooms):
         reason_codes.append("SOME_ROOMS_UNSNAPPED")
+    if semantic_corrections:
+        reason_codes.append("ROOM_LABEL_TYPE_CORRECTED")
 
     evidence = FusionEvidence(
         scale=scale_evidence,
@@ -138,6 +143,26 @@ def fuse(
         rooms=tuple(fused_rooms),
         evidence=evidence,
     )
+
+
+def _resolve_room_type(model_type: str, label: str | None) -> tuple[str, bool]:
+    if not label:
+        return model_type, False
+    normalized = label.replace(" ", "")
+    rules = (
+        (("客餐厅", "餐客厅"), "livingDining"),
+        (("卫生间", "洗手间", "厕所"), "bathroom"),
+        (("厨房",), "kitchen"),
+        (("阳台",), "balcony"),
+        (("书房",), "study"),
+        (("卧室", "主卧", "次卧", "儿童房", "老人房"), "bedroom"),
+        (("客厅",), "living"),
+        (("餐厅",), "dining"),
+    )
+    for keywords, resolved in rules:
+        if any(keyword in normalized for keyword in keywords):
+            return resolved, resolved != model_type
+    return model_type, False
 
 
 def _reconcile_scale(
