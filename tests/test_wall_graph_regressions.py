@@ -8,6 +8,7 @@ from pano_platform.floorplan.wall_graph import (
     _collinear_gap_segments,
     _extend_toward,
     _ensure_outer_boundary,
+    WallSegment,
     _modal_run,
 )
 
@@ -71,7 +72,13 @@ def test_missing_outer_boundary_is_closed_from_wall_mask_bbox() -> None:
     mask[160:164, 40:200] = 1
     mask[30:164, 40:44] = 1
     mask[30:164, 196:200] = 1
-    boundaries = _ensure_outer_boundary(mask, 4.0, (30.0, 160.0), (40.0, 196.0), 1)
+    existing = [
+        WallSegment("top", "horizontal", (40, 30), (199, 30), 4, False),
+        WallSegment("bottom", "horizontal", (40, 160), (199, 160), 4, False),
+        WallSegment("left", "vertical", (40, 30), (40, 163), 4, False),
+        WallSegment("right", "vertical", (196, 30), (196, 163), 4, False),
+    ]
+    boundaries = _ensure_outer_boundary(mask, 4.0, (30.0, 160.0), (40.0, 196.0), 1, existing)
     assert boundaries == []
 
 
@@ -79,6 +86,10 @@ def test_outer_boundary_adds_only_missing_edges() -> None:
     mask = np.zeros((200, 240), np.uint8)
     mask[30:34, 40:200] = 1
     mask[30:164, 40:44] = 1
-    boundaries = _ensure_outer_boundary(mask, 4.0, (30.0,), (40.0,), 1)
+    existing = [
+        WallSegment("top", "horizontal", (40, 30), (199, 30), 4, False),
+        WallSegment("left", "vertical", (40, 30), (40, 163), 4, False),
+    ]
+    boundaries = _ensure_outer_boundary(mask, 4.0, (30.0,), (40.0,), 1, existing)
     assert len(boundaries) == 2
     assert {item.axis for item in boundaries} == {"horizontal", "vertical"}

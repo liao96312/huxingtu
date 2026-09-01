@@ -146,7 +146,7 @@ def build_wall_graph(
     segments.extend(gap_segments)
     gaps.extend(collinear_gaps)
     boundary_segments = _ensure_outer_boundary(
-        layers.wall, strokes.wall_width_px, horizontal_axes, vertical_axes, counter
+        layers.wall, strokes.wall_width_px, horizontal_axes, vertical_axes, counter, segments
     )
     segments.extend(boundary_segments)
 
@@ -166,6 +166,7 @@ def _ensure_outer_boundary(
     horizontal_axes: tuple[float, ...],
     vertical_axes: tuple[float, ...],
     counter: int,
+    existing_segments: list[WallSegment] | tuple[WallSegment, ...] = (),
 ) -> list[WallSegment]:
     """Add missing plan perimeter edges so flood-fill can form enclosed rooms."""
 
@@ -177,23 +178,29 @@ def _ensure_outer_boundary(
     if right - left < 20 or bottom - top < 20:
         return []
     tolerance = max(2.0, wall_width_px * 1.5)
-    horizontal = [
-        segment for segment in horizontal_axes
-        if abs(segment - top) <= tolerance or abs(segment - bottom) <= tolerance
-    ]
-    vertical = [
-        segment for segment in vertical_axes
-        if abs(segment - left) <= tolerance or abs(segment - right) <= tolerance
-    ]
+    def full_horizontal(value: float) -> bool:
+        return any(
+            item.axis == "horizontal" and abs(item.start[1] - value) <= tolerance
+            and abs(item.end[0] - item.start[0]) >= (right - left) * 0.85
+            for item in existing_segments
+        )
+
+    def full_vertical(value: float) -> bool:
+        return any(
+            item.axis == "vertical" and abs(item.start[0] - value) <= tolerance
+            and abs(item.end[1] - item.start[1]) >= (bottom - top) * 0.85
+            for item in existing_segments
+        )
+
     result: list[WallSegment] = []
     next_id = counter
-    if not any(abs(segment - top) <= tolerance for segment in horizontal):
+    if not full_horizontal(top):
         result.append(WallSegment(f"wall_boundary_h{next_id}", "horizontal", (left, top), (right, top), wall_width_px, False)); next_id += 1
-    if not any(abs(segment - bottom) <= tolerance for segment in horizontal):
+    if not full_horizontal(bottom):
         result.append(WallSegment(f"wall_boundary_h{next_id}", "horizontal", (left, bottom), (right, bottom), wall_width_px, False)); next_id += 1
-    if not any(abs(segment - left) <= tolerance for segment in vertical):
+    if not full_vertical(left):
         result.append(WallSegment(f"wall_boundary_v{next_id}", "vertical", (left, top), (left, bottom), wall_width_px, False)); next_id += 1
-    if not any(abs(segment - right) <= tolerance for segment in vertical):
+    if not full_vertical(right):
         result.append(WallSegment(f"wall_boundary_v{next_id}", "vertical", (right, top), (right, bottom), wall_width_px, False));
     return result
 
