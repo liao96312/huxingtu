@@ -166,12 +166,35 @@ def detect_door_arc_proposals(grayscale: np.ndarray) -> list[DoorArcProposal]:
         x = min(grayscale.shape[1] - 1, max(0, round(center_x)))
         y = min(grayscale.shape[0] - 1, max(0, round(center_y)))
         if score >= 0.88 and wall_distance[y, x] <= maximum_wall_distance:
+            if _is_closed_map_marker(grayscale, (center_x, center_y), radius, scale):
+                # Floorplan north arrows/compasses are closed rings, unlike a
+                # door leaf's single quarter arc. They commonly sit in the
+                # drawing margin and must never become opening proposals.
+                continue
             proposals.append(DoorArcProposal(
                 center=(float(center_x), float(center_y)),
                 radius_px=float(radius),
                 arc_score=score,
             ))
     return _deduplicate_proposals(proposals, scale)
+
+
+def _is_closed_map_marker(
+    grayscale: np.ndarray, center: tuple[float, float], radius: float, scale: float
+) -> bool:
+    """Reject small closed circular legend markers such as the north compass."""
+
+    if radius > max(30.0, 0.05 * min(grayscale.shape[:2])):
+        return False
+    hits = 0
+    samples = 72
+    for angle in np.linspace(0, 360, samples, endpoint=False):
+        radians = np.deg2rad(angle)
+        x = round(center[0] + radius * np.cos(radians))
+        y = round(center[1] + radius * np.sin(radians))
+        patch = grayscale[max(0, y - 2):y + 3, max(0, x - 2):x + 3]
+        hits += bool(patch.size and patch.min() < 110)
+    return hits / samples >= 0.82
 
 
 def _deduplicate_proposals(proposals: list[DoorArcProposal], scale: float) -> list[DoorArcProposal]:
