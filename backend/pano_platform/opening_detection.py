@@ -194,7 +194,17 @@ def _is_closed_map_marker(
         y = round(center[1] + radius * np.sin(radians))
         patch = grayscale[max(0, y - 2):y + 3, max(0, x - 2):x + 3]
         hits += bool(patch.size and patch.min() < 110)
-    return hits / samples >= 0.82
+    coverage = hits / samples
+    if coverage >= 0.82:
+        return True
+    # Some compass drawings contain a broken inner ring rather than a fully
+    # closed outer circle. A small circular mark in the lower-left map margin
+    # is still a legend symbol, while real door arcs are anchored in the plan.
+    in_lower_left_margin = (
+        center[0] <= grayscale.shape[1] * 0.28
+        and center[1] >= grayscale.shape[0] * 0.76
+    )
+    return in_lower_left_margin and coverage >= 0.55
 
 
 def _deduplicate_proposals(proposals: list[DoorArcProposal], scale: float) -> list[DoorArcProposal]:

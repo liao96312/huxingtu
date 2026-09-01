@@ -72,6 +72,13 @@ def test_compass_marker_is_not_reported_as_door_arc() -> None:
     assert not any(item.center[0] < image.shape[1] * 0.15 and item.center[1] > image.shape[0] * 0.82 for item in proposals)
 
 
+def test_compass_inner_ring_in_lower_left_margin_is_not_reported() -> None:
+    image = cv2.imread(str(ROOT / "datasets/source/desktop-9/fp-108.png"), cv2.IMREAD_GRAYSCALE)
+    proposals = detect_door_arc_proposals(image)
+
+    assert not any(item.center[0] < image.shape[1] * 0.28 and item.center[1] > image.shape[0] * 0.76 for item in proposals)
+
+
 def test_automatic_detection_artifact_contains_no_manual_annotation() -> None:
     audit = json.loads((ROOT / "datasets/derived/fp-001/automatic-door-detection.v5.json").read_text(encoding="utf-8"))
     assert audit["detector"] == "opencv-hough-circles+quarter-arc+nearest-wall+room-topology"
