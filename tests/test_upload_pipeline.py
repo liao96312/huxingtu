@@ -105,6 +105,26 @@ def test_rejected_input_does_not_get_an_envelope(tmp_path, monkeypatch) -> None:
     assert result["viewerUrl"] is None
 
 
+def test_one_structural_room_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> None:
+    from pano_platform import pipeline
+
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
+    layout, rooms, _ = _publish_preview("structural-partial", b"fixture", _preview_run())
+    original = pipeline.render_structural_erp
+
+    def partial_render(layout_arg, room_arg, width):
+        if room_arg["id"] == "room_001":
+            raise RuntimeError("degenerate room")
+        return original(layout_arg, room_arg, width)
+
+    monkeypatch.setattr(pipeline, "render_structural_erp", partial_render)
+    manifest, _, _, _, _ = _render_panoramas("structural-partial", layout, rooms, generate_ai=False)
+
+    assert len(manifest.scenes) == 2
+    evidence = tmp_path / "structural-partial/structural-fallback-rooms.json"
+    assert evidence.is_file() and "客餐厅" in evidence.read_text(encoding="utf-8")
+
+
 def test_ai_renders_every_room(tmp_path, monkeypatch) -> None:
     import shutil
     from pano_platform import pipeline

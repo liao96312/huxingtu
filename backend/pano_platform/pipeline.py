@@ -111,6 +111,12 @@ def run_upload_pipeline(
         "superresFailedRooms": superres_failed_rooms,
     })
     warnings = []
+    structural_fallback_path = _data_root() / project_id / "structural-fallback-rooms.json"
+    if structural_fallback_path.is_file():
+        structural_fallback = json.loads(structural_fallback_path.read_text(encoding="utf-8"))
+        if structural_fallback["rooms"]:
+            result["structuralFallbackRooms"] = structural_fallback["rooms"]
+            warnings.append("以下房间结构渲染异常，已自动使用保底全景：" + ", ".join(structural_fallback["rooms"]))
     fallback_path = _data_root() / project_id / "automatic-fallback.json"
     if fallback_path.is_file():
         fallback_evidence = json.loads(fallback_path.read_text(encoding="utf-8"))
@@ -386,13 +392,19 @@ def _render_panoramas(
     ai_failed_rooms: list[str] = []
     superres_count = 0
     superres_failed_rooms: list[str] = []
+    structural_fallback_rooms: list[str] = []
     ordered_rooms = sorted(rooms.rooms, key=lambda room: room.areaMm2, reverse=True)
     for order, room in enumerate(ordered_rooms):
         scene_id = f"{room.id}-main"
         folder = _data_root() / project_id / "panorama" / scene_id
         folder.mkdir(parents=True, exist_ok=True)
         structural = folder / "structural-erp-2048x1024.jpg"
-        image = render_structural_erp(layout, room.model_dump(mode="python"), ERP_WIDTH)
+        try:
+            image = render_structural_erp(layout, room.model_dump(mode="python"), ERP_WIDTH)
+        except Exception:
+            # One malformed room must not cancel the remaining room jobs.
+            image = _fallback_structural_erp()
+            structural_fallback_rooms.append(room.name)
         cv2.imwrite(str(structural), image, [cv2.IMWRITE_JPEG_QUALITY, 94])
 
         original = structural
@@ -460,8 +472,27 @@ def _render_panoramas(
     }
     payload["contentHash"] = canonical_sha256(payload)
     manifest = PanoManifest.model_validate(payload)
-    _write_model(_data_root() / project_id / "pano-manifest.json", manifest)
+    project_folder = _data_root() / project_id
+    project_folder.mkdir(parents=True, exist_ok=True)
+    (project_folder / "structural-fallback-rooms.json").write_text(
+        json.dumps({"schemaVersion": "0.1.0", "projectId": project_id, "rooms": structural_fallback_rooms}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    _write_model(project_folder / "pano-manifest.json", manifest)
     return manifest, ai_generated_count, ai_failed_rooms, superres_count, superres_failed_rooms
+
+
+def _fallback_structural_erp() -> np.ndarray:
+    """Return a neutral 2:1 ERP when one room's vector render is malformed."""
+
+    height, width = ERP_WIDTH // 2, ERP_WIDTH
+    image = np.empty((height, width, 3), dtype=np.uint8)
+    image[:] = (226, 232, 238)
+    image[int(height * 0.72):] = (190, 205, 214)
+    image[:int(height * 0.18)] = (238, 241, 244)
+    for row in (height // 2, int(height * 0.72), int(height * 0.86)):
+        image[max(0, row - 1):row + 1] = (150, 168, 180)
+    return image
 
 
 def _qa_ai_panorama_structure(reference: Path, candidate: Path) -> dict[str, Any]:
