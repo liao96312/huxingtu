@@ -388,7 +388,7 @@ button {
 
 .pipeline-card h1, .pipeline-card h2, .pipeline-card p { margin: 0; }
 .pipeline-card label { display: grid; gap: 7px; font-weight: 650; }
-.pipeline-card input[type="text"], .pipeline-card label > input:not([type]) { padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; }
+.pipeline-card input[type="text"], .pipeline-card label > input:not([type]), .pipeline-card select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; background: white; }
 .pipeline-back { color: #52657a; text-decoration: none; }
 .file-drop { padding: 24px; border: 2px dashed #9eb1c5; border-radius: 14px; text-align: center; cursor: pointer; }
 .file-drop input { margin-top: 12px; }

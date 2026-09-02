@@ -149,7 +149,10 @@ def test_ai_renders_every_room(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
     layout, rooms, _ = _publish_preview("upload-ai", b"fixture", _preview_run())
 
-    def fake_ai(source: Path, output: Path, room_type: str, opening_hint: str = "") -> Path:
+    styles_seen = []
+
+    def fake_ai(source: Path, output: Path, room_type: str, opening_hint: str = "", style_context=None) -> Path:
+        styles_seen.append(style_context.id)
         shutil.copy2(source, output)
         return output
 
@@ -163,12 +166,16 @@ def test_ai_renders_every_room(tmp_path, monkeypatch) -> None:
 
     monkeypatch.setattr(pipeline, "_generate_ai_panorama", fake_ai)
     monkeypatch.setattr(pipeline, "_upscale_with_realesrgan", fake_superres)
-    manifest, ai_generated_count, failed_rooms, superres_count, superres_failed = _render_panoramas("upload-ai", layout, rooms, generate_ai=True)
+    manifest, ai_generated_count, failed_rooms, superres_count, superres_failed = _render_panoramas(
+        "upload-ai", layout, rooms, generate_ai=True, style_id="cream"
+    )
     assert ai_generated_count == len(rooms.rooms) == 2
     assert failed_rooms == []
     assert superres_count == 2 and superres_failed == []
     assert all(scene.title.endswith("AI+超分预览") for scene in manifest.scenes)
     assert all(scene.assets.original.url.endswith("ai-erp-6144x3072.jpg") for scene in manifest.scenes)
+    assert styles_seen == ["cream", "cream"]
+    assert "奶油风" in manifest.share.title
 
 
 def test_one_ai_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> None:
@@ -178,7 +185,7 @@ def test_one_ai_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> Non
     monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
     layout, rooms, _ = _publish_preview("upload-partial", b"fixture", _preview_run())
 
-    def partial_ai(source: Path, output: Path, room_type: str, opening_hint: str = "") -> Path:
+    def partial_ai(source: Path, output: Path, room_type: str, opening_hint: str = "", style_context=None) -> Path:
         if room_type == "bedroom":
             raise RuntimeError("provider unavailable")
         shutil.copy2(source, output)

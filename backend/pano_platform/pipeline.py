@@ -14,6 +14,7 @@ import os
 import subprocess
 import sys
 from collections.abc import Callable
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +28,8 @@ from .contracts import (
     LayoutRevision,
     PanoManifest,
     SceneGeometry,
+    StyleCatalog,
+    StyleContext,
     canonical_sha256,
 )
 from .floorplan.parse import ParseRun, ParseStatus, VisionMode, orchestrate
@@ -36,10 +39,23 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_ROOT = ROOT / "datasets" / "derived"
 ERP_WIDTH = 2048
 WALL_HEIGHT_MM = 2800.0
+STYLE_CATALOG_PATH = ROOT / "datasets" / "style-catalog.v1.json"
 
 
 class PipelineNotReady(ValueError):
     pass
+
+
+@lru_cache(maxsize=1)
+def load_style_catalog() -> StyleCatalog:
+    return StyleCatalog.model_validate_json(STYLE_CATALOG_PATH.read_text(encoding="utf-8"))
+
+
+def load_style_context(style_id: str) -> StyleContext:
+    style = next((item for item in load_style_catalog().styles if item.id == style_id), None)
+    if style is None:
+        raise ValueError(f"unknown styleId: {style_id}")
+    return style
 
 
 def run_upload_pipeline(
@@ -48,6 +64,7 @@ def run_upload_pipeline(
     project_id: str,
     allow_external_vision: bool,
     generate_ai: bool = True,
+    style_id: str = "modern",
     progress_callback: Callable[[int, str], None] | None = None,
 ) -> dict[str, Any]:
     """Run the vertical slice synchronously and return user-facing evidence."""
@@ -62,6 +79,7 @@ def run_upload_pipeline(
             # into a failed task.
             pass
 
+    style = load_style_context(style_id)
     report(5, "parse")
     config = None
     if allow_external_vision:
@@ -106,7 +124,7 @@ def run_upload_pipeline(
         layout, rooms, scene = _publish_preview(project_id, image_bytes, run)
         report(60, "structure-preview")
         manifest, ai_generated_count, ai_failed_rooms, superres_count, superres_failed_rooms = _render_panoramas(
-            project_id, layout, rooms, generate_ai=generate_ai
+            project_id, layout, rooms, generate_ai=generate_ai, style_id=style.id,
         )
         report(95, "panorama-complete")
     except PipelineNotReady as error:
@@ -123,6 +141,8 @@ def run_upload_pipeline(
         "wallSolidCount": len(scene.solids),
         "manifestUrl": manifest_url,
         "viewerUrl": f"/?manifestUrl={manifest_url}",
+        "styleId": style.id,
+        "styleLabel": style.label,
         "aiGenerated": ai_generated_count > 0,
         "aiGeneratedCount": ai_generated_count,
         "aiFailedRooms": ai_failed_rooms,
@@ -476,7 +496,9 @@ def _render_panoramas(
     rooms: DerivedRoomSet,
     *,
     generate_ai: bool,
+    style_id: str = "modern",
 ) -> tuple[PanoManifest, int, list[str], int, list[str]]:
+    style = load_style_context(style_id)
     scenes = []
     ai_generated_count = 0
     ai_failed_rooms: list[str] = []
@@ -504,7 +526,7 @@ def _render_panoramas(
             try:
                 candidate = _generate_ai_panorama(
                     structural, folder / "ai-erp-2048x1024.jpg", room.type,
-                    _opening_hint(layout, room),
+                    _opening_hint(layout, room), style,
                 )
                 qa = _qa_ai_panorama_structure(structural, candidate)
                 (folder / "ai-structure-qa.json").write_text(
@@ -558,7 +580,7 @@ def _render_panoramas(
     payload = {
         "schemaVersion": "0.1.0", "projectId": project_id, "revision": 1,
         "defaultSceneId": scenes[0]["id"], "projection": "equirectangular",
-        "scenes": scenes, "share": {"title": f"{project_id} 户型识别全景预览"},
+        "scenes": scenes, "share": {"title": f"{project_id} · {style.label}全景预览"},
     }
     payload["contentHash"] = canonical_sha256(payload)
     manifest = PanoManifest.model_validate(payload)
@@ -800,7 +822,8 @@ def _ray_segment_intersections(cx, cy, directions, ax, ay, bx, by):
 
 
 def _generate_ai_panorama(
-    source: Path, output: Path, room_type: str, opening_hint: str = ""
+    source: Path, output: Path, room_type: str, opening_hint: str = "",
+    style_context: StyleContext | None = None,
 ) -> Path:
     import base64
     import requests
@@ -810,14 +833,17 @@ def _generate_ai_panorama(
     key = os.environ.get("TUZI_API_KEY", "").strip()
     if not key:
         raise RuntimeError("TUZI_API_KEY missing")
+    style = style_context or load_style_context("modern")
     prompt = (
         "Transform this exact structural 2:1 equirectangular 360 panorama into a photorealistic "
-        f"warm contemporary {room_type} interior. Preserve every wall, architectural opening, camera position, "
+        f"{style.designStyle} {room_type} interior. Preserve every wall, architectural opening, camera position, "
         "projection and the left/right seam. This is a topology-locked edit, not a free redesign. "
         f"{opening_hint} Do not add or remove any architectural opening. Do not invent room doors, hallway doors, "
         "balcony doors, windows, wall cutouts, closets, wardrobes, cabinet doors, cupboard doors, handles, or "
         "door-shaped panels that are not present in the reference. If an opening is not specified, keep that wall "
-        "blank. Use simple furniture with flat, handleless surfaces. Return a seamless 2:1 ERP."
+        "blank. Use simple furniture with flat, handleless surfaces. "
+        f"Style requirements: {style.promptSuffix} Preferred palette: {', '.join(style.palette)}. "
+        f"Preferred materials: {', '.join(style.materials)}. Return a seamless 2:1 ERP."
     )
     idempotency_key = hashlib.sha256(
         source.read_bytes() + prompt.encode("utf-8") + b"gpt-image-2:2k"

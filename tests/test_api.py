@@ -26,6 +26,18 @@ def test_health() -> None:
     }
 
 
+def test_pipeline_styles_are_served_from_frozen_catalog() -> None:
+    response = request("GET", "/api/v1/pipeline/styles")
+
+    assert response.status_code == 200
+    assert response.json()["styles"][:4] == [
+        {"id": "modern", "label": "现代"},
+        {"id": "chinese", "label": "中式"},
+        {"id": "scandinavian", "label": "北欧"},
+        {"id": "cream", "label": "奶油风"},
+    ]
+
+
 def test_parse_command_persists_queryable_result(tmp_path, monkeypatch) -> None:
     import cv2
     import numpy as np

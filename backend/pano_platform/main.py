@@ -27,7 +27,7 @@ from .contracts import (
 from .facade import CommandFacade, CommandNotImplementedError, load_parse_result, parse_command
 from .geometry import calibrate_scale
 from .opening_review import complete_opening_review, load_derived_rooms, load_latest_reviewed_layout, load_opening_candidates
-from .pipeline import load_preview_scene_geometry, run_upload_pipeline
+from .pipeline import load_preview_scene_geometry, load_style_catalog, load_style_context, run_upload_pipeline
 from .scene_geometry import build_scene_geometry
 
 app = FastAPI(title="Pano Platform API", version=__version__)
@@ -93,6 +93,7 @@ async def upload_floorplan_pipeline(
     projectId: str | None = Form(default=None),
     allowExternalVision: bool = Form(default=True),
     generateAi: bool = Form(default=True),
+    styleId: str = Form(default="modern"),
 ) -> dict:
     if file.content_type not in ("image/png", "image/jpeg", "image/webp"):
         raise HTTPException(status_code=415, detail="only PNG/JPEG/WebP floorplans are supported")
@@ -103,6 +104,10 @@ async def upload_floorplan_pipeline(
     if not re.fullmatch(r"[a-zA-Z0-9_-]{1,128}", project_id):
         raise HTTPException(status_code=422, detail="invalid projectId")
     try:
+        load_style_context(styleId)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    try:
         task_id = uuid4()
         async with _pipeline_tasks_lock:
             _pipeline_tasks[task_id] = {
@@ -112,7 +117,7 @@ async def upload_floorplan_pipeline(
             }
         _pipeline_executor.submit(
             _run_pipeline_task, task_id, image_bytes, project_id,
-            allowExternalVision, generateAi,
+            allowExternalVision, generateAi, styleId,
         )
         return JSONResponse(status_code=202, content={
             "taskId": str(task_id), "projectId": project_id,
@@ -123,7 +128,20 @@ async def upload_floorplan_pipeline(
         raise HTTPException(status_code=422, detail=str(error)) from error
 
 
-def _run_pipeline_task(task_id: UUID, image_bytes: bytes, project_id: str, allow_external: bool, generate_ai: bool) -> None:
+@app.get("/api/v1/pipeline/styles")
+async def get_pipeline_styles() -> dict:
+    return {
+        "styles": [
+            {"id": item.id, "label": item.label}
+            for item in load_style_catalog().styles
+        ]
+    }
+
+
+def _run_pipeline_task(
+    task_id: UUID, image_bytes: bytes, project_id: str,
+    allow_external: bool, generate_ai: bool, style_id: str,
+) -> None:
     try:
         def report(progress: int, stage: str) -> None:
             task = _pipeline_tasks.get(task_id)
@@ -134,7 +152,7 @@ def _run_pipeline_task(task_id: UUID, image_bytes: bytes, project_id: str, allow
         result = run_upload_pipeline(
             image_bytes, project_id=project_id,
             allow_external_vision=allow_external, generate_ai=generate_ai,
-            progress_callback=report,
+            style_id=style_id, progress_callback=report,
         )
         status_value = "DONE" if result.get("viewerUrl") else "NEEDS_REVIEW"
         _pipeline_tasks[task_id] = {

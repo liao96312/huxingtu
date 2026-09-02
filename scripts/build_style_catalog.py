@@ -24,6 +24,7 @@ payload = {
 }
 payload["contentHash"] = canonical_sha256(payload)
 catalog = StyleCatalog.model_validate(payload)
-output = ROOT / "datasets/derived/fp-001/style-catalog.v1.json"
+output = ROOT / "datasets/style-catalog.v1.json"
+output.parent.mkdir(parents=True, exist_ok=True)
 output.write_text(catalog.model_dump_json(indent=2), encoding="utf-8")
 print(f"{len(catalog.styles)} styles -> {output.name}")

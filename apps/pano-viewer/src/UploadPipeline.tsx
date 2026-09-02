@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type PipelineResult = {
   projectId: string;
@@ -8,6 +8,8 @@ type PipelineResult = {
   parseStatus: string;
   message?: string;
   warning?: string;
+  styleId?: string;
+  styleLabel?: string;
   viewerUrl?: string | null;
   roomCount?: number;
   aiGeneratedCount?: number;
@@ -24,11 +26,20 @@ export default function UploadPipeline() {
   const [projectId, setProjectId] = useState("");
   const [externalVision, setExternalVision] = useState(true);
   const [generateAi, setGenerateAi] = useState(true);
+  const [styleId, setStyleId] = useState("modern");
+  const [styles, setStyles] = useState<{ id: string; label: string }[]>([{ id: "modern", label: "现代" }]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [processingStage, setProcessingStage] = useState("等待任务");
   const [error, setError] = useState("");
   const [result, setResult] = useState<PipelineResult | null>(null);
+
+  useEffect(() => {
+    fetch("/api/v1/pipeline/styles")
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((payload) => payload.styles?.length && setStyles(payload.styles))
+      .catch(() => undefined);
+  }, []);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -43,6 +54,7 @@ export default function UploadPipeline() {
     if (projectId.trim()) body.append("projectId", projectId.trim());
     body.append("allowExternalVision", String(externalVision));
     body.append("generateAi", String(generateAi));
+    body.append("styleId", styleId);
     try {
       const response = await fetch("/api/v1/pipeline/upload", { method: "POST", body });
       const payload = await response.json();
@@ -89,6 +101,12 @@ export default function UploadPipeline() {
           项目ID（可选）
           <input value={projectId} pattern="[a-zA-Z0-9_-]{1,128}" placeholder="自动生成" onChange={(event) => setProjectId(event.target.value)} />
         </label>
+        <label>
+          装修风格
+          <select value={styleId} onChange={(event) => setStyleId(event.target.value)}>
+            {styles.map((style) => <option key={style.id} value={style.id}>{style.label}</option>)}
+          </select>
+        </label>
         <label className="pipeline-check">
           <input type="checkbox" checked={externalVision} onChange={(event) => setExternalVision(event.target.checked)} />
           允许将本图发送给 Tuzi 视觉模型进行结构识别
@@ -105,7 +123,7 @@ export default function UploadPipeline() {
         {result && (
           <section className="pipeline-result">
             <h2>{result.viewerUrl ? "全景预览已生成" : "识别未达到生成条件"}</h2>
-            <p>项目：{result.projectId} · Parse：{result.parseStatus} · 房间：{result.roomCount ?? 0} · CV自动门：{result.automaticCvDoorCount ?? 0} · CV自动窗：{result.automaticCvWindowCount ?? 0} · AI成功：{result.aiGeneratedCount ?? 0} · 超分成功：{result.superresGeneratedCount ?? 0}</p>
+            <p>项目：{result.projectId} · 风格：{result.styleLabel ?? styleId} · Parse：{result.parseStatus} · 房间：{result.roomCount ?? 0} · CV自动门：{result.automaticCvDoorCount ?? 0} · CV自动窗：{result.automaticCvWindowCount ?? 0} · AI成功：{result.aiGeneratedCount ?? 0} · 超分成功：{result.superresGeneratedCount ?? 0}</p>
             {(result.message || result.warning) && <p>{result.message ?? result.warning}</p>}
             <ol>{result.stages.map((stage) => <li key={stage.stage}><b>{stage.stage}</b>：{stage.status} — {stage.detail}</li>)}</ol>
             {result.viewerUrl && <a className="pipeline-open" href={result.viewerUrl}>打开可拖动360°全景</a>}
