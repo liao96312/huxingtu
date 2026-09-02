@@ -4,6 +4,8 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import os
 import re
+import json
+import threading
 from pathlib import Path as FilePath
 from uuid import UUID, uuid4
 
@@ -40,7 +42,8 @@ facade = CommandFacade()
 facade.register_parse(parse_command)
 _pipeline_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="pano-pipeline")
 _pipeline_tasks: dict[UUID, dict] = {}
-_pipeline_tasks_lock = asyncio.Lock()
+_pipeline_state_lock = threading.RLock()
+_pipeline_active: set[UUID] = set()
 
 
 @app.get("/api/health")
@@ -109,16 +112,16 @@ async def upload_floorplan_pipeline(
         raise HTTPException(status_code=422, detail=str(error)) from error
     try:
         task_id = uuid4()
-        async with _pipeline_tasks_lock:
-            _pipeline_tasks[task_id] = {
-                "taskId": str(task_id), "projectId": project_id,
-                "status": "PROCESSING", "progress": 0, "stage": "queued",
-                "result": None, "error": None,
-            }
-        _pipeline_executor.submit(
-            _run_pipeline_task, task_id, image_bytes, project_id,
-            allowExternalVision, generateAi, styleId,
-        )
+        task = {
+            "taskId": str(task_id), "projectId": project_id,
+            "status": "PROCESSING", "progress": 0, "stage": "queued",
+            "allowExternalVision": allowExternalVision, "generateAi": generateAi,
+            "styleId": styleId, "result": None, "error": None,
+        }
+        _persist_pipeline_task(task_id, task, image_bytes)
+        with _pipeline_state_lock:
+            _pipeline_tasks[task_id] = task
+        _submit_pipeline_task(task_id, task)
         return JSONResponse(status_code=202, content={
             "taskId": str(task_id), "projectId": project_id,
             "status": "PROCESSING", "progress": 0,
@@ -144,10 +147,7 @@ def _run_pipeline_task(
 ) -> None:
     try:
         def report(progress: int, stage: str) -> None:
-            task = _pipeline_tasks.get(task_id)
-            if task is not None:
-                task["progress"] = progress
-                task["stage"] = stage
+            _update_pipeline_task(task_id, progress=progress, stage=stage)
 
         result = run_upload_pipeline(
             image_bytes, project_id=project_id,
@@ -155,28 +155,118 @@ def _run_pipeline_task(
             style_id=style_id, progress_callback=report,
         )
         status_value = "DONE" if result.get("viewerUrl") else "NEEDS_REVIEW"
-        _pipeline_tasks[task_id] = {
+        _update_pipeline_task(task_id, **{
             "taskId": str(task_id), "projectId": project_id,
             "status": status_value, "progress": 100,
             "stage": "done" if status_value == "DONE" else "needs-review",
             "result": result, "error": None,
-        }
+        })
     except Exception as error:
-        _pipeline_tasks[task_id] = {
+        _update_pipeline_task(task_id, **{
             "taskId": str(task_id), "projectId": project_id,
             "status": "FAILED", "progress": 100,
             "stage": "failed",
             "result": None, "error": str(error)[:500],
-        }
+        })
+    finally:
+        with _pipeline_state_lock:
+            _pipeline_active.discard(task_id)
 
 
 @app.get("/api/v1/pipeline/tasks/{task_id}")
 async def get_pipeline_task(task_id: UUID) -> dict:
-    async with _pipeline_tasks_lock:
-        task = _pipeline_tasks.get(task_id)
+    with _pipeline_state_lock:
+        task = _pipeline_tasks.get(task_id) or _load_pipeline_task(task_id)
+        if task is not None:
+            _pipeline_tasks[task_id] = task
     if task is None:
         raise HTTPException(status_code=404, detail="pipeline task not found")
+    if task.get("status") == "PROCESSING":
+        _submit_pipeline_task(task_id, task)
     return task
+
+
+def _pipeline_task_root() -> FilePath:
+    return FilePath(os.environ.get("PANO_DATA_ROOT", artifact_root)) / "_pipeline_tasks"
+
+
+def _pipeline_task_dir(task_id: UUID) -> FilePath:
+    return _pipeline_task_root() / str(task_id)
+
+
+def _persist_pipeline_task(task_id: UUID, task: dict, image_bytes: bytes | None = None) -> None:
+    folder = _pipeline_task_dir(task_id)
+    folder.mkdir(parents=True, exist_ok=True)
+    if image_bytes is not None:
+        input_path = folder / "input.bin"
+        temporary_input = input_path.with_suffix(".bin.tmp")
+        temporary_input.write_bytes(image_bytes)
+        temporary_input.replace(input_path)
+    target = folder / "task.json"
+    temporary = target.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(task, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    temporary.replace(target)
+
+
+def _load_pipeline_task(task_id: UUID) -> dict | None:
+    path = _pipeline_task_dir(task_id) / "task.json"
+    if not path.is_file():
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _update_pipeline_task(task_id: UUID, **changes) -> None:
+    with _pipeline_state_lock:
+        task = _pipeline_tasks.get(task_id) or _load_pipeline_task(task_id) or {"taskId": str(task_id)}
+        task.update(changes)
+        _pipeline_tasks[task_id] = task
+        _persist_pipeline_task(task_id, task)
+
+
+def _submit_pipeline_task(task_id: UUID, task: dict) -> None:
+    with _pipeline_state_lock:
+        if task_id in _pipeline_active:
+            return
+        input_path = _pipeline_task_dir(task_id) / "input.bin"
+        if not input_path.is_file():
+            _update_pipeline_task(task_id, status="FAILED", progress=100, stage="failed", result=None, error="persisted task input missing")
+            return
+        _pipeline_active.add(task_id)
+    try:
+        image_bytes = input_path.read_bytes()
+        _pipeline_executor.submit(
+            _run_pipeline_task, task_id, image_bytes, task["projectId"],
+            bool(task.get("allowExternalVision", True)), bool(task.get("generateAi", True)),
+            task.get("styleId", "modern"),
+        )
+    except Exception as error:
+        with _pipeline_state_lock:
+            _pipeline_active.discard(task_id)
+        _update_pipeline_task(
+            task_id, status="FAILED", progress=100, stage="failed",
+            result=None, error=f"persisted task resume failed: {error}"[:500],
+        )
+
+
+@app.on_event("startup")
+async def recover_pipeline_tasks() -> None:
+    root = _pipeline_task_root()
+    if not root.is_dir():
+        return
+    for path in root.glob("*/task.json"):
+        try:
+            task_id = UUID(path.parent.name)
+        except ValueError:
+            continue
+        task = _load_pipeline_task(task_id)
+        if task and task.get("status") == "PROCESSING":
+            with _pipeline_state_lock:
+                _pipeline_tasks[task_id] = task
+            _submit_pipeline_task(task_id, task)
 
 
 @app.get("/api/v1/projects/{project_id}/parse-results/{task_id}")

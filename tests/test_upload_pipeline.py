@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from uuid import uuid4
 
 import httpx
 
@@ -110,6 +111,30 @@ def test_tuzi_image_session_uses_explicit_proxy_without_global_mutation(monkeypa
         assert session.adapters["https://"].max_retries.total == 5
     finally:
         session.close()
+
+
+def test_pipeline_task_is_reloaded_and_resubmitted_after_memory_loss(tmp_path, monkeypatch) -> None:
+    from pano_platform import main
+
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
+    task_id = uuid4()
+    task = {
+        "taskId": str(task_id), "projectId": "restart-check", "status": "PROCESSING",
+        "progress": 42, "stage": "geometry", "allowExternalVision": False,
+        "generateAi": False, "styleId": "modern", "result": None, "error": None,
+    }
+    main._persist_pipeline_task(task_id, task, b"persisted-image")
+    main._pipeline_tasks.clear()
+    main._pipeline_active.clear()
+    submitted = []
+    monkeypatch.setattr(main._pipeline_executor, "submit", lambda function, *args: submitted.append((function, args)))
+    loaded = asyncio.run(main.get_pipeline_task(task_id))
+    try:
+        assert loaded["progress"] == 42
+        assert submitted and submitted[0][1][0] == task_id
+        assert submitted[0][1][1] == b"persisted-image"
+    finally:
+        main._pipeline_active.clear()
 
 
 def test_cv_only_run_still_builds_automatic_preview(tmp_path, monkeypatch) -> None:

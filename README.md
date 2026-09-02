@@ -36,6 +36,8 @@ npm run dev
 
 image-2 请求默认沿用标准 `HTTPS_PROXY/HTTP_PROXY`；若服务进程需要单独指定代理，可设置 `TUZI_HTTP_PROXY`。代理只作用于 Tuzi image-2 会话，不修改系统或 Git 全局代理。连接/读超时和 408/425/429/5xx 会按有限指数退避自动重试，输入/鉴权/内容错误仍按房间级失败回退。
 
+上传任务状态和原图会持久化在 `PANO_DATA_ROOT/_pipeline_tasks/<taskId>/`；服务重启后会自动恢复 `PROCESSING` 任务，轮询接口也能从磁盘读回任务。该能力覆盖单机/单实例部署，多实例生产仍需 PostgreSQL + 租约队列。
+
 ## 容器启动
 
 ```powershell
