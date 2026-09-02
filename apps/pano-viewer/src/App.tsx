@@ -240,11 +240,14 @@ function PanoramaViewer() {
     const params = new URLSearchParams(window.location.search);
     const manifestUrl = params.get("manifestUrl");
     const manifestName = params.get("manifest");
+    const shareToken = params.get("shareToken");
     const manifestFile = manifestName === "visual"
       ? "visual-manifest.json"
       : manifestName === "structural" ? "structural-manifest.json"
       : manifestName === "ai" ? "ai-manifest.json" : "pano-manifest.json";
-    const source = manifestUrl?.startsWith("/artifacts/") ? manifestUrl : `/demo/${manifestFile}`;
+    const source = shareToken
+      ? `/api/v1/shares/${encodeURIComponent(shareToken)}`
+      : manifestUrl?.startsWith("/artifacts/") ? manifestUrl : `/demo/${manifestFile}`;
     fetch(source)
       .then((response) => {
         if (!response.ok) throw new Error(`Manifest HTTP ${response.status}`);

@@ -5,7 +5,10 @@ from concurrent.futures import ThreadPoolExecutor
 import os
 import re
 import json
+import hashlib
+import secrets
 import threading
+from datetime import datetime, timedelta, timezone
 from pathlib import Path as FilePath
 from uuid import UUID, uuid4
 
@@ -25,6 +28,8 @@ from .contracts import (
     SCHEMA_VERSION,
     ScaleCalibrationRequest,
     ScaleCalibrationResult,
+    PanoManifest,
+    ShareCreateRequest,
 )
 from .facade import CommandFacade, CommandNotImplementedError, load_parse_result, parse_command
 from .geometry import calibrate_scale
@@ -141,6 +146,79 @@ async def get_pipeline_styles() -> dict:
     }
 
 
+@app.post("/api/v1/projects/{project_id}/shares")
+async def create_share(
+    request: ShareCreateRequest,
+    project_id: str = Path(pattern=r"^[a-zA-Z0-9_-]{1,128}$"),
+) -> dict:
+    manifest_path = _pipeline_manifest_path(project_id)
+    if not manifest_path.is_file():
+        raise HTTPException(status_code=404, detail="pano manifest not found")
+    try:
+        manifest = PanoManifest.model_validate_json(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise HTTPException(status_code=409, detail="pano manifest is invalid") from error
+
+    token = secrets.token_urlsafe(32)
+    share_id = uuid4()
+    expires_at = datetime.now(timezone.utc) + timedelta(seconds=request.ttlSeconds)
+    grant = {
+        "shareId": str(share_id), "projectId": project_id,
+        "tokenHash": hashlib.sha256(token.encode("ascii")).hexdigest(),
+        "manifestRevision": manifest.revision, "status": "ACTIVE",
+        "retentionMode": request.retentionMode,
+        "createdAt": datetime.now(timezone.utc).isoformat(),
+        "expiresAt": expires_at.isoformat(),
+    }
+    _persist_share_grant(share_id, grant)
+    base_url = os.environ.get("PANO_PUBLIC_BASE_URL", "").rstrip("/")
+    share_url = f"{base_url}/?shareToken={token}" if base_url else f"/?shareToken={token}"
+    return {
+        "shareId": str(share_id), "shareUrl": share_url,
+        "expiresAt": grant["expiresAt"], "manifestRevision": manifest.revision,
+        "retentionMode": request.retentionMode,
+    }
+
+
+@app.get("/api/v1/shares/{token}")
+async def read_share(token: str) -> dict:
+    grant = _find_share_grant(token)
+    if grant is None:
+        raise HTTPException(status_code=404, detail="share not found")
+    if grant.get("status") != "ACTIVE":
+        raise HTTPException(status_code=410, detail="share is no longer available")
+    try:
+        expires_at = datetime.fromisoformat(grant["expiresAt"])
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(status_code=410, detail="share is no longer available")
+    if datetime.now(timezone.utc) >= expires_at:
+        grant["status"] = "EXPIRED"
+        _persist_share_grant(UUID(grant["shareId"]), grant)
+        raise HTTPException(status_code=410, detail="share is no longer available")
+    manifest_path = _pipeline_manifest_path(grant["projectId"])
+    if not manifest_path.is_file():
+        raise HTTPException(status_code=410, detail="share is no longer available")
+    try:
+        manifest = PanoManifest.model_validate_json(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise HTTPException(status_code=410, detail="share is no longer available") from error
+    return manifest.model_dump(mode="json")
+
+
+@app.delete("/api/v1/projects/{project_id}/shares/{share_id}")
+async def revoke_share(
+    project_id: str = Path(pattern=r"^[a-zA-Z0-9_-]{1,128}$"),
+    share_id: UUID = Path(),
+) -> dict:
+    grant = _load_share_grant(share_id)
+    if grant is None or grant.get("projectId") != project_id:
+        raise HTTPException(status_code=404, detail="share not found")
+    if grant.get("status") == "ACTIVE":
+        grant["status"] = "REVOKED"
+        _persist_share_grant(share_id, grant)
+    return {"shareId": str(share_id), "status": grant.get("status", "REVOKED")}
+
+
 def _run_pipeline_task(
     task_id: UUID, image_bytes: bytes, project_id: str,
     allow_external: bool, generate_ai: bool, style_id: str,
@@ -188,6 +266,52 @@ async def get_pipeline_task(task_id: UUID) -> dict:
 
 def _pipeline_task_root() -> FilePath:
     return FilePath(os.environ.get("PANO_DATA_ROOT", artifact_root)) / "_pipeline_tasks"
+
+
+def _pipeline_manifest_path(project_id: str) -> FilePath:
+    return FilePath(os.environ.get("PANO_DATA_ROOT", artifact_root)) / project_id / "pano-manifest.json"
+
+
+def _share_root() -> FilePath:
+    return FilePath(os.environ.get("PANO_DATA_ROOT", artifact_root)) / "_shares"
+
+
+def _share_grant_path(share_id: UUID) -> FilePath:
+    return _share_root() / f"{share_id}.json"
+
+
+def _persist_share_grant(share_id: UUID, grant: dict) -> None:
+    root = _share_root()
+    root.mkdir(parents=True, exist_ok=True)
+    target = _share_grant_path(share_id)
+    temporary = target.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(grant, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    temporary.replace(target)
+
+
+def _load_share_grant(share_id: UUID) -> dict | None:
+    path = _share_grant_path(share_id)
+    if not path.is_file():
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _find_share_grant(token: str) -> dict | None:
+    if len(token) < 32 or len(token) > 128:
+        return None
+    digest = hashlib.sha256(token.encode("ascii", "ignore")).hexdigest()
+    for path in _share_root().glob("*.json"):
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(value, dict) and secrets.compare_digest(value.get("tokenHash", ""), digest):
+            return value
+    return None
 
 
 def _pipeline_task_dir(task_id: UUID) -> FilePath:

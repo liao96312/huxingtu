@@ -288,6 +288,11 @@ class ShareConfig(StrictModel):
     title: str = Field(min_length=1, max_length=128)
 
 
+class ShareCreateRequest(StrictModel):
+    ttlSeconds: int = Field(default=86400, ge=60, le=86400)
+    retentionMode: Literal["shareOnly", "ephemeralProject"] = "shareOnly"
+
+
 class PanoManifest(StrictModel):
     schemaVersion: Literal["0.1.0"] = SCHEMA_VERSION
     projectId: str = Field(min_length=1, max_length=128)

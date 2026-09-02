@@ -451,6 +451,14 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - [x] 重启恢复回归验证：清空内存后可读回进度，并重新提交持久化输入；缺失输入会变成明确 `FAILED`，不会静默卡死；
 - [ ] 当前仍是单机持久化，未接 PostgreSQL 任务事实源、跨实例租约/Heartbeat、取消和分布式队列；云多实例发布前必须升级该层。
 
+## 32. 2026-09-02 24小时临时分享（单实例PoC）
+
+- [x] 新增 `POST /api/v1/projects/{projectId}/shares`：默认 TTL 86400 秒，生成 256-bit 随机 Token，只持久化 Token SHA-256、项目和 manifest revision；
+- [x] 新增 `GET /api/v1/shares/{token}`：Viewer 通过 `?shareToken=` 读取只读 PanoManifest；过期、撤销或 manifest 不存在统一返回 410；
+- [x] 新增 `DELETE /api/v1/projects/{projectId}/shares/{shareId}`：撤销立即生效且重复撤销幂等；原始 Token 不写入状态文件；
+- [x] `shareOnly/ephemeralProject` 字段已进入分享记录，默认 `shareOnly`；短期测试可直接使用相对分享 URL；
+- [ ] 当前仍为单实例本地分享：资源 URL 仍走宿主静态 artifacts，尚未接私有 Bucket/短时签名 URL、CDN Purge、跨租户鉴权和物理删除 SLO；云多实例发布前升级到方案中的 ShareGrant 数据库实现。
+
 ## 28. 2026-09-02 ResPlan公共真值接入
 
 - [x] 通过本机 `127.0.0.1:7897` 代理从官方 GitHub 固定提交下载 `ResPlan.zip`；校验大小 `100106537` 字节、SHA-256 `f718de8865e51bbe93b49b584798e3c536ed6b4b8a5d32f01b56812f389aeb46`；

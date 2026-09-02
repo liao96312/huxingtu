@@ -1,5 +1,6 @@
 import asyncio
 import base64
+from pathlib import Path
 from uuid import uuid4
 
 import httpx
@@ -36,6 +37,54 @@ def test_pipeline_styles_are_served_from_frozen_catalog() -> None:
         {"id": "scandinavian", "label": "北欧"},
         {"id": "cream", "label": "奶油风"},
     ]
+
+
+def test_share_token_is_readable_revokeable_and_not_persisted(tmp_path, monkeypatch) -> None:
+    import shutil
+
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
+    target = tmp_path / "share-project"
+    target.mkdir()
+    shutil.copy2(
+        Path(__file__).parents[1] / "apps/pano-viewer/public/demo/pano-manifest.json",
+        target / "pano-manifest.json",
+    )
+    created = request("POST", "/api/v1/projects/share-project/shares", json={"ttlSeconds": 60})
+    assert created.status_code == 200
+    payload = created.json()
+    token = payload["shareUrl"].split("shareToken=", 1)[1]
+    grant_path = next((tmp_path / "_shares").glob("*.json"))
+    assert token not in grant_path.read_text(encoding="utf-8")
+
+    readable = request("GET", f"/api/v1/shares/{token}")
+    assert readable.status_code == 200
+    assert readable.json()["projectId"] == "golden_viewer"
+
+    revoked = request("DELETE", f"/api/v1/projects/share-project/shares/{payload['shareId']}")
+    assert revoked.status_code == 200 and revoked.json()["status"] == "REVOKED"
+    assert request("GET", f"/api/v1/shares/{token}").status_code == 410
+
+
+def test_expired_share_is_marked_and_returns_410(tmp_path, monkeypatch) -> None:
+    import json
+    import shutil
+
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
+    target = tmp_path / "expired-project"
+    target.mkdir()
+    shutil.copy2(
+        Path(__file__).parents[1] / "apps/pano-viewer/public/demo/pano-manifest.json",
+        target / "pano-manifest.json",
+    )
+    created = request("POST", "/api/v1/projects/expired-project/shares", json={}).json()
+    token = created["shareUrl"].split("shareToken=", 1)[1]
+    grant_path = next((tmp_path / "_shares").glob("*.json"))
+    grant = json.loads(grant_path.read_text(encoding="utf-8"))
+    grant["expiresAt"] = "2000-01-01T00:00:00+00:00"
+    grant_path.write_text(json.dumps(grant), encoding="utf-8")
+
+    assert request("GET", f"/api/v1/shares/{token}").status_code == 410
+    assert json.loads(grant_path.read_text(encoding="utf-8"))["status"] == "EXPIRED"
 
 
 def test_parse_command_persists_queryable_result(tmp_path, monkeypatch) -> None:
