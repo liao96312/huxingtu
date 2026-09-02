@@ -29,6 +29,13 @@ type PanoScene = {
     pitch: number;
     fov: number;
   };
+  hotspots?: Array<{
+    id: string;
+    label: string;
+    targetSceneId: string;
+    yaw: number;
+    pitch: number;
+  }>;
 };
 
 type PanoManifest = {
@@ -321,6 +328,21 @@ function PanoramaViewer() {
         <span aria-hidden="true">↗</span> 分享
       </button>
       <a className="upload-button" href="/?pipeline=1">上传户型图</a>
+
+      {activeScene.hotspots && activeScene.hotspots.length > 0 && (
+        <nav className="hotspot-list" aria-label="房间热点">
+          <span>门洞导航</span>
+          {activeScene.hotspots.map((hotspot) => {
+            const target = scenes.find((scene) => scene.id === hotspot.targetSceneId);
+            if (!target) return null;
+            return (
+              <button key={hotspot.id} type="button" onClick={() => selectScene(target)} title={`朝向 ${Math.round(hotspot.yaw)}°`}>
+                <span aria-hidden="true">↗</span>{hotspot.label}
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       {(loading || error) && <div className={`load-state ${error ? "is-error" : ""}`}>{error || "正在加载当前视角…"}</div>}
       {notice && <div className="notice" role="status">{notice}</div>}

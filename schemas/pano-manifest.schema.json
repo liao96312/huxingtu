@@ -69,6 +69,18 @@
         "fov": { "type": "number", "minimum": 45, "maximum": 100 }
       }
     },
+    "hotspot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "targetSceneId", "yaw", "pitch"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "label": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "targetSceneId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "yaw": { "type": "number", "minimum": -180, "maximum": 180 },
+        "pitch": { "type": "number", "minimum": -85, "maximum": 85 }
+      }
+    },
     "scene": {
       "type": "object",
       "additionalProperties": false,
@@ -80,7 +92,11 @@
         "title": { "type": "string", "minLength": 1, "maxLength": 128 },
         "order": { "type": "integer", "minimum": 0 },
         "assets": { "$ref": "#/$defs/assets" },
-        "initialView": { "$ref": "#/$defs/initialView" }
+        "initialView": { "$ref": "#/$defs/initialView" },
+        "hotspots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/hotspot" }
+        }
       }
     }
   }

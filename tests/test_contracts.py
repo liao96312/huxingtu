@@ -123,6 +123,17 @@ def test_golden_pano_manifest_matches_target_scene_matrix() -> None:
     assert all("3vjia" not in scene.assets.thumbnailUrl for scene in manifest.scenes)
 
 
+def test_pano_hotspot_target_must_reference_another_scene() -> None:
+    document = load_json(ROOT / "apps/pano-viewer/public/demo/pano-manifest.json")
+    document["scenes"][0]["hotspots"] = [{
+        "id": "bad-hotspot", "label": "不存在", "targetSceneId": "missing",
+        "yaw": 0, "pitch": 0,
+    }]
+    document["contentHash"] = canonical_sha256({key: value for key, value in document.items() if key != "contentHash"})
+    with pytest.raises(ValidationError, match="unknown scene"):
+        PanoManifest.model_validate(document)
+
+
 def test_dataset_manifest_files_match_recorded_evidence() -> None:
     document = load_json(ROOT / "datasets/manifest.json")
     manifest = DatasetManifest.model_validate(document)

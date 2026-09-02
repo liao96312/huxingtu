@@ -265,6 +265,14 @@ class InitialView(StrictModel):
     fov: float = Field(ge=45, le=100)
 
 
+class PanoHotspot(StrictModel):
+    id: str = Field(min_length=1, max_length=128)
+    label: str = Field(min_length=1, max_length=128)
+    targetSceneId: str = Field(min_length=1, max_length=128)
+    yaw: float = Field(ge=-180, le=180)
+    pitch: float = Field(ge=-85, le=85)
+
+
 class PanoScene(StrictModel):
     id: str = Field(min_length=1, max_length=128)
     roomId: str = Field(min_length=1, max_length=128)
@@ -273,6 +281,7 @@ class PanoScene(StrictModel):
     order: int = Field(ge=0)
     assets: SceneAssets
     initialView: InitialView
+    hotspots: list[PanoHotspot] = Field(default_factory=list)
 
 
 class ShareConfig(StrictModel):
@@ -308,6 +317,12 @@ class PanoManifest(StrictModel):
             raise ValueError("duplicate pano scene order")
         if self.defaultSceneId not in scene_ids:
             raise ValueError("defaultSceneId does not reference a scene")
+        for scene in self.scenes:
+            for hotspot in scene.hotspots:
+                if hotspot.targetSceneId not in scene_ids:
+                    raise ValueError(f"hotspot {hotspot.id} references an unknown scene")
+                if hotspot.targetSceneId == scene.id:
+                    raise ValueError(f"hotspot {hotspot.id} targets its own scene")
         return self
 
 

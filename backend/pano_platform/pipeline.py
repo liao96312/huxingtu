@@ -20,7 +20,7 @@ from typing import Any
 
 import cv2
 import numpy as np
-from shapely.geometry import Polygon
+from shapely.geometry import Point, Polygon
 from shapely.ops import polylabel
 
 from .contracts import (
@@ -577,6 +577,11 @@ def _render_panoramas(
             "initialView": {"yaw": 0.0, "pitch": 0.0, "fov": 82.0},
         })
 
+    scene_by_room = {scene["roomId"]: scene["id"] for scene in scenes}
+    hotspots_by_room = _build_room_hotspots(layout, rooms, scene_by_room)
+    for scene in scenes:
+        scene["hotspots"] = hotspots_by_room.get(scene["roomId"], [])
+
     payload = {
         "schemaVersion": "0.1.0", "projectId": project_id, "revision": 1,
         "defaultSceneId": scenes[0]["id"], "projection": "equirectangular",
@@ -592,6 +597,54 @@ def _render_panoramas(
     )
     _write_model(project_folder / "pano-manifest.json", manifest)
     return manifest, ai_generated_count, ai_failed_rooms, superres_count, superres_failed_rooms
+
+
+def _build_room_hotspots(layout: LayoutRevision, rooms: DerivedRoomSet, scene_by_room: dict[str, str]) -> dict[str, list[dict[str, Any]]]:
+    """Build conservative bidirectional room links from confirmed door geometry."""
+
+    nodes = {node.id: node for node in layout.nodes}
+    room_polygons = {
+        room.id: Polygon([(point.x, point.y) for point in room.polygon])
+        for room in rooms.rooms
+    }
+    room_names = {room.id: room.name for room in rooms.rooms}
+    links: dict[tuple[str, str], dict[str, Any]] = {}
+    for opening in layout.openings:
+        if opening.type.value != "door":
+            continue
+        edge = next((item for item in layout.edges if item.id == opening.wallEdgeId), None)
+        if edge is None:
+            continue
+        start, end = nodes[edge.startNodeId], nodes[edge.endNodeId]
+        length = math.hypot(end.x - start.x, end.y - start.y)
+        if length <= 0:
+            continue
+        ratio = (opening.offset + opening.width / 2) / length
+        midpoint = Point(start.x + (end.x - start.x) * ratio, start.y + (end.y - start.y) * ratio)
+        nearby = sorted(
+            (polygon.boundary.distance(midpoint), room_id)
+            for room_id, polygon in room_polygons.items()
+            if polygon.boundary.distance(midpoint) <= max(300.0, edge.thickness * 3)
+        )
+        if len(nearby) < 2:
+            continue
+        first, second = nearby[0][1], nearby[1][1]
+        if first == second or first not in scene_by_room or second not in scene_by_room:
+            continue
+        for source, target in ((first, second), (second, first)):
+            source_point = room_polygons[source].representative_point()
+            yaw = math.degrees(math.atan2(midpoint.y - source_point.y, midpoint.x - source_point.x))
+            links.setdefault((source, target), {
+                "id": f"hotspot-{opening.id}-{source}-to-{target}",
+                "label": f"去{room_names[target]}",
+                "targetSceneId": scene_by_room[target],
+                "yaw": max(-180.0, min(180.0, yaw)),
+                "pitch": 0.0,
+            })
+    result: dict[str, list[dict[str, Any]]] = {}
+    for (source, _), hotspot in sorted(links.items()):
+        result.setdefault(source, []).append(hotspot)
+    return result
 
 
 def _fallback_structural_erp() -> np.ndarray:

@@ -148,6 +148,50 @@ button {
   outline: none;
 }
 
+.hotspot-list {
+  position: fixed;
+  z-index: 5;
+  top: 50%;
+  right: max(16px, env(safe-area-inset-right));
+  display: flex;
+  width: 132px;
+  padding: 9px;
+  gap: 6px;
+  flex-direction: column;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 12px;
+  background: rgb(18 18 18 / 72%);
+  backdrop-filter: blur(12px);
+  transform: translateY(-50%);
+}
+
+.hotspot-list > span {
+  padding: 0 4px 2px;
+  color: rgb(255 255 255 / 70%);
+  font-size: 11px;
+}
+
+.hotspot-list button {
+  min-height: 32px;
+  padding: 0 8px;
+  overflow: hidden;
+  color: #fff;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 7px;
+  background: rgb(255 255 255 / 10%);
+  cursor: pointer;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hotspot-list button:hover,
+.hotspot-list button:focus-visible {
+  background: rgb(255 255 255 / 22%);
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+
 .load-state,
 .notice,
 .fatal-state {
@@ -195,6 +239,13 @@ button {
   .scene-card {
     flex-basis: 92px;
     height: 64px;
+  }
+
+  .hotspot-list {
+    top: auto;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(96px, calc(env(safe-area-inset-bottom) + 84px));
+    transform: none;
   }
 }
 

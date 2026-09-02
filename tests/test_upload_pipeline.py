@@ -9,8 +9,8 @@ from pano_platform.floorplan.fusion_rooms import ClosedRoom
 from pano_platform.floorplan.parse import ParseRun, ParseStatus, StageGraph, VisionMode
 from pano_platform.floorplan.parse import orchestrate
 from pano_platform.floorplan.wall_graph import WallGraph, WallSegment
-from pano_platform.contracts import DerivedRoomSet, LayoutRevision, PanoManifest, SceneGeometry
-from pano_platform.pipeline import _publish_preview, _render_panoramas
+from pano_platform.contracts import DerivedRoomSet, LayoutRevision, PanoManifest, SceneGeometry, canonical_sha256
+from pano_platform.pipeline import _build_room_hotspots, _publish_preview, _render_panoramas
 
 
 def _preview_run() -> ParseRun:
@@ -58,6 +58,43 @@ def test_preview_geometry_and_erp_are_published(tmp_path, monkeypatch) -> None:
     DerivedRoomSet.model_validate_json((folder / "rooms.preview-v1.json").read_text(encoding="utf-8"))
     SceneGeometry.model_validate_json((folder / "scene-geometry.preview-v1.json").read_text(encoding="utf-8"))
     PanoManifest.model_validate_json((folder / "pano-manifest.json").read_text(encoding="utf-8"))
+
+
+def test_door_hotspots_link_only_two_nearby_rooms() -> None:
+    layout_payload = {
+        "schemaVersion": "0.1.0", "id": "layout", "projectId": "p", "revision": 1,
+        "units": "mm", "coordinateFrame": "business-z-up-rh",
+        "source": {"imageArtifactId": "sha256:" + "1" * 64, "pixelToWorldTransform": (1, 0, 0, 0, 1, 0, 0, 0, 1), "scaleConfidence": 0.5},
+        "nodes": [
+            {"id": "n1", "x": 0, "y": 0}, {"id": "n2", "x": 1000, "y": 0},
+            {"id": "n3", "x": 1000, "y": 1000}, {"id": "n4", "x": 0, "y": 1000},
+            {"id": "n5", "x": 2000, "y": 0}, {"id": "n6", "x": 2000, "y": 1000},
+        ],
+        "edges": [
+            {"id": "wall-top", "startNodeId": "n1", "endNodeId": "n2", "thickness": 120, "height": 2800, "confidence": 0.5},
+            {"id": "wall-mid", "startNodeId": "n2", "endNodeId": "n3", "thickness": 120, "height": 2800, "confidence": 0.5},
+            {"id": "wall-bottom", "startNodeId": "n3", "endNodeId": "n4", "thickness": 120, "height": 2800, "confidence": 0.5},
+            {"id": "wall-left", "startNodeId": "n4", "endNodeId": "n1", "thickness": 120, "height": 2800, "confidence": 0.5},
+            {"id": "wall-right", "startNodeId": "n2", "endNodeId": "n5", "thickness": 120, "height": 2800, "confidence": 0.5},
+            {"id": "wall-right2", "startNodeId": "n5", "endNodeId": "n6", "thickness": 120, "height": 2800, "confidence": 0.5},
+        ],
+        "openings": [{"id": "door-1", "type": "door", "wallEdgeId": "wall-mid", "offset": 400, "width": 200, "height": 2200, "confidence": 0.5}],
+        "roomAnnotations": [],
+    }
+    layout_payload["contentHash"] = canonical_sha256(layout_payload)
+    layout = LayoutRevision.model_validate(layout_payload)
+    room_payload = {
+        "schemaVersion": "0.1.0", "projectId": "p", "layoutRevisionId": "layout", "sourceLayoutHash": "2" * 64,
+        "rooms": [
+            {"id": "a", "name": "客厅", "type": "living", "polygon": [{"x": 50, "y": 50}, {"x": 950, "y": 50}, {"x": 950, "y": 950}, {"x": 50, "y": 950}], "areaMm2": 810000, "confidence": 0.5},
+            {"id": "b", "name": "卧室", "type": "bedroom", "polygon": [{"x": 1050, "y": 50}, {"x": 1950, "y": 50}, {"x": 1950, "y": 950}, {"x": 1050, "y": 950}], "areaMm2": 810000, "confidence": 0.5},
+        ],
+    }
+    room_payload["contentHash"] = canonical_sha256(room_payload)
+    rooms = DerivedRoomSet.model_validate(room_payload)
+    hotspots = _build_room_hotspots(layout, rooms, {"a": "a-main", "b": "b-main"})
+    assert hotspots["a"][0]["targetSceneId"] == "b-main"
+    assert hotspots["b"][0]["targetSceneId"] == "a-main"
 
 
 def test_cv_only_run_still_builds_automatic_preview(tmp_path, monkeypatch) -> None:
