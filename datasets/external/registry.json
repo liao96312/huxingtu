@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "0.1.0",
+  "datasets": [
+    {
+      "id": "resplan",
+      "version": "e2b78fe069aee1ab1e1828a612743f308e3c32a7",
+      "source": "https://github.com/m-agour/ResPlan",
+      "artifactUrl": "https://raw.githubusercontent.com/m-agour/ResPlan/e2b78fe069aee1ab1e1828a612743f308e3c32a7/ResPlan.zip",
+      "artifactBytes": 100106537,
+      "artifactSha256": "f718de8865e51bbe93b49b584798e3c536ed6b4b8a5d32f01b56812f389aeb46",
+      "splitUrl": "https://raw.githubusercontent.com/m-agour/ResPlan/e2b78fe069aee1ab1e1828a612743f308e3c32a7/split.json",
+      "splitBytes": 177059,
+      "splitSha256": "7761df4ad4c860d7e89d1ef9c7004737cd407615b66ed9cde676d7087108c9a7",
+      "dataLicense": "CC-BY-4.0",
+      "codeLicense": "MIT",
+      "commercialUse": true,
+      "usage": "Generate a vector-derived wall/room/opening regression corpus; do not treat its synthetic rasters as real-image accuracy evidence.",
+      "localArtifact": "tmp/external/resplan/ResPlan.zip"
+    },
+    {
+      "id": "cubicasa5k",
+      "source": "https://github.com/CubiCasa/CubiCasa5k",
+      "dataLicense": "CC-BY-NC-4.0",
+      "commercialUse": false,
+      "usage": "Research-only comparison; excluded from the commercial training and runtime path."
+    }
+  ]
+}

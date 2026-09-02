@@ -60,6 +60,18 @@ $env:TEST_DATABASE_URL='postgresql://pano:pano@127.0.0.1:55432/pano'
 python -m pytest -q
 ```
 
+## 公共真值回归
+
+下载固定版本并执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/fetch_resplan.ps1
+python scripts/prepare_resplan_truth.py --partition test --limit 10
+python scripts/run_resplan_regression.py --limit 10
+```
+
+下载器会自动探测本机 `127.0.0.1:7897`，仅对本次下载使用代理并校验固定版本的字节数和 SHA-256；随后以受限反序列化生成本项目的 PNG/真值 JSON，最后实际跑无人干预上传到 Viewer 链并输出房间/门窗数量差。派生文件只写入被 Git 忽略的 `tmp/`。数据来源和许可证见 `datasets/external/registry.json`。
+
 ## 目录
 
 ```text
