@@ -901,33 +901,31 @@ def _generate_ai_panorama(
     idempotency_key = hashlib.sha256(
         source.read_bytes() + prompt.encode("utf-8") + b"gpt-image-2:2k"
     ).hexdigest()
-    session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries=Retry(
-        total=4, connect=4, read=1, backoff_factor=1,
-        status_forcelist=(429, 500, 502, 503, 504),
-        allowed_methods=frozenset(("GET", "POST")),
-    )))
-    with source.open("rb") as image:
-        response = session.post(
-            f"{os.environ.get('TUZI_BASE_URL', 'https://api.tu-zi.com').rstrip('/')}/v1/images/edits",
-            headers={"Authorization": f"Bearer {key}", "Idempotency-Key": idempotency_key},
-            data={"model": "gpt-image-2", "prompt": prompt, "n": "1", "size": "2048x1024", "quality": "2k", "response_format": "url"},
-            files={"image": (source.name, image, "image/jpeg")}, timeout=(20, 300),
-        )
-    response.raise_for_status()
-    document = response.json()
-    items = document.get("data", {}).get("images", []) if isinstance(document.get("data"), dict) else document.get("data", [])
-    if not items:
-        raise RuntimeError("Tuzi image response has no image")
-    item = items[0]
-    if item.get("url"):
-        downloaded = session.get(item["url"], timeout=(20, 180))
-        downloaded.raise_for_status()
-        payload = downloaded.content
-    elif item.get("b64_json"):
-        payload = base64.b64decode(item["b64_json"])
-    else:
-        raise RuntimeError("Tuzi image response has no usable payload")
+    session = _build_tuzi_image_session(requests, HTTPAdapter, Retry)
+    try:
+        with source.open("rb") as image:
+            response = session.post(
+                f"{os.environ.get('TUZI_BASE_URL', 'https://api.tu-zi.com').rstrip('/')}/v1/images/edits",
+                headers={"Authorization": f"Bearer {key}", "Idempotency-Key": idempotency_key},
+                data={"model": "gpt-image-2", "prompt": prompt, "n": "1", "size": "2048x1024", "quality": "2k", "response_format": "url"},
+                files={"image": (source.name, image, "image/jpeg")}, timeout=_tuzi_image_timeout(),
+            )
+        response.raise_for_status()
+        document = response.json()
+        items = document.get("data", {}).get("images", []) if isinstance(document.get("data"), dict) else document.get("data", [])
+        if not items:
+            raise RuntimeError("Tuzi image response has no image")
+        item = items[0]
+        if item.get("url"):
+            downloaded = session.get(item["url"], timeout=(20, 180))
+            downloaded.raise_for_status()
+            payload = downloaded.content
+        elif item.get("b64_json"):
+            payload = base64.b64decode(item["b64_json"])
+        else:
+            raise RuntimeError("Tuzi image response has no usable payload")
+    finally:
+        session.close()
     decoded = cv2.imdecode(np.frombuffer(payload, np.uint8), cv2.IMREAD_COLOR)
     if decoded is None:
         raise RuntimeError("AI image decode failed")
@@ -940,6 +938,35 @@ def _generate_ai_panorama(
         normalized[:, -1 - offset] = np.clip(normalized[:, -1 - offset] * (1 - alpha) + average * alpha, 0, 255)
     cv2.imwrite(str(output), normalized, [cv2.IMWRITE_JPEG_QUALITY, 94])
     return output
+
+
+def _build_tuzi_image_session(requests_module, adapter_type, retry_type):
+    """Create the bounded image-2 session without changing global proxy state."""
+
+    session = requests_module.Session()
+    proxy = (
+        os.environ.get("TUZI_HTTP_PROXY", "").strip()
+        or os.environ.get("HTTPS_PROXY", "").strip()
+        or os.environ.get("HTTP_PROXY", "").strip()
+    )
+    if proxy:
+        session.proxies.update({"http": proxy, "https": proxy})
+    session.trust_env = True
+    session.mount("https://", adapter_type(max_retries=retry_type(
+        total=5, connect=5, read=2, status=5, backoff_factor=1,
+        respect_retry_after_header=True,
+        status_forcelist=(408, 425, 429, 500, 502, 503, 504),
+        allowed_methods=frozenset(("GET", "POST")),
+    )))
+    return session
+
+
+def _tuzi_image_timeout() -> tuple[int, int]:
+    try:
+        read_timeout = max(30, int(os.environ.get("TUZI_IMAGE_TIMEOUT_SECONDS", "300")))
+    except ValueError:
+        read_timeout = 300
+    return (20, read_timeout)
 
 
 def _opening_hint(layout: LayoutRevision, room) -> str:

@@ -97,6 +97,21 @@ def test_door_hotspots_link_only_two_nearby_rooms() -> None:
     assert hotspots["b"][0]["targetSceneId"] == "a-main"
 
 
+def test_tuzi_image_session_uses_explicit_proxy_without_global_mutation(monkeypatch) -> None:
+    from pano_platform.pipeline import _build_tuzi_image_session
+    import requests
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+
+    monkeypatch.setenv("TUZI_HTTP_PROXY", "http://127.0.0.1:7897")
+    session = _build_tuzi_image_session(requests, HTTPAdapter, Retry)
+    try:
+        assert session.proxies["https"] == "http://127.0.0.1:7897"
+        assert session.adapters["https://"].max_retries.total == 5
+    finally:
+        session.close()
+
+
 def test_cv_only_run_still_builds_automatic_preview(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
     image_path = Path(__file__).parents[1] / "tests/fixtures/floorplan-golden/fp-golden.png"
