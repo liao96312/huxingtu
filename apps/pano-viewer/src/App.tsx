@@ -293,15 +293,25 @@ function PanoramaViewer() {
 
   const share = async () => {
     if (!manifest || !activeScene) return;
-    const url = new URL(window.location.href);
-    url.searchParams.set("scene", activeScene.id);
     try {
+      let url = new URL(window.location.href);
+      if (!url.searchParams.has("shareToken")) {
+        const response = await fetch(`/api/v1/projects/${encodeURIComponent(manifest.projectId)}/shares`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ttlSeconds: 86400, retentionMode: "shareOnly" }),
+        });
+        if (!response.ok) throw new Error(`创建分享失败：HTTP ${response.status}`);
+        const created = await response.json() as { shareUrl: string };
+        url = new URL(created.shareUrl, window.location.origin);
+      }
+      url.searchParams.set("scene", activeScene.id);
       if (navigator.share) {
         await navigator.share({ title: manifest.share.title, url: url.toString() });
-        setNotice("分享面板已打开");
+        setNotice("24小时分享面板已打开");
       } else {
         await navigator.clipboard.writeText(url.toString());
-        setNotice("链接已复制");
+        setNotice("24小时分享链接已复制");
       }
     } catch (reason) {
       if ((reason as DOMException).name !== "AbortError") setNotice("分享失败，请复制地址栏链接");

@@ -3,7 +3,7 @@
 > 对应方案：[floorplan-recognition-v2.md](./floorplan-recognition-v2.md)
 > 原则：一次只推进一个可验证切片；任何视觉结果都不能绕过几何与质量门。
 
-> **2026-09-02 当前执行口径：**功能完整性优先。T09的F1/大样本评测、T10安全成本、T11 Shadow和T12发布门统一后置，不作为当前自动出图阻断。当前顺序为：风格主链 → 房间热点 → Tuzi恢复 → 任务持久化 → 24小时分享。后文历史指标保留为证据，不代表当前优先级。
+> **2026-09-03 当前执行口径：**功能完整性和自动识别优先。程序化家具、正式云部署、T09的F1/大样本评测、T10安全成本、T11 Shadow和T12发布门统一后置。当前本机临时隧道分享已完成，下一顺序为：ResPlan/桌面图识别回归 → Tuzi在线整批恢复 → 自动链稳定性。后文历史指标保留为证据，不代表当前优先级。
 
 ## 0. 执行顺序
 
@@ -458,6 +458,20 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - [x] 新增 `DELETE /api/v1/projects/{projectId}/shares/{shareId}`：撤销立即生效且重复撤销幂等；原始 Token 不写入状态文件；
 - [x] `shareOnly/ephemeralProject` 字段已进入分享记录，默认 `shareOnly`；短期测试可直接使用相对分享 URL；
 - [ ] 当前仍为单实例本地分享：资源 URL 仍走宿主静态 artifacts，尚未接私有 Bucket/短时签名 URL、CDN Purge、跨租户鉴权和物理删除 SLO；云多实例发布前升级到方案中的 ShareGrant 数据库实现。
+
+## 33. 2026-09-03 项目文件夹临时分享隧道
+
+- [x] 复用项目内 `tools/cloudflared.exe` 和 Vite 的 `.trycloudflare.com` Host 白名单，不要求域名、Cloudflare账号或云服务器；
+- [x] 新增 Windows 主入口 `scripts/local_share.ps1`：自动检查/启动本地 API 和 Viewer，探测 `127.0.0.1:7897`，代理失败时有限重试并最终尝试直连；
+- [x] 支持 `start/url/stop`，只停止 PID 文件对应且路径匹配项目 cloudflared 的进程；Git Bash 脚本收敛为 PowerShell 包装层；
+- [x] 传入 `ProjectId` 时自动调用24小时 Share API并输出客户 Viewer URL；Viewer 分享按钮也会自动创建24小时 Token；
+- [x] 公网实测：Viewer、只读 share manifest、全景图片均返回 HTTP 200，项目包含5个场景；
+- [ ] Quick Tunnel 不保证固定地址和持续在线；Token 24小时后失效，但隧道进程需手动 `stop` 或随电脑/进程退出销毁。这是明确的短期测试方案，不升级为云部署承诺。
+
+当前后置：
+
+- [ ] 程序化家具布局和 GLB 资产包暂不做；
+- [ ] 正式云部署、私有对象存储、CDN和多实例任务系统暂不做。
 
 ## 28. 2026-09-02 ResPlan公共真值接入
 

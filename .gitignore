@@ -20,6 +20,13 @@ datasets/debug/bench-*.json
 datasets/debug/fp101-*.png
 datasets/debug/fp101-*.json
 datasets/debug/*.pid
+datasets/debug/cloudflared-url.txt
 datasets/debug/upscale-test/
 datasets/derived/verify-*/
 datasets/derived/door-window-review/
+datasets/derived/_pipeline_tasks/
+datasets/derived/_shares/
+
+# third-party CLI binaries (do not commit large executables)
+tools/cloudflared.exe
+tools/*.exe

@@ -38,6 +38,26 @@ image-2 请求默认沿用标准 `HTTPS_PROXY/HTTP_PROXY`；若服务进程需�
 
 上传任务状态和原图会持久化在 `PANO_DATA_ROOT/_pipeline_tasks/<taskId>/`；服务重启后会自动恢复 `PROCESSING` 任务，轮询接口也能从磁盘读回任务。该能力覆盖单机/单实例部署，多实例生产仍需 PostgreSQL + 租约队列。
 
+## 本机临时公网分享
+
+先生成全景，再从项目目录运行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/local_share.ps1 -Action start -ProjectId <项目ID> -TtlHours 24
+```
+
+脚本会确保本地 API/Viewer 已启动，自动探测 `127.0.0.1:7897` 代理并创建 Cloudflare Quick Tunnel。传入已有项目 ID 时直接输出24小时客户链接；不传项目 ID 时输出公网上传入口，生成结果后点击 Viewer 右上角“分享”即可创建24小时链接。
+
+```powershell
+# 查看当前隧道
+powershell -ExecutionPolicy Bypass -File scripts/local_share.ps1 -Action url
+
+# 停止隧道，公网地址立即失效
+powershell -ExecutionPolicy Bypass -File scripts/local_share.ps1 -Action stop
+```
+
+Quick Tunnel 仅用于短期测试，不保证固定域名或持续在线；24小时限制由分享 Token 执行，隧道本身在执行 `stop`、进程退出或电脑关机时销毁。
+
 ## 容器启动
 
 ```powershell
