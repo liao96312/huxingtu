@@ -17,6 +17,8 @@ import numpy as np
 
 from .wall_graph import WallGraph
 
+MIN_ROOM_AREA_MM2 = 50_000.0
+
 
 @dataclass(frozen=True)
 class Room:
@@ -35,7 +37,7 @@ def polygonize_rooms(
     graph: WallGraph,
     wall_thickness_px: float,
     canvas_shape: tuple[int, int],
-    min_room_area_mm2: float = 0.5,
+    min_room_area_mm2: float = MIN_ROOM_AREA_MM2,
     wall_mask: np.ndarray | None = None,
 ) -> tuple[Room, ...]:
     """Produce room polygons from a closed wall graph.

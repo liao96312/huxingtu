@@ -24,3 +24,26 @@ def test_wall_mask_recovers_partition_missing_from_axis_graph() -> None:
     rooms = polygonize_rooms(graph, 5.0, wall_mask.shape, wall_mask=wall_mask)
 
     assert len(rooms) == 2
+
+
+def test_sub_005_square_metre_wall_pocket_is_not_a_room() -> None:
+    segments = [
+        WallSegment("outer-top", "horizontal", (10, 10), (110, 10), 2, False),
+        WallSegment("outer-right", "vertical", (110, 10), (110, 110), 2, False),
+        WallSegment("outer-bottom", "horizontal", (110, 110), (10, 110), 2, False),
+        WallSegment("outer-left", "vertical", (10, 110), (10, 10), 2, False),
+        WallSegment("tiny-top", "horizontal", (30, 30), (36, 30), 2, False),
+        WallSegment("tiny-right", "vertical", (36, 30), (36, 36), 2, False),
+        WallSegment("tiny-bottom", "horizontal", (36, 36), (30, 36), 2, False),
+        WallSegment("tiny-left", "vertical", (30, 36), (30, 30), 2, False),
+    ]
+    graph = WallGraph(
+        horizontal_axes=(10.0, 30.0, 36.0, 110.0),
+        vertical_axes=(10.0, 30.0, 36.0, 110.0),
+        segments=tuple(segments), gaps=(), mm_per_px=10.0, wall_width_px=2.0,
+    )
+
+    rooms = polygonize_rooms(graph, 2.0, (120, 120))
+
+    assert len(rooms) == 1
+    assert rooms[0].area_mm2 > 500_000
