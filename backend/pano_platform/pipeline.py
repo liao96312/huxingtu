@@ -405,7 +405,9 @@ def _publish_preview(
                 for item in automatic_cv_confirmed
             ],
             "rejected": [
-                {"id": item.id, "wallEdgeId": item.wall_edge_id,
+                {"id": item.id, "type": item.type, "wallEdgeId": item.wall_edge_id,
+                 "startPx": item.start_px, "endPx": item.end_px,
+                 "widthMm": item.width_mm, "sideRoomIds": item.side_room_ids,
                  "reasonCodes": item.reason_codes}
                 for item in (*cv_window_result.rejected, *cv_opening_result.rejected)
             ],
