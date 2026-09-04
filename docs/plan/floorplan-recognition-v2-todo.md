@@ -511,6 +511,15 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - [x] 10/10 ResPlan和9/9桌面图继续无人干预生成Viewer；
 - [ ] 过分割当前集中在 resplan-00071 与 resplan-00080，各多6个空间；下一步按这两个样本追踪凹形外轮廓，不对全部图统一删整边。
 
+## 37. 2026-09-04 Tuzi结构化响应兼容与实探
+
+- [x] 复查Tuzi官方文档：Chat接口用于图片理解，但页面未声明Chat的response_format/json_schema；Responses接口声明图片与结构化JSON，JsonSchemaFormat采用type/name/schema/strict直接结构；
+- [x] 实测当前gemini-3.5-flash：Responses纯文本返回200和request ID；Responses内嵌data URI图片在代理、直连下均于响应头前断开，故不切主路径；
+- [x] Chat图片仍可到达模型，但本次严格Schema连续3次返回非JSON，归一为VISION_SCHEMA_INVALID，不允许自由文本猜JSON；
+- [x] Adapter兼容官方code/message/request_id/data网关包装，能从data内提取choices、usage、actualModel，并优先记录顶层request_id；
+- [x] HTTP错误证据新增安全状态码摘要，如HTTP 403；不记录Key、Base64或模型自由文本；
+- [ ] 继续使用Chat图片+本地严格校验和CV回退；只有Responses图片data URI或私有文件输入完成真实VlmDraft探针后，才允许切换endpoint。
+
 用户需要解决的外部卡点：
 
 - [ ] 若要落地“程序化家具布局”，需要提供或确认一套可商用 GLB 家具资产包及许可证；否则主链继续由 image-2 自动生成家具视觉，不承诺家具三维实体可编辑；

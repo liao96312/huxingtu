@@ -138,6 +138,29 @@ def test_parse_success_records_evidence() -> None:
     assert "sk-secret" not in json.dumps(result.evidence)
 
 
+def test_documented_tuzi_data_envelope_is_unwrapped() -> None:
+    wrapped = {
+        "code": 0,
+        "message": "ok",
+        "request_id": "gateway_req_1",
+        "data": responses_response(valid_draft_text(), request_id="chat_req_1"),
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=wrapped)
+
+    provider = TuziResponsesVisionProvider(
+        config(), httpx.Client(transport=httpx.MockTransport(handler))
+    )
+    result = provider.parse(parse_request(), b"\x00" * 8)
+    provider.close()
+
+    assert result.error is None
+    assert result.draft is not None
+    assert result.evidence["providerRequestId"] == "gateway_req_1"
+    assert result.evidence["usage"]["total_tokens"] == 142
+
+
 def test_429_is_retried_then_succeeds() -> None:
     provider = TuziResponsesVisionProvider(config(), httpx.Client(transport=transport_with(429)))
     result = provider.parse(parse_request(), b"\x00" * 8)
@@ -175,6 +198,7 @@ def test_auth_error_is_not_retried() -> None:
     provider.close()
     assert result.error is VisionError.VISION_PROVIDER_UNAVAILABLE
     assert result.evidence["attemptCount"] == 1
+    assert result.evidence["errorDetail"] == "HTTP 403"
 
 
 def test_model_not_found_is_distinct() -> None:

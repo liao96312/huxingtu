@@ -125,6 +125,7 @@ def canonical_hash(value: object) -> str:
 
 
 def extract_output_text(response: dict) -> str | None:
+    response = unwrap_gateway_response(response)
     """Pull the assistant message ``content`` from a chat.completion payload."""
 
     choices = response.get("choices")
@@ -147,6 +148,7 @@ def extract_output_text(response: dict) -> str | None:
 
 
 def extract_finish_reason(response: dict) -> str | None:
+    response = unwrap_gateway_response(response)
     choices = response.get("choices")
     if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
         return None
@@ -224,15 +226,29 @@ def extract_request_id(response: httpx.Response) -> str | None:
         return request_id
     data = _safe_json(response)
     if isinstance(data, dict):
-        return data.get("id")
+        nested = data.get("data")
+        return data.get("request_id") or data.get("id") or (
+            nested.get("id") if isinstance(nested, dict) else None
+        )
     return None
 
 
 def extract_usage(response: httpx.Response) -> dict:
     data = _safe_json(response)
-    if isinstance(data, dict) and isinstance(data.get("usage"), dict):
-        return data["usage"]
+    if isinstance(data, dict):
+        normalized = unwrap_gateway_response(data)
+        if isinstance(normalized.get("usage"), dict):
+            return normalized["usage"]
     return {}
+
+
+def unwrap_gateway_response(response: dict) -> dict:
+    """Unwrap the documented Tuzi code/message/request_id/data envelope."""
+
+    nested = response.get("data")
+    if isinstance(nested, dict) and any(key in nested for key in ("choices", "output", "usage")):
+        return nested
+    return response
 
 
 def _safe_json(response: httpx.Response) -> object:

@@ -38,6 +38,7 @@ from .provider import (
     is_retryable,
     normalize_http_error,
     parse_draft,
+    unwrap_gateway_response,
 )
 
 MAX_ATTEMPTS = 3
@@ -160,6 +161,7 @@ class TuziResponsesVisionProvider(VisionProvider):
                 evidence = self._evidence(
                     attempt, started, image_sha256, prompt_version, draft_schema_version, model,
                     error=last_error, request_id=extract_request_id(error.response),
+                    error_detail=f"HTTP {error.response.status_code}",
                 )
                 # Do not let a follow-up gateway 400 hide a useful validation
                 # error from the provider's previous structured response.
@@ -193,6 +195,7 @@ class TuziResponsesVisionProvider(VisionProvider):
                     time.sleep(self._backoff(attempt))
                 continue
 
+            completion_payload = unwrap_gateway_response(payload)
             output_text = extract_output_text(payload)
             finish_reason = extract_finish_reason(payload)
             if finish_reason in ("content_filter", "safety"):
@@ -234,7 +237,7 @@ class TuziResponsesVisionProvider(VisionProvider):
                 attempt, started, image_sha256, prompt_version, draft_schema_version, model,
                 request_id=extract_request_id(response),
                 usage=extract_usage(response),
-                actual_model=payload.get("model"),
+                actual_model=completion_payload.get("model"),
                 raw=payload,
                 normalized_draft=draft,
             )
