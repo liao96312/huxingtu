@@ -66,6 +66,17 @@ def test_collinear_noise_gap_below_physical_minimum_is_ignored() -> None:
     assert segments == [] and gaps == []
 
 
+def test_collinear_open_area_above_structural_gap_limit_is_ignored() -> None:
+    runs = [
+        _AxisRun(100, 10, 100, 10, "horizontal"),
+        _AxisRun(100, 351, 500, 10, "horizontal"),
+    ]
+    segments, gaps = _collinear_gap_segments(
+        runs, [], (100.0,), (), 10.0, 3, 300.0, 2500.0
+    )
+    assert segments == [] and gaps == []
+
+
 def test_missing_outer_boundary_is_closed_from_wall_mask_bbox() -> None:
     mask = np.zeros((200, 240), np.uint8)
     mask[30:34, 40:200] = 1

@@ -87,7 +87,7 @@ def build_wall_graph(
     strokes: StrokeProfile,
     max_corner_snap_mm: float = 300.0,
     min_opening_width_mm: float = 300.0,
-    max_opening_width_mm: float = 3000.0,
+    max_opening_width_mm: float = 2500.0,
     axis_tolerance_factor: float = 1.5,
 ) -> WallGraph:
     """Vectorize ``layers.wall`` into canonical axes, snapped segments and gaps.
