@@ -507,7 +507,10 @@ def _render_panoramas(
     superres_count = 0
     superres_failed_rooms: list[str] = []
     structural_fallback_rooms: list[str] = []
-    ordered_rooms = sorted(rooms.rooms, key=lambda room: room.areaMm2, reverse=True)
+    enclosing_rooms = _enclosing_room_map(rooms.rooms)
+    ordered_rooms = sorted(
+        rooms.rooms, key=lambda room: (room.id in enclosing_rooms, -room.areaMm2)
+    )
     for order, room in enumerate(ordered_rooms):
         scene_id = f"{room.id}-main"
         folder = _data_root() / project_id / "panorama" / scene_id
@@ -593,12 +596,43 @@ def _render_panoramas(
     manifest = PanoManifest.model_validate(payload)
     project_folder = _data_root() / project_id
     project_folder.mkdir(parents=True, exist_ok=True)
+    (project_folder / "automatic-room-evidence.json").write_text(
+        json.dumps({
+            "schemaVersion": "0.1.0", "projectId": project_id,
+            "suspectedEnclosingRooms": [
+                {"roomId": room_id, "containedRoomIds": list(contained)}
+                for room_id, contained in sorted(enclosing_rooms.items())
+            ],
+        }, ensure_ascii=False, indent=2), encoding="utf-8",
+    )
     (project_folder / "structural-fallback-rooms.json").write_text(
         json.dumps({"schemaVersion": "0.1.0", "projectId": project_id, "rooms": structural_fallback_rooms}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     _write_model(project_folder / "pano-manifest.json", manifest)
     return manifest, ai_generated_count, ai_failed_rooms, superres_count, superres_failed_rooms
+
+
+def _enclosing_room_map(rooms, containment_ratio: float = 0.9) -> dict[str, tuple[str, ...]]:
+    """Find exterior-shell candidates without deleting topology evidence."""
+
+    polygons = {
+        room.id: Polygon([(point.x, point.y) for point in room.polygon])
+        for room in rooms
+    }
+    result = {}
+    for room in rooms:
+        candidate = polygons[room.id]
+        contained = tuple(
+            other_id
+            for other_id, other in polygons.items()
+            if other_id != room.id
+            and other.area > 0
+            and candidate.intersection(other).area / other.area >= containment_ratio
+        )
+        if len(contained) >= 2:
+            result[room.id] = contained
+    return result
 
 
 def _build_room_hotspots(layout: LayoutRevision, rooms: DerivedRoomSet, scene_by_room: dict[str, str]) -> dict[str, list[dict[str, Any]]]:

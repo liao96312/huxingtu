@@ -11,18 +11,18 @@
 
 1. **Tuzi 是视觉 Provider，不是几何真值源。**视觉模型只输出 `VlmDraft`；墙、房间、门窗必须经过 Schema、几何吸附、比例尺/面积自洽和拓扑门禁才能进入事实工件。
 2. **不写死 Gemini 或任何未经当前 Key 验证的模型名。**启动时从 Tuzi `/v1/models` 获取候选模型，并对图片输入、严格 JSON Schema、最大输出长度做能力探针。
-3. **使用 Tuzi OpenAI 兼容接口（图片理解 + 结构化输出）。** 结构化输出走 `POST /v1/chat/completions` + `response_format.type=json_schema`。
-   - **实测（2026-08-28）**：本机 Tuzi 网关对 `POST /v1/responses` 返回 `500 not implemented / convert_request_failed`——该端点在网关侧未接通上游（即便纯文本也 500）。而 `/v1/chat/completions` 实测 200，`gemini-3.5-flash` 能正确收图并返回严格 JSON（`finish_reason=stop`）。
-   - 因此**改走 chat/completions**；给模型的结构化 schema 必须是**展平的 OpenAPI 子集**（Gemini 的 `response_schema` 不认 `$id`/`$defs`/`$ref`），见 `vision/contracts.vlm_draft_openai_schema`。
+3. **使用 Tuzi OpenAI 兼容接口（图片理解 + 结构化输出）。** 当前生产适配仍走 `POST /v1/chat/completions`，响应必须经过本地严格Schema校验。
+   - **最新实测（2026-09-04）**：`/v1/responses` 纯文本可用，但内嵌图片在代理和直连下均于响应头前断开；`/v1/chat/completions` 图片能到达模型，但严格Schema并非每次都返回合法JSON。
+   - 因此暂不切换endpoint，也不解析自由文本猜JSON；失败统一归一为视觉不可用并让CV链自动继续。给模型的schema仍使用展平的OpenAPI子集，见 `vision/contracts.vlm_draft_openai_schema`。
 4. **低置信结果不进入 `LayoutRevision`。**只进入 `OpeningCandidateSet`、`VlmDraftArtifact` 或项目 `NEEDS_REVIEW`。
 5. **Provider 不可用时仍可交付确定性降级。**纯 CV 输出可审计候选；不得发布自由文本、半截 JSON 或旧缓存冒充当前结果。
 6. **Tuzi 中转不消除第三方数据风险。**户型图会发送到 Tuzi 及其上游模型；必须执行服务端密钥、短时输入、日志脱敏、保留/删除策略和用户授权边界。
 
-当前已确认的 Tuzi 能力：
+当前已确认的 Tuzi 能力边界：
 
-- OpenAI 兼容 `POST /v1/responses`；
-- `input` 支持 `input_text + input_image`；
-- 结构化输出支持 `text.format={type:"json_schema", name, strict, schema}`；
+- `POST /v1/responses` 的纯文本请求可用，文档声明支持 `input_text + input_image`；当前网络路径尚未完成图片请求；
+- Responses结构化输出文档格式为 `text.format={type:"json_schema", name, strict, schema}`；
+- Chat图片请求可达上游，但结构化结果必须按不稳定外部能力处理；
 - 模型可通过 `/v1/models` 查询，但**实际可用模型依赖当前 API Key**。
 
 官方接口依据：[Tuzi Responses 图片](https://tuzi-api.apifox.cn/463707786e0)、[Tuzi 模型列表](https://tuzi-api.apifox.cn/343647074e0)。
@@ -346,10 +346,12 @@ ON        通过留出集门禁后作为P0主路径
 
 ## 10. 当前状态
 
-- CV预处理、WallGraph和RoomPolygon原型位于 `backend/pano_platform/floorplan/`；
-- Tuzi图片渲染链已验证，但视觉识别Adapter尚未实现；
-- 当前本机已配置Windows用户级 `TUZI_API_KEY/TUZI_BASE_URL/TUZI_VISION_PRIMARY_MODEL/TUZI_VISION_REVIEW_MODEL`；主/复核模型暂设为模型列表中已确认存在的 `gemini-2.5-pro/gemini-2.5-flash`；图片+严格JSON能力探针尚未执行；
-- `floorplan-to-3d`、FloorplanVLM、MiniCPM LoRA、Raster-to-Graph均未进入生产依赖；
-- 识别v2相关代码和数据目前尚未纳入Git，需要在实现前做来源与数据授权审计。
+- 上传、CV识别、Tuzi视觉尝试、几何建模、全房间生图、本地超分、可拖动全景和24小时临时分享已串成一条自动链；视觉失败只产生告警并自动走结构全景，不要求人工放行；
+- CV预处理、WallGraph、RoomPolygon、门窗候选和证据工件位于 `backend/pano_platform/floorplan/`；Tuzi识别Adapter和图片生成Adapter均已实现；
+- ResPlan官方test split首批10图已成为公共结构回归源：83个真值房间、当前89个预测房间，10/10自动生成Viewer；桌面9图当前55个房间、15个严格确认门，9/9自动生成Viewer；
+- 对包含多个内部房间的疑似包围壳不直接删除：保留其拓扑证据，写入 `automatic-room-evidence.json` 并将对应全景排到末位，防止误当默认客户场景；
+- Tuzi模型和Key均由服务端环境变量读取；当前Chat图片结构化输出与Responses图片链仍不稳定，所以本地严格校验和CV自动回退是必须保留的运行路径；
+- `floorplan-to-3d`、FloorplanVLM、MiniCPM LoRA、Raster-to-Graph均未进入生产依赖；ResPlan按固定提交和许可证登记，仅用于回归；
+- 程序化家具、正式云部署、安全成本门、正式F1和大样本发布门按当前优先级后置，不阻断功能主链。
 
 下一步严格按照 [详细TODO](./floorplan-recognition-v2-todo.md) 执行。

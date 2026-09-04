@@ -11,7 +11,7 @@ from pano_platform.floorplan.parse import ParseRun, ParseStatus, StageGraph, Vis
 from pano_platform.floorplan.parse import orchestrate
 from pano_platform.floorplan.wall_graph import WallGraph, WallSegment
 from pano_platform.contracts import DerivedRoomSet, LayoutRevision, PanoManifest, SceneGeometry, canonical_sha256
-from pano_platform.pipeline import _build_room_hotspots, _publish_preview, _render_panoramas
+from pano_platform.pipeline import _build_room_hotspots, _enclosing_room_map, _publish_preview, _render_panoramas
 
 
 def _preview_run() -> ParseRun:
@@ -96,6 +96,24 @@ def test_door_hotspots_link_only_two_nearby_rooms() -> None:
     hotspots = _build_room_hotspots(layout, rooms, {"a": "a-main", "b": "b-main"})
     assert hotspots["a"][0]["targetSceneId"] == "b-main"
     assert hotspots["b"][0]["targetSceneId"] == "a-main"
+
+
+def test_enclosing_shell_is_identified_without_deleting_rooms() -> None:
+    from types import SimpleNamespace
+
+    def room(identifier, points):
+        return SimpleNamespace(
+            id=identifier,
+            polygon=[SimpleNamespace(x=x, y=y) for x, y in points],
+        )
+
+    shell = room("shell", ((0, 0), (100, 0), (100, 100), (0, 100)))
+    left = room("left", ((10, 10), (45, 10), (45, 90), (10, 90)))
+    right = room("right", ((55, 10), (90, 10), (90, 90), (55, 90)))
+
+    assert _enclosing_room_map([shell, left, right]) == {
+        "shell": ("left", "right")
+    }
 
 
 def test_tuzi_image_session_uses_explicit_proxy_without_global_mutation(monkeypatch) -> None:
