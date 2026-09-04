@@ -348,8 +348,9 @@ ON        通过留出集门禁后作为P0主路径
 
 - 上传、CV识别、Tuzi视觉尝试、几何建模、全房间生图、本地超分、可拖动全景和24小时临时分享已串成一条自动链；视觉失败只产生告警并自动走结构全景，不要求人工放行；
 - CV预处理、WallGraph、RoomPolygon、门窗候选和证据工件位于 `backend/pano_platform/floorplan/`；Tuzi识别Adapter和图片生成Adapter均已实现；
-- ResPlan官方test split首批10图已成为公共结构回归源：83个真值房间、当前83个预测房间，10/10自动生成Viewer；该总数仍包含逐图过分割和欠分割，不代表IoU/F1或逐图全对；桌面9图当前55个房间、15个严格确认门，9/9自动生成Viewer；
+- ResPlan官方test split首批10图已成为公共结构回归源：83个真值房间、当前83个预测房间，10/10自动生成Viewer；该总数仍包含逐图过分割和欠分割，不代表IoU/F1或逐图全对；当前严格确认41个门；桌面9图当前55个房间、23个严格确认门，9/9自动生成Viewer；
 - 共线空白只在300～2500mm内生成结构虚拟墙；该上限由ResPlan与桌面9图四档联合回归确定，避免把约2.5～3m开放区域错误切成房间；
+- CV门弧仍执行500～1500mm物理门宽、WallEdge、弧分数和房间拓扑门禁；由于CV比例尺仅由110mm墙厚自举，强门弧允许 `0.7×物理下限-1像素` 的量化容差，并以 `CV_ARC_BOOTSTRAP_SCALE_TOLERANCE` 单独留证；
 - 对包含多个内部房间的疑似包围壳不直接删除：保留其拓扑证据，写入 `automatic-room-evidence.json` 并将对应全景排到末位，防止误当默认客户场景；
 - Tuzi模型和Key均由服务端环境变量读取；当前Chat图片结构化输出与Responses图片链仍不稳定，所以本地严格校验和CV自动回退是必须保留的运行路径；
 - `floorplan-to-3d`、FloorplanVLM、MiniCPM LoRA、Raster-to-Graph均未进入生产依赖；ResPlan按固定提交和许可证登记，仅用于回归；

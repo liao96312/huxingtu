@@ -162,6 +162,40 @@ def test_cv_door_arc_can_recover_leaf_that_hides_wall_gap() -> None:
     assert 500 <= result.confirmed[0].width_mm <= 1500
 
 
+def test_strong_arc_tolerates_bootstrap_scale_underestimate() -> None:
+    solid_graph = WallGraph(
+        horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
+        segments=(WallSegment("h1", "horizontal", (50.0, 100.0), (450.0, 100.0), 13.0, False),),
+        gaps=(), mm_per_px=10.0, wall_width_px=13.0,
+    )
+    proposal = SimpleNamespace(center=(250.0, 100.0), radius_px=20.0, arc_score=1.0)
+    room_polygons = [
+        SimpleNamespace(id="top", polygon_px=((50, 50), (450, 50), (450, 95), (50, 95))),
+        SimpleNamespace(id="bottom", polygon_px=((50, 105), (450, 105), (450, 150), (50, 150))),
+    ]
+
+    result = arbitrate_cv_door_arcs([proposal], solid_graph, room_polygons, 1000, 1000)
+
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].width_mm == 400
+    assert "CV_ARC_BOOTSTRAP_SCALE_TOLERANCE" in result.confirmed[0].reason_codes
+
+
+def test_physical_gap_uses_same_bootstrap_scale_tolerance() -> None:
+    narrow_gap = graph(mm_per_px=4.0)
+    proposal = SimpleNamespace(center=(250.0, 100.0), radius_px=50.0, arc_score=1.0)
+    room_polygons = [
+        SimpleNamespace(id="top", polygon_px=((50, 50), (450, 50), (450, 95), (50, 95))),
+        SimpleNamespace(id="bottom", polygon_px=((50, 105), (450, 105), (450, 150), (50, 150))),
+    ]
+
+    result = arbitrate_cv_door_arcs([proposal], narrow_gap, room_polygons, 1000, 1000)
+
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].width_mm == 400
+    assert "CV_ARC_BOOTSTRAP_SCALE_TOLERANCE" in result.confirmed[0].reason_codes
+
+
 def test_high_score_arc_on_physical_gap_can_continue_when_cv_rooms_are_nested() -> None:
     proposal = SimpleNamespace(center=(250.0, 100.0), radius_px=50.0, arc_score=1.0)
     nested_room = SimpleNamespace(

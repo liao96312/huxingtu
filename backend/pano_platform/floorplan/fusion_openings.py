@@ -167,9 +167,12 @@ def arbitrate_cv_door_arcs(
             continue
         unit = ((segment.end[0] - segment.start[0]) / length, (segment.end[1] - segment.start[1]) / length)
         subdivided_gap = False
+        bootstrap_minimum_width = max(
+            0.0, DOOR_WIDTH_MIN_MM * 0.7 - max(0.0, graph.mm_per_px)
+        )
         if segment.virtual:
             full_width_mm = length * graph.mm_per_px if graph.mm_per_px > 0 else None
-            if full_width_mm is not None and DOOR_WIDTH_MIN_MM * 0.9 <= full_width_mm <= DOOR_WIDTH_MAX_MM:
+            if full_width_mm is not None and bootstrap_minimum_width <= full_width_mm <= DOOR_WIDTH_MAX_MM:
                 start_px, end_px = segment.start, segment.end
                 width_px = length
             else:
@@ -215,7 +218,10 @@ def arbitrate_cv_door_arcs(
 
         width_mm = width_px * graph.mm_per_px if graph.mm_per_px > 0 else None
         reasons: list[str] = []
-        minimum_width = DOOR_WIDTH_MIN_MM * 0.9 if segment.virtual else DOOR_WIDTH_MIN_MM
+        # Wall-thickness scale is only a bootstrap estimate. Keep the physical
+        # door profile, but tolerate its known under-scaling plus one raster
+        # pixel when a strong arc is anchored to a wall and passes topology.
+        minimum_width = bootstrap_minimum_width
         if width_mm is None or not minimum_width <= width_mm <= DOOR_WIDTH_MAX_MM:
             reasons.append("CV_ARC_WIDTH_OUT_OF_PROFILE")
         if not segment.virtual and proposal.arc_score < 0.96:
@@ -242,6 +248,8 @@ def arbitrate_cv_door_arcs(
             reason_codes.extend(reasons)
             continue
         confirmation_codes = ["CV_ARC_AUTOMATIC"]
+        if width_mm is not None and width_mm < DOOR_WIDTH_MIN_MM:
+            confirmation_codes.append("CV_ARC_BOOTSTRAP_SCALE_TOLERANCE")
         if set(side_rooms[0]) & set(side_rooms[1]):
             confirmation_codes.append("CV_ARC_SHARED_ROOM_PHYSICAL_GAP")
         if subdivided_gap:
