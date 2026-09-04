@@ -59,6 +59,7 @@ def main() -> int:
     report = {
         "dataset": manifest["dataset"],
         "sourceVersion": manifest["sourceVersion"],
+        "converterVersion": manifest.get("converterVersion"),
         "note": "Count regression only; synthetic ResPlan rasters are not real-image accuracy evidence.",
         "automaticChainReady": all(item["viewerReady"] for item in samples),
         "samples": samples,

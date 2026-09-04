@@ -28,6 +28,7 @@ REGISTRY_PATH = ROOT / "datasets" / "external" / "registry.json"
 DEFAULT_ZIP = ROOT / "tmp" / "external" / "resplan" / "ResPlan.zip"
 DEFAULT_SPLIT = ROOT / "tmp" / "external" / "resplan" / "split.json"
 DEFAULT_OUT = ROOT / "tmp" / "external" / "resplan" / "derived"
+CONVERTER_VERSION = "v2-margin48"
 
 ROOM_TYPES = {
     "living": "living",
@@ -101,7 +102,8 @@ def _transform(plan: dict, canvas: int, margin: int):
 
     def apply(geom):
         moved = affinity.translate(geom, xoff=-min_x, yoff=-max_y)
-        return affinity.scale(moved, xfact=scale, yfact=-scale, origin=(0, 0))
+        scaled = affinity.scale(moved, xfact=scale, yfact=-scale, origin=(0, 0))
+        return affinity.translate(scaled, xoff=margin, yoff=margin)
 
     return apply
 
@@ -224,6 +226,7 @@ def main() -> int:
     manifest = {
         "dataset": "resplan",
         "sourceVersion": _dataset_record()["version"],
+        "converterVersion": CONVERTER_VERSION,
         "partition": args.partition,
         "samples": samples,
     }
