@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from pathlib import Path
 from uuid import uuid4
 
@@ -59,6 +60,9 @@ def test_preview_geometry_and_erp_are_published(tmp_path, monkeypatch) -> None:
     DerivedRoomSet.model_validate_json((folder / "rooms.preview-v1.json").read_text(encoding="utf-8"))
     SceneGeometry.model_validate_json((folder / "scene-geometry.preview-v1.json").read_text(encoding="utf-8"))
     PanoManifest.model_validate_json((folder / "pano-manifest.json").read_text(encoding="utf-8"))
+    room_evidence = json.loads((folder / "automatic-room-evidence.json").read_text(encoding="utf-8"))
+    assert room_evidence["unsupportedBoundaryRoomIds"] == []
+    assert room_evidence["suspectedEnclosingRooms"] == []
 
 
 def test_door_hotspots_link_only_two_nearby_rooms() -> None:

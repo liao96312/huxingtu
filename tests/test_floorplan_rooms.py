@@ -3,7 +3,7 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
-from pano_platform.floorplan.rooms import polygonize_rooms
+from pano_platform.floorplan.rooms import polygonize_rooms, unsupported_boundary_room_ids
 from pano_platform.floorplan.wall_graph import WallGraph, WallSegment
 
 
@@ -47,3 +47,27 @@ def test_sub_005_square_metre_wall_pocket_is_not_a_room() -> None:
 
     assert len(rooms) == 1
     assert rooms[0].area_mm2 > 500_000
+
+
+def test_small_room_mostly_closed_by_unsupported_bbox_edges_is_filtered() -> None:
+    from types import SimpleNamespace
+
+    graph = WallGraph(
+        horizontal_axes=(10.0, 90.0), vertical_axes=(10.0, 90.0),
+        segments=(
+            WallSegment("wall_boundary_h1", "horizontal", (10, 10), (90, 10), 5, False),
+            WallSegment("wall_boundary_v2", "vertical", (10, 10), (10, 90), 5, False),
+        ),
+        gaps=(), mm_per_px=10.0, wall_width_px=5.0,
+    )
+    room = SimpleNamespace(
+        id="exterior", area_mm2=640_000,
+        polygon_px=((10, 10), (90, 10), (90, 90), (10, 90)),
+    )
+    empty_wall_mask = np.zeros((100, 100), np.uint8)
+
+    assert unsupported_boundary_room_ids(graph, [room], empty_wall_mask) == ("exterior",)
+    large_fallback = SimpleNamespace(
+        id="fallback", area_mm2=6_000_000, polygon_px=room.polygon_px,
+    )
+    assert unsupported_boundary_room_ids(graph, [large_fallback], empty_wall_mask) == ()

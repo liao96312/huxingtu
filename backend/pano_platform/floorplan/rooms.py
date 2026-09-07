@@ -18,6 +18,7 @@ import numpy as np
 from .wall_graph import WallGraph
 
 MIN_ROOM_AREA_MM2 = 50_000.0
+MAX_UNSUPPORTED_BOUNDARY_ROOM_MM2 = 5_000_000.0
 
 
 @dataclass(frozen=True)
@@ -95,6 +96,88 @@ def polygonize_rooms(
         rooms.append(Room(f"room_{counter:03d}", polygon, area_mm2))
         counter += 1
     return tuple(sorted(rooms, key=lambda room: -room.area_mm2))
+
+
+def unsupported_boundary_room_ids(
+    graph: WallGraph,
+    rooms,
+    wall_mask: np.ndarray | None,
+    *,
+    minimum_unsupported_fraction: float = 0.48,
+    maximum_area_mm2: float = MAX_UNSUPPORTED_BOUNDARY_ROOM_MM2,
+) -> tuple[str, ...]:
+    """Find small exterior cells enclosed mostly by synthetic bbox edges."""
+
+    if wall_mask is None:
+        return ()
+    boundaries = tuple(
+        segment for segment in graph.segments if segment.id.startswith("wall_boundary_")
+    )
+    if not boundaries:
+        return ()
+    tolerance = max(2.0, graph.wall_width_px * 1.5)
+    rejected = []
+    for room in rooms:
+        if room.area_mm2 > maximum_area_mm2:
+            continue
+        perimeter = unsupported = 0.0
+        points = room.polygon_px
+        for index, start in enumerate(points):
+            end = points[(index + 1) % len(points)]
+            perimeter += ((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2) ** 0.5
+            for boundary in boundaries:
+                interval = _boundary_overlap(start, end, boundary, tolerance)
+                if interval is None:
+                    continue
+                low, high = interval
+                support = _wall_interval_support(
+                    wall_mask, boundary.axis, boundary.start, low, high, tolerance
+                )
+                unsupported += (high - low) * (1.0 - support)
+        if perimeter > 0 and unsupported / perimeter >= minimum_unsupported_fraction:
+            rejected.append(room.id)
+    return tuple(rejected)
+
+
+def _boundary_overlap(start, end, boundary, tolerance: float):
+    if (
+        boundary.axis == "horizontal"
+        and abs(start[1] - end[1]) < 1
+        and abs(start[1] - boundary.start[1]) <= tolerance
+    ):
+        low = max(min(start[0], end[0]), min(boundary.start[0], boundary.end[0]))
+        high = min(max(start[0], end[0]), max(boundary.start[0], boundary.end[0]))
+    elif (
+        boundary.axis == "vertical"
+        and abs(start[0] - end[0]) < 1
+        and abs(start[0] - boundary.start[0]) <= tolerance
+    ):
+        low = max(min(start[1], end[1]), min(boundary.start[1], boundary.end[1]))
+        high = min(max(start[1], end[1]), max(boundary.start[1], boundary.end[1]))
+    else:
+        return None
+    return (low, high) if high > low else None
+
+
+def _wall_interval_support(mask, axis: str, start, low, high, tolerance: float) -> float:
+    first, last = sorted((round(low), round(high)))
+    if axis == "horizontal":
+        first, last = max(0, first), min(mask.shape[1] - 1, last)
+        fixed = round(start[1])
+        crop = mask[
+            max(0, round(fixed - tolerance)):min(mask.shape[0], round(fixed + tolerance) + 1),
+            first:last + 1,
+        ]
+        supported = np.any(crop > 0, axis=0) if crop.size else np.array([])
+    else:
+        first, last = max(0, first), min(mask.shape[0] - 1, last)
+        fixed = round(start[0])
+        crop = mask[
+            first:last + 1,
+            max(0, round(fixed - tolerance)):min(mask.shape[1], round(fixed + tolerance) + 1),
+        ]
+        supported = np.any(crop > 0, axis=1) if crop.size else np.array([])
+    return float(supported.mean()) if supported.size else 0.0
 
 
 def _draw_wall(barrier: np.ndarray, start: tuple[float, float], end: tuple[float, float], thickness: int) -> None:

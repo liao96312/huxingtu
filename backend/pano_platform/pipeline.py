@@ -191,7 +191,7 @@ def _publish_preview(
     # preview; review status is evidence, not a user-action gate.
     from .floorplan.fusion import FusedRoom
     from .floorplan.fusion_openings import arbitrate_cv_door_arcs, arbitrate_cv_windows
-    from .floorplan.rooms import polygonize_rooms
+    from .floorplan.rooms import polygonize_rooms, unsupported_boundary_room_ids
     from .floorplan.wall_graph import WallGraph, WallSegment
 
     cv_data = cv_stage.data if cv_stage is not None else {}
@@ -288,6 +288,14 @@ def _publish_preview(
             existing_intervals.append(candidate)
             automatic_cv_confirmed.append(candidate)
     confirmed_openings = tuple(existing_intervals)
+
+    unsupported_boundary_rooms = unsupported_boundary_room_ids(
+        graph, closed_rooms, wall_mask
+    )
+    if unsupported_boundary_rooms and len(unsupported_boundary_rooms) < len(closed_rooms):
+        rejected_room_ids = set(unsupported_boundary_rooms)
+        closed_rooms = tuple(room for room in closed_rooms if room.id not in rejected_room_ids)
+        fallback_codes.append("CV_UNSUPPORTED_BOUNDARY_ROOM_FILTERED")
 
     mm_per_px = float(source_data.get("mmPerPx") or cv_data.get("mmPerPx") or graph.mm_per_px or 0)
     if not math.isfinite(mm_per_px) or mm_per_px <= 0:
@@ -398,6 +406,12 @@ def _publish_preview(
 
     folder = _data_root() / project_id
     folder.mkdir(parents=True, exist_ok=True)
+    (folder / "automatic-room-evidence.json").write_text(
+        json.dumps({
+            "schemaVersion": "0.1.0", "projectId": project_id,
+            "unsupportedBoundaryRoomIds": list(unsupported_boundary_rooms),
+        }, ensure_ascii=False, indent=2), encoding="utf-8",
+    )
     (folder / "automatic-cv-openings.json").write_text(
         json.dumps({
             "schemaVersion": "0.1.0", "projectId": project_id,
@@ -600,14 +614,20 @@ def _render_panoramas(
     manifest = PanoManifest.model_validate(payload)
     project_folder = _data_root() / project_id
     project_folder.mkdir(parents=True, exist_ok=True)
-    (project_folder / "automatic-room-evidence.json").write_text(
-        json.dumps({
+    room_evidence_path = project_folder / "automatic-room-evidence.json"
+    room_evidence = (
+        json.loads(room_evidence_path.read_text(encoding="utf-8"))
+        if room_evidence_path.is_file() else {}
+    )
+    room_evidence.update({
             "schemaVersion": "0.1.0", "projectId": project_id,
             "suspectedEnclosingRooms": [
                 {"roomId": room_id, "containedRoomIds": list(contained)}
                 for room_id, contained in sorted(enclosing_rooms.items())
             ],
-        }, ensure_ascii=False, indent=2), encoding="utf-8",
+        })
+    room_evidence_path.write_text(
+        json.dumps(room_evidence, ensure_ascii=False, indent=2), encoding="utf-8",
     )
     (project_folder / "structural-fallback-rooms.json").write_text(
         json.dumps({"schemaVersion": "0.1.0", "projectId": project_id, "rooms": structural_fallback_rooms}, ensure_ascii=False, indent=2),
