@@ -256,7 +256,7 @@ def test_parallel_panes_can_cut_an_existing_exterior_wall() -> None:
     ink[92, 200:301] = 1
     ink[108, 200:301] = 1
     room_above = SimpleNamespace(
-        id="top", polygon_px=((50, 20), (450, 20), (450, 95), (50, 95))
+        id="top", polygon_px=((50, 20), (450, 20), (450, 70), (50, 70))
     )
 
     result = arbitrate_cv_windows(solid_graph, [room_above], ink)

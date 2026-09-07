@@ -76,7 +76,8 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
         width_px = hypot(segment.end[0] - segment.start[0], segment.end[1] - segment.start[1])
         width_mm = width_px * graph.mm_per_px if graph.mm_per_px > 0 else None
         side_rooms = _room_sides_for_segment(
-            segment.start, segment.end, segment, room_polygons, graph.wall_width_px
+            segment.start, segment.end, segment, room_polygons, graph.wall_width_px,
+            sample_offset_factor=3.0,
         )
         reasons: list[str] = []
         if width_mm is None or not WINDOW_WIDTH_MIN_MM <= width_mm <= WINDOW_WIDTH_MAX_MM:
@@ -112,7 +113,8 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
             if width_mm is None or not WINDOW_WIDTH_MIN_MM <= width_mm <= WINDOW_WIDTH_MAX_MM:
                 continue
             side_rooms = _room_sides_for_segment(
-                start, end, segment, room_polygons, graph.wall_width_px
+                start, end, segment, room_polygons, graph.wall_width_px,
+                sample_offset_factor=3.0,
             )
             if bool(side_rooms[0]) == bool(side_rooms[1]):
                 continue
@@ -549,7 +551,10 @@ def _adjacent_room_ids(draft, edge: dict, image_width: int, image_height: int) -
     return sides[0], sides[1]
 
 
-def _room_sides_for_segment(start, end, segment, room_polygons, wall_width_px: float) -> tuple[tuple[str, ...], tuple[str, ...]]:
+def _room_sides_for_segment(
+    start, end, segment, room_polygons, wall_width_px: float,
+    sample_offset_factor: float = 1.5,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
     """Sample room polygons on both sides of a pixel wall segment."""
 
     length = hypot(end[0] - start[0], end[1] - start[1])
@@ -557,7 +562,7 @@ def _room_sides_for_segment(start, end, segment, room_polygons, wall_width_px: f
         return (), ()
     midpoint = ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2)
     normal = (-(end[1] - start[1]) / length, (end[0] - start[0]) / length)
-    offset = max(8.0, wall_width_px * 1.5)
+    offset = max(8.0, wall_width_px * sample_offset_factor)
     try:
         from shapely.geometry import Point
 
