@@ -28,7 +28,7 @@ REGISTRY_PATH = ROOT / "datasets" / "external" / "registry.json"
 DEFAULT_ZIP = ROOT / "tmp" / "external" / "resplan" / "ResPlan.zip"
 DEFAULT_SPLIT = ROOT / "tmp" / "external" / "resplan" / "split.json"
 DEFAULT_OUT = ROOT / "tmp" / "external" / "resplan" / "derived"
-CONVERTER_VERSION = "v2-margin48"
+CONVERTER_VERSION = "v3-window-parallel-lines"
 
 ROOM_TYPES = {
     "living": "living",
@@ -150,6 +150,25 @@ def _draw_door_symbol(image: np.ndarray, start: dict, end: dict) -> None:
     cv2.ellipse(image, center, (round(radius), round(radius)), 0, start_angle, start_angle + 90, 0, 2, cv2.LINE_AA)
 
 
+def _draw_window_symbol(image: np.ndarray, start: dict, end: dict) -> None:
+    """Draw the two parallel pane lines expected by the window detector."""
+
+    first = np.array([start["x"], start["y"]], dtype=float)
+    second = np.array([end["x"], end["y"]], dtype=float)
+    along = second - first
+    length = float(np.linalg.norm(along))
+    if length < 4:
+        return
+    normal = np.array([-along[1], along[0]]) / length * 3.0
+    for offset in (-normal, normal):
+        cv2.line(
+            image,
+            tuple(np.rint(first + offset).astype(int)),
+            tuple(np.rint(second + offset).astype(int)),
+            0, 2, cv2.LINE_AA,
+        )
+
+
 def convert_plan(plan: dict, output_dir: Path, canvas: int = 1024) -> dict:
     sample_id = f"resplan-{int(plan['id']):05d}"
     apply = _transform(plan, canvas, margin=48)
@@ -172,7 +191,7 @@ def convert_plan(plan: dict, output_dir: Path, canvas: int = 1024) -> dict:
             if truth_type == "door":
                 _draw_door_symbol(image, start, end)
             else:
-                cv2.line(image, (round(start["x"]), round(start["y"])), (round(end["x"]), round(end["y"])), 0, 2)
+                _draw_window_symbol(image, start, end)
 
     rooms = []
     for source_type, truth_type in ROOM_TYPES.items():
