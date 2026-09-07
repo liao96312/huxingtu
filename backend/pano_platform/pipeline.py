@@ -292,10 +292,16 @@ def _publish_preview(
     unsupported_boundary_rooms = unsupported_boundary_room_ids(
         graph, closed_rooms, wall_mask
     )
-    if unsupported_boundary_rooms and len(unsupported_boundary_rooms) < len(closed_rooms):
-        rejected_room_ids = set(unsupported_boundary_rooms)
+    implausibly_small_rooms = tuple(
+        room.id for room in closed_rooms if room.area_mm2 < 100_000.0
+    )
+    rejected_room_ids = set((*unsupported_boundary_rooms, *implausibly_small_rooms))
+    if rejected_room_ids and len(rejected_room_ids) < len(closed_rooms):
         closed_rooms = tuple(room for room in closed_rooms if room.id not in rejected_room_ids)
-        fallback_codes.append("CV_UNSUPPORTED_BOUNDARY_ROOM_FILTERED")
+        if unsupported_boundary_rooms:
+            fallback_codes.append("CV_UNSUPPORTED_BOUNDARY_ROOM_FILTERED")
+        if implausibly_small_rooms:
+            fallback_codes.append("CV_IMPLAUSIBLY_SMALL_ROOM_FILTERED")
 
     mm_per_px = float(source_data.get("mmPerPx") or cv_data.get("mmPerPx") or graph.mm_per_px or 0)
     if not math.isfinite(mm_per_px) or mm_per_px <= 0:
@@ -410,6 +416,7 @@ def _publish_preview(
         json.dumps({
             "schemaVersion": "0.1.0", "projectId": project_id,
             "unsupportedBoundaryRoomIds": list(unsupported_boundary_rooms),
+            "implausiblySmallRoomIds": list(implausibly_small_rooms),
         }, ensure_ascii=False, indent=2), encoding="utf-8",
     )
     (folder / "automatic-cv-openings.json").write_text(

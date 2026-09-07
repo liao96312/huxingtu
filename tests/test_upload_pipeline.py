@@ -62,6 +62,7 @@ def test_preview_geometry_and_erp_are_published(tmp_path, monkeypatch) -> None:
     PanoManifest.model_validate_json((folder / "pano-manifest.json").read_text(encoding="utf-8"))
     room_evidence = json.loads((folder / "automatic-room-evidence.json").read_text(encoding="utf-8"))
     assert room_evidence["unsupportedBoundaryRoomIds"] == []
+    assert room_evidence["implausiblySmallRoomIds"] == []
     assert room_evidence["suspectedEnclosingRooms"] == []
 
 
