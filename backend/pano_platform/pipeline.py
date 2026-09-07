@@ -269,7 +269,9 @@ def _publish_preview(
         cv_data.get("doorArcProposals") or (), graph, closed_rooms,
         image_width, image_height,
     )
-    cv_window_result = arbitrate_cv_windows(graph, closed_rooms, annotation_mask)
+    cv_window_result = arbitrate_cv_windows(
+        graph, closed_rooms, annotation_mask, cv_data.get("doorArcProposals") or ()
+    )
     existing_intervals = list(confirmed_openings)
     automatic_cv_confirmed = []
     for result in (cv_window_result, cv_opening_result):

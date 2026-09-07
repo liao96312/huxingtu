@@ -52,7 +52,7 @@ class OpeningsFusionResult:
     reason_codes: tuple[str, ...] = field(default_factory=tuple)
 
 
-def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask) -> OpeningsFusionResult:
+def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=()) -> OpeningsFusionResult:
     """Confirm exterior windows from CV gap + parallel-line evidence."""
 
     confirmed: list[FusedOpening] = []
@@ -99,10 +99,133 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask) -> OpeningsFu
                 width_mm, "confirmed", ("CV_WINDOW_AUTOMATIC",), side_rooms,
             ))
 
+    wall_candidates = []
+    for segment in (item for item in graph.segments if not item.virtual):
+        for start, end in _window_intervals_on_wall(annotation_mask, segment, graph):
+            if any(
+                _point_segment_distance(tuple(arc.center), start, end) <= float(arc.radius_px)
+                for arc in door_arcs
+            ):
+                continue
+            width_px = hypot(end[0] - start[0], end[1] - start[1])
+            width_mm = width_px * graph.mm_per_px if graph.mm_per_px > 0 else None
+            if width_mm is None or not WINDOW_WIDTH_MIN_MM <= width_mm <= WINDOW_WIDTH_MAX_MM:
+                continue
+            side_rooms = _room_sides_for_segment(
+                start, end, segment, room_polygons, graph.wall_width_px
+            )
+            if bool(side_rooms[0]) == bool(side_rooms[1]):
+                continue
+            wall_candidates.append((segment, start, end, width_mm, side_rooms))
+
+    kept = []
+    segments_by_id = {item.id: item for item in graph.segments}
+    for candidate in sorted(wall_candidates, key=lambda item: -item[3]):
+        segment, start, end, _, _ = candidate
+        if any(
+            item.type == "window"
+            and (existing_segment := segments_by_id.get(item.wall_edge_id)) is not None
+            and segment.axis == existing_segment.axis
+            and _parallel_interval_overlap(
+                start, end, item.start_px, item.end_px, graph.wall_width_px
+            )
+            for item in confirmed
+        ):
+            continue
+        if any(
+            segment.axis == existing[0].axis
+            and _parallel_interval_overlap(start, end, existing[1], existing[2], graph.wall_width_px)
+            for existing in kept
+        ):
+            continue
+        kept.append(candidate)
+    for index, (segment, start, end, width_mm, side_rooms) in enumerate(kept):
+        confirmed.append(FusedOpening(
+            f"cv_window_wall_{index:03d}", "window", segment.id, start, end,
+            width_mm, "confirmed", ("CV_WINDOW_WALL_LINES_AUTOMATIC",), side_rooms,
+        ))
+
     return OpeningsFusionResult(
         confirmed=tuple(confirmed), candidates=(), rejected=tuple(rejected),
         reason_codes=tuple(dict.fromkeys(reason_codes)),
     )
+
+
+def _window_intervals_on_wall(mask, segment, graph: WallGraph):
+    """Find long two-line intervals inside an already-localized wall strip."""
+
+    if mask is None or graph.mm_per_px <= 0:
+        return ()
+    import cv2
+    import numpy as np
+
+    height, width = mask.shape[:2]
+    margin = max(4, int(round(graph.wall_width_px * 1.3)))
+    if segment.axis == "horizontal":
+        first = max(0, round(min(segment.start[0], segment.end[0])))
+        last = min(width - 1, round(max(segment.start[0], segment.end[0])))
+        fixed = round(segment.start[1])
+        crop = mask[max(0, fixed - margin):min(height, fixed + margin + 1), first:last + 1]
+    else:
+        first = max(0, round(min(segment.start[1], segment.end[1])))
+        last = min(height - 1, round(max(segment.start[1], segment.end[1])))
+        fixed = round(segment.start[0])
+        crop = mask[first:last + 1, max(0, fixed - margin):min(width, fixed + margin + 1)].T
+    if crop.size == 0:
+        return ()
+
+    separated = np.zeros(crop.shape[1], np.uint8)
+    for index in range(crop.shape[1]):
+        ink = np.flatnonzero(crop[:, index])
+        if (
+            ink.size >= 2
+            and 1 + np.count_nonzero(np.diff(ink) > 1) >= 2
+            and ink[-1] - ink[0] + 1 <= graph.wall_width_px * 1.5
+        ):
+            separated[index] = 1
+    separated = cv2.morphologyEx(
+        separated[None, :], cv2.MORPH_CLOSE, np.ones((1, 5), np.uint8)
+    )[0]
+    minimum_px = max(4, round(WINDOW_WIDTH_MIN_MM / graph.mm_per_px * 0.7))
+    intervals = []
+    indices = np.flatnonzero(separated)
+    if not indices.size:
+        return ()
+    start = previous = int(indices[0])
+    for value in (*map(int, indices[1:]), None):
+        if value is None or value - previous > 1:
+            if previous - start + 1 >= minimum_px:
+                low, high = first + start, first + previous
+                if segment.axis == "horizontal":
+                    intervals.append(((low, float(segment.start[1])), (high, float(segment.start[1]))))
+                else:
+                    intervals.append(((float(segment.start[0]), low), (float(segment.start[0]), high)))
+            if value is None:
+                break
+            start = value
+        previous = value
+    return tuple(intervals)
+
+
+def _point_segment_distance(point, start, end) -> float:
+    dx, dy = end[0] - start[0], end[1] - start[1]
+    length_squared = dx * dx + dy * dy
+    if length_squared <= 0:
+        return hypot(point[0] - start[0], point[1] - start[1])
+    along = max(0.0, min(1.0, ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / length_squared))
+    return hypot(point[0] - start[0] - along * dx, point[1] - start[1] - along * dy)
+
+
+def _parallel_interval_overlap(a1, a2, b1, b2, wall_width_px: float) -> bool:
+    horizontal = abs(a2[0] - a1[0]) >= abs(a2[1] - a1[1])
+    axis = 0 if horizontal else 1
+    perpendicular = 1 - axis
+    if abs(a1[perpendicular] - b1[perpendicular]) > wall_width_px * 1.5:
+        return False
+    left = sorted((a1[axis], a2[axis]))
+    right = sorted((b1[axis], b2[axis]))
+    overlap = max(0.0, min(left[1], right[1]) - max(left[0], right[0]))
+    return overlap >= min(left[1] - left[0], right[1] - right[0]) * 0.5
 
 
 def arbitrate_cv_door_arcs(
