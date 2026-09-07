@@ -43,7 +43,11 @@ def main() -> int:
             allow_external_vision=False,
             generate_ai=False,
         )
-        predicted_openings = result.get("automaticCvDoorCount", 0) + result.get("automaticCvWindowCount", 0)
+        truth_doors = sum(item["type"] == "door" for item in truth["openings"])
+        truth_windows = sum(item["type"] == "window" for item in truth["openings"])
+        predicted_doors = result.get("automaticCvDoorCount", 0)
+        predicted_windows = result.get("automaticCvWindowCount", 0)
+        predicted_openings = predicted_doors + predicted_windows
         samples.append({
             "sampleId": sample_id,
             "pipelineStatus": result.get("pipelineStatus"),
@@ -54,14 +58,28 @@ def main() -> int:
             "truthOpenings": len(truth["openings"]),
             "predictedOpenings": predicted_openings,
             "openingCountDelta": predicted_openings - len(truth["openings"]),
+            "truthDoors": truth_doors,
+            "predictedDoors": predicted_doors,
+            "doorCountDelta": predicted_doors - truth_doors,
+            "truthWindows": truth_windows,
+            "predictedWindows": predicted_windows,
+            "windowCountDelta": predicted_windows - truth_windows,
         })
 
+    totals = {
+        key: sum(item[key] for item in samples)
+        for key in (
+            "truthRooms", "predictedRooms", "truthOpenings", "predictedOpenings",
+            "truthDoors", "predictedDoors", "truthWindows", "predictedWindows",
+        )
+    }
     report = {
         "dataset": manifest["dataset"],
         "sourceVersion": manifest["sourceVersion"],
         "converterVersion": manifest.get("converterVersion"),
         "note": "Count regression only; synthetic ResPlan rasters are not real-image accuracy evidence.",
         "automaticChainReady": all(item["viewerReady"] for item in samples),
+        "totals": totals,
         "samples": samples,
     }
     output = args.out or args.corpus / "pipeline-regression.json"
