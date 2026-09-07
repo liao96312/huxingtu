@@ -216,7 +216,9 @@ def _publish_preview(
             binary = binarize(gray)
             layers = separate_layers(binary.ink, measure_strokes(binary.ink))
             wall_mask = layers.wall
-            annotation_mask = layers.annotation
+            # Connected window panes can be absorbed into the reconstructed
+            # wall layer. The already-localized gap crop safely uses raw ink.
+            annotation_mask = binary.ink
         except Exception:
             wall_mask = None
             annotation_mask = None
