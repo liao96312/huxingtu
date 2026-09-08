@@ -18,8 +18,10 @@
 ## 本地验证
 
 ```powershell
-python -m pytest
-uvicorn pano_platform.main:app --app-dir backend --reload
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m uvicorn pano_platform.main:app --app-dir backend --reload
 cd apps/pano-viewer
 npm install
 npm run dev
