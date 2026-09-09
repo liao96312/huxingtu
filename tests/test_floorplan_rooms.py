@@ -3,7 +3,9 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
-from pano_platform.floorplan.rooms import polygonize_rooms, unsupported_boundary_room_ids
+from pano_platform.floorplan.rooms import (
+    polygonize_rooms, unsupported_boundary_room_ids, unsupported_wall_room_ids,
+)
 from pano_platform.floorplan.wall_graph import WallGraph, WallSegment
 
 
@@ -71,3 +73,17 @@ def test_small_room_mostly_closed_by_unsupported_bbox_edges_is_filtered() -> Non
         id="fallback", area_mm2=6_000_000, polygon_px=room.polygon_px,
     )
     assert unsupported_boundary_room_ids(graph, [large_fallback], empty_wall_mask) == ()
+
+
+def test_small_room_with_mostly_unsupported_perimeter_is_filtered() -> None:
+    from types import SimpleNamespace
+
+    room = SimpleNamespace(
+        id="unsupported", area_mm2=1_000_000,
+        polygon_px=((10, 10), (90, 10), (90, 90), (10, 90)),
+    )
+    empty_wall_mask = np.zeros((100, 100), np.uint8)
+
+    assert unsupported_wall_room_ids([room], empty_wall_mask, 5.0) == ("unsupported",)
+    large = SimpleNamespace(id="fallback", area_mm2=4_000_000, polygon_px=room.polygon_px)
+    assert unsupported_wall_room_ids([large], empty_wall_mask, 5.0) == ()

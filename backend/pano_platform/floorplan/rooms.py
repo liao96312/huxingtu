@@ -139,6 +139,45 @@ def unsupported_boundary_room_ids(
     return tuple(rejected)
 
 
+def unsupported_wall_room_ids(
+    rooms,
+    wall_mask: np.ndarray | None,
+    wall_width_px: float,
+    *,
+    minimum_unsupported_fraction: float = 0.58,
+    maximum_area_mm2: float = 3_000_000.0,
+) -> tuple[str, ...]:
+    """Find small cells whose full perimeter is mostly absent from the wall mask."""
+
+    if wall_mask is None:
+        return ()
+    tolerance = max(2.0, wall_width_px * 1.5)
+    rejected = []
+    for room in rooms:
+        if room.area_mm2 > maximum_area_mm2:
+            continue
+        perimeter = unsupported = 0.0
+        points = room.polygon_px
+        for index, start in enumerate(points):
+            end = points[(index + 1) % len(points)]
+            length = ((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2) ** 0.5
+            perimeter += length
+            if abs(start[1] - end[1]) < 1:
+                support = _wall_interval_support(
+                    wall_mask, "horizontal", (0, start[1]), start[0], end[0], tolerance
+                )
+            elif abs(start[0] - end[0]) < 1:
+                support = _wall_interval_support(
+                    wall_mask, "vertical", (start[0], 0), start[1], end[1], tolerance
+                )
+            else:
+                support = 1.0
+            unsupported += length * (1.0 - support)
+        if perimeter > 0 and unsupported / perimeter >= minimum_unsupported_fraction:
+            rejected.append(room.id)
+    return tuple(rejected)
+
+
 def _boundary_overlap(start, end, boundary, tolerance: float):
     if (
         boundary.axis == "horizontal"

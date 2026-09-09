@@ -191,7 +191,9 @@ def _publish_preview(
     # preview; review status is evidence, not a user-action gate.
     from .floorplan.fusion import FusedRoom
     from .floorplan.fusion_openings import arbitrate_cv_door_arcs, arbitrate_cv_windows
-    from .floorplan.rooms import polygonize_rooms, unsupported_boundary_room_ids
+    from .floorplan.rooms import (
+        polygonize_rooms, unsupported_boundary_room_ids, unsupported_wall_room_ids,
+    )
     from .floorplan.wall_graph import WallGraph, WallSegment
 
     cv_data = cv_stage.data if cv_stage is not None else {}
@@ -292,14 +294,21 @@ def _publish_preview(
     unsupported_boundary_rooms = unsupported_boundary_room_ids(
         graph, closed_rooms, wall_mask
     )
+    unsupported_wall_rooms = unsupported_wall_room_ids(
+        closed_rooms, wall_mask, graph.wall_width_px
+    )
     implausibly_small_rooms = tuple(
         room.id for room in closed_rooms if room.area_mm2 < 100_000.0
     )
-    rejected_room_ids = set((*unsupported_boundary_rooms, *implausibly_small_rooms))
+    rejected_room_ids = set((
+        *unsupported_boundary_rooms, *unsupported_wall_rooms, *implausibly_small_rooms,
+    ))
     if rejected_room_ids and len(rejected_room_ids) < len(closed_rooms):
         closed_rooms = tuple(room for room in closed_rooms if room.id not in rejected_room_ids)
         if unsupported_boundary_rooms:
             fallback_codes.append("CV_UNSUPPORTED_BOUNDARY_ROOM_FILTERED")
+        if unsupported_wall_rooms:
+            fallback_codes.append("CV_UNSUPPORTED_WALL_ROOM_FILTERED")
         if implausibly_small_rooms:
             fallback_codes.append("CV_IMPLAUSIBLY_SMALL_ROOM_FILTERED")
 
@@ -416,6 +425,7 @@ def _publish_preview(
         json.dumps({
             "schemaVersion": "0.1.0", "projectId": project_id,
             "unsupportedBoundaryRoomIds": list(unsupported_boundary_rooms),
+            "unsupportedWallRoomIds": list(unsupported_wall_rooms),
             "implausiblySmallRoomIds": list(implausibly_small_rooms),
         }, ensure_ascii=False, indent=2), encoding="utf-8",
     )
