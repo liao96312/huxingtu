@@ -40,6 +40,7 @@ def polygonize_rooms(
     canvas_shape: tuple[int, int],
     min_room_area_mm2: float = MIN_ROOM_AREA_MM2,
     wall_mask: np.ndarray | None = None,
+    close_radius_factor: float = 0.9,
 ) -> tuple[Room, ...]:
     """Produce room polygons from a closed wall graph.
 
@@ -71,7 +72,7 @@ def polygonize_rooms(
 
     # Seal only scan/morphology corner micro-gaps. The kernel is tied to the
     # measured wall stroke, so it cannot close a physical 300mm+ opening.
-    close_radius = max(1, int(round(thickness * 0.75)))
+    close_radius = max(1, int(round(thickness * close_radius_factor)))
     close_kernel = np.ones((close_radius * 2 + 1, close_radius * 2 + 1), np.uint8)
     barrier = cv2.morphologyEx(barrier, cv2.MORPH_CLOSE, close_kernel)
 

@@ -28,6 +28,22 @@ def test_wall_mask_recovers_partition_missing_from_axis_graph() -> None:
     assert len(rooms) == 2
 
 
+def test_measured_wall_close_seals_corner_micro_gap() -> None:
+    graph = WallGraph(
+        horizontal_axes=(10.0, 110.0), vertical_axes=(10.0, 110.0),
+        segments=(
+            WallSegment("top", "horizontal", (10, 10), (82, 10), 10, False),
+            WallSegment("right", "vertical", (110, 10), (110, 110), 10, False),
+            WallSegment("bottom", "horizontal", (110, 110), (10, 110), 10, False),
+            WallSegment("left", "vertical", (10, 110), (10, 10), 10, False),
+        ),
+        gaps=(), mm_per_px=10.0, wall_width_px=10.0,
+    )
+
+    assert polygonize_rooms(graph, 10, (130, 130), close_radius_factor=0.75) == ()
+    assert len(polygonize_rooms(graph, 10, (130, 130))) == 1
+
+
 def test_sub_005_square_metre_wall_pocket_is_not_a_room() -> None:
     segments = [
         WallSegment("outer-top", "horizontal", (10, 10), (110, 10), 2, False),
