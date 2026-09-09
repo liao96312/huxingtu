@@ -18,6 +18,7 @@ from pano_platform.vision.capabilities import (
     ProbeStatus,
     VisionCapabilityProfile,
     probe_model,
+    probe_primary_and_review,
 )
 from pano_platform.vision.config import VisionConfig
 
@@ -110,6 +111,47 @@ def test_probe_ok_when_model_present_and_json_parses() -> None:
     assert profile.requestIdAvailable is True
     assert profile.actualModel == "gemini-3.5-flash"
     assert "sk-secret" not in json.dumps(profile.redacted_dict())
+
+
+def test_same_primary_and_review_model_is_probed_once(monkeypatch) -> None:
+    calls = 0
+
+    def fake_probe(config, model, client):
+        nonlocal calls
+        calls += 1
+        return VisionCapabilityProfile(
+            provider="tuzi", baseUrl=config.baseUrl, model=model, status=ProbeStatus.OK,
+            imagesSupported=True, jsonSchemaSupported=True, requestIdAvailable=True,
+            latencyMs=1, actualModel=model, maxTokens=1,
+            checkedAt=datetime.now(timezone.utc).isoformat(), detail=None,
+        )
+
+    monkeypatch.setattr("pano_platform.vision.capabilities.probe_model", fake_probe)
+    primary, review = probe_primary_and_review(make_config())
+    assert primary is review
+    assert calls == 1
+
+
+def test_same_model_transient_failure_is_retried_once(monkeypatch) -> None:
+    calls = 0
+
+    def fake_probe(config, model, client):
+        nonlocal calls
+        calls += 1
+        status = ProbeStatus.UNAVAILABLE if calls == 1 else ProbeStatus.OK
+        return VisionCapabilityProfile(
+            provider="tuzi", baseUrl=config.baseUrl, model=model, status=status,
+            imagesSupported=status is ProbeStatus.OK,
+            jsonSchemaSupported=status is ProbeStatus.OK,
+            requestIdAvailable=status is ProbeStatus.OK,
+            latencyMs=1, actualModel=model, maxTokens=1,
+            checkedAt=datetime.now(timezone.utc).isoformat(), detail=None,
+        )
+
+    monkeypatch.setattr("pano_platform.vision.capabilities.probe_model", fake_probe)
+    primary, review = probe_primary_and_review(make_config())
+    assert primary.status is review.status is ProbeStatus.OK
+    assert calls == 2
 
 
 def test_probe_reports_model_missing() -> None:

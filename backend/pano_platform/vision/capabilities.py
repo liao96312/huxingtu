@@ -154,10 +154,12 @@ def probe_primary_and_review(config: VisionConfig) -> tuple[VisionCapabilityProf
     """Probe both configured models independently."""
 
     with httpx.Client(timeout=config.timeoutSeconds) as client:
-        return (
-            probe_model(config, config.primaryModel, client),
-            probe_model(config, config.reviewModel, client),
-        )
+        primary = probe_model(config, config.primaryModel, client)
+        if config.reviewModel == config.primaryModel:
+            if primary.status is ProbeStatus.UNAVAILABLE:
+                primary = probe_model(config, config.primaryModel, client)
+            return primary, primary
+        return primary, probe_model(config, config.reviewModel, client)
 
 
 def _model_present(client: httpx.Client, config: VisionConfig, model: str) -> bool:

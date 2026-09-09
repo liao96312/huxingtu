@@ -7,11 +7,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
+from dotenv import load_dotenv
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
 ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT / ".env", override=False)
 DEFAULT_SOURCE = ROOT / "datasets/derived/fp-001/panorama/living-main/living-main-erp-2048x1024.png"
 DEFAULT_OUTPUT = ROOT / "datasets/derived/fp-001/panorama/living-main/ai/living-main-gpt-image-2-v1.png"
 PROMPT = """Create a photorealistic interior-design version of this exact 360-degree equirectangular panorama.

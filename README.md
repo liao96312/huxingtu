@@ -20,12 +20,15 @@
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+Copy-Item .env.example .env  # 首次配置后把TUZI_API_KEY填入.env
 .\.venv\Scripts\python.exe -m pytest
 .\.venv\Scripts\python.exe -m uvicorn pano_platform.main:app --app-dir backend --reload
 cd apps/pano-viewer
 npm install
 npm run dev
 ```
+
+项目启动时自动读取根目录`.env`，但不会覆盖进程中显式设置的环境变量；`.env`已被Git忽略，`.env.example`只保存变量名和非敏感默认值。
 
 健康检查：`GET http://127.0.0.1:8000/api/health`
 

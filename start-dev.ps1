@@ -21,6 +21,7 @@ $ErrorActionPreference = "Stop"
 $Root        = $PSScriptRoot
 $BackendPort = 8000
 $FrontPort   = 5173
+$PythonExe   = Join-Path $Root ".venv\Scripts\python.exe"
 
 function Info($msg)  { Write-Host "[start-dev] $msg" -ForegroundColor Cyan }
 function Ok($msg)    { Write-Host "[start-dev] OK  $msg" -ForegroundColor Green }
@@ -39,7 +40,10 @@ function Stop-Port($port) {
 if ($Restart) { Stop-Port $BackendPort; Stop-Port $FrontPort }
 
 # ---- deps ----
-if (-not (Get-Command python -ErrorAction SilentlyContinue)) { throw "python not found (install Python 3.12+)" }
+if (-not (Test-Path $PythonExe)) {
+    $PythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source
+}
+if (-not $PythonExe) { throw "python not found (create .venv or install Python 3.12+)" }
 if (-not (Get-Command npm -ErrorAction SilentlyContinue))    { throw "npm not found (install Node 18+)" }
 if (-not (Test-Path (Join-Path $Root "tools\realesrgan\package\realesrgan-ncnn-vulkan.exe"))) {
     Warn "Real-ESRGAN tool missing; run scripts\install_realesrgan.ps1. AI panorama will skip super-resolution."
@@ -66,7 +70,7 @@ if (-not $NoBack) {
     $env:PYTHONPATH = "$Root\backend;$env:PYTHONPATH"
     # Launch detached via Start-Process WITHOUT redirecting stdout/stderr, so this
     # PS process returns immediately (redirecting holds the pipe open and hangs).
-    $backend = Start-Process -FilePath "python" -ArgumentList @(
+    $backend = Start-Process -FilePath $PythonExe -ArgumentList @(
         "-m","uvicorn","pano_platform.main:app","--app-dir","$Root\backend",
         "--host","127.0.0.1","--port","$BackendPort"
     ) -WorkingDirectory $Root -WindowStyle Hidden -PassThru

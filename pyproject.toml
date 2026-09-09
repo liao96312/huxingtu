@@ -11,6 +11,7 @@ dependencies = [
   "opencv-python-headless==5.0.0.93",
   "psycopg[binary]==3.3.4",
   "pydantic==2.13.4",
+  "python-dotenv==1.2.3",
   "python-multipart==0.0.32",
   "requests==2.34.2",
   "shapely==2.1.2",
