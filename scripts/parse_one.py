@@ -53,7 +53,9 @@ def main() -> int:
         print(f"  [{stage.stage}] {stage.status} :: {stage.detail}")
 
     if args.out:
-        Path(args.out).write_text(json.dumps({
+        output_path = Path(args.out)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps({
             "traceId": run.traceId,
             "status": run.status.value,
             "visionMode": run.visionMode.value,

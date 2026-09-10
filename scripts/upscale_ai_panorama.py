@@ -69,7 +69,7 @@ def tile_weight(index: int, starts: list[int]) -> np.ndarray:
 
 
 shutil.rmtree(TILE_DIR, ignore_errors=True)
-TILE_DIR.mkdir()
+TILE_DIR.mkdir(parents=True)
 x_starts, y_starts = tile_starts(padded.shape[1]), tile_starts(padded.shape[0])
 output_shape = (padded.shape[0] * model_scale, padded.shape[1] * model_scale)
 accumulator = np.zeros((*output_shape, 3), np.float32)
