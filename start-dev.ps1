@@ -86,9 +86,20 @@ if (-not $NoFront) {
     Info "starting frontend Vite on port $FrontPort"
     $npmCmd = (Get-Command npm.cmd -ErrorAction SilentlyContinue).Source
     if (-not $npmCmd) { $npmCmd = "npm.cmd" }
-    $front = Start-Process -FilePath $npmCmd -ArgumentList @("run","dev") -WorkingDirectory (Join-Path $Root "apps\pano-viewer") -WindowStyle Hidden -PassThru
-    $front.Id | Out-File (Join-Path $Root "datasets\debug\pano-viewer.pid")
-    Ok "frontend PID=$($front.Id)"
+    $front = Start-Process -FilePath $npmCmd -ArgumentList @("run","dev","--","--host","127.0.0.1") -WorkingDirectory (Join-Path $Root "apps\pano-viewer") -WindowStyle Hidden -PassThru
+    $frontDeadline = (Get-Date).AddSeconds(15)
+    do {
+        $frontListener = Get-NetTCPConnection -LocalPort $FrontPort -State Listen -ErrorAction SilentlyContinue |
+            Where-Object LocalAddress -in @("127.0.0.1", "0.0.0.0") |
+            Select-Object -First 1
+        if (-not $frontListener) { Start-Sleep -Milliseconds 500 }
+    } while (-not $frontListener -and (Get-Date) -lt $frontDeadline)
+    if ($frontListener) {
+        $frontListener.OwningProcess | Out-File (Join-Path $Root "datasets\debug\pano-viewer.pid")
+        Ok "frontend PID=$($frontListener.OwningProcess) listening on 127.0.0.1:$FrontPort"
+    } else {
+        Warn "frontend did not listen on 127.0.0.1:$FrontPort"
+    }
 } else {
     Warn "frontend skipped (--NoFront)"
 }
@@ -108,8 +119,8 @@ if (-not $NoBack) {
 
 Write-Host ""
 Write-Host "==================== STARTED ====================" -ForegroundColor Magenta
-Write-Host "  Panorama viewer : http://localhost:$FrontPort/"
-Write-Host "  Upload pipeline: http://localhost:$FrontPort/?pipeline=1"
+Write-Host "  Panorama viewer : http://127.0.0.1:$FrontPort/"
+Write-Host "  Upload pipeline: http://127.0.0.1:$FrontPort/?pipeline=1"
 Write-Host "  Backend API    : http://127.0.0.1:$BackendPort/api/health"
 Write-Host "  API docs       : http://127.0.0.1:$BackendPort/docs"
 Write-Host "  Logs           : datasets\debug\pano-api.log / pano-viewer.log"
