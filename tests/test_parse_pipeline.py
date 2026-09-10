@@ -19,6 +19,7 @@ from pano_platform.floorplan.parse import (
     ParseStatus,
     RunDeadline,
     VisionMode,
+    VisionUnavailable,
     gate_input,
     new_trace_id,
     orchestrate,
@@ -64,6 +65,29 @@ def test_orchestrate_no_vision_config_needs_review() -> None:
     run = orchestrate(_png(), vision_mode=VisionMode.ASSISTED, vision_config=None)
     assert run.status in (ParseStatus.NEEDS_REVIEW, ParseStatus.REJECTED, ParseStatus.FAILED)
     assert run.rooms_published is False
+
+
+def test_failed_vision_stage_preserves_redacted_provider_evidence(monkeypatch) -> None:
+    from pano_platform.floorplan import parse
+    from pano_platform.vision.config import VisionConfig
+
+    evidence = {"attemptCount": 3, "errorDetail": "HTTP 503", "providerRequestId": None}
+    monkeypatch.setattr(
+        parse, "_run_vision",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            VisionUnavailable("VISION_UPSTREAM_ERROR", evidence)
+        ),
+    )
+    config = VisionConfig.model_validate({
+        "baseUrl": "https://example.invalid", "apiKey": "secret",
+        "primaryModel": "model", "reviewModel": "model",
+    })
+
+    run = orchestrate(_png(), vision_mode=VisionMode.ASSISTED, vision_config=config)
+
+    stage = next(item for item in run.stages if item.stage == "vision")
+    assert stage.status == "failed"
+    assert stage.data["evidence"] == evidence
 
 
 def test_deadline_cancels_run() -> None:
@@ -157,3 +181,48 @@ def test_vision_stage_reuses_validated_draft_cache(monkeypatch) -> None:
     assert first.data["evidence"]["cacheHit"] is False
     assert second.data["evidence"]["cacheHit"] is True
     assert second.data["inputArtifact"]["processedSha256"]
+
+
+def test_vision_stage_falls_back_to_review_model(monkeypatch) -> None:
+    from pano_platform.vision.config import VisionConfig
+    from pano_platform.vision.contracts import VlmDraft
+    from pano_platform.vision.provider import VisionError, VisionRunResult
+    from pano_platform.vision import tuzi_responses
+
+    calls = []
+
+    class FakeProvider:
+        def __init__(self, config): pass
+        def close(self): pass
+        def parse(self, request, image_bytes):
+            calls.append(request.model)
+            if request.model == "primary":
+                return VisionRunResult(
+                    draft=None, evidence={"errorDetail": "HTTP 503"},
+                    error=VisionError.VISION_UPSTREAM_ERROR,
+                )
+            draft = VlmDraft.model_validate({
+                "scaleCandidates": [],
+                "rooms": [{
+                    "type": "bedroom", "polygon": [[0.1, 0.1], [0.8, 0.1], [0.8, 0.8]],
+                }],
+                "openings": [], "warnings": [],
+            })
+            return VisionRunResult(
+                draft=draft,
+                evidence={"requestedModel": request.model, "rawResponseSha256": "r" * 64},
+            )
+
+    monkeypatch.setattr(tuzi_responses, "TuziResponsesVisionProvider", FakeProvider)
+    config = VisionConfig.model_validate({
+        "baseUrl": "https://fallback-test.invalid", "apiKey": "secret",
+        "primaryModel": "primary", "reviewModel": "fallback",
+    })
+    _VISION_CACHE.clear()
+
+    stage = _run_vision(_png(), config, "floorplan_parse_v1", VisionMode.ASSISTED)
+
+    assert calls == ["primary", "fallback"]
+    assert stage.data["draft"].rooms
+    assert stage.data["evidence"]["requestedModel"] == "fallback"
+    assert "primary primary failed" in stage.data["evidence"]["errorDetail"]

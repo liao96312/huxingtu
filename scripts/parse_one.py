@@ -86,6 +86,10 @@ def main() -> int:
                 for key in ("fusedRooms", "roomsNeedingReview")
                 for item in stage.data.get(key, ())
             ],
+            "visionEvidence": next((
+                stage.data.get("evidence", {})
+                for stage in run.stages if stage.stage == "vision"
+            ), {}),
             "reasonCodes": list(run.reasonCodes),
         }, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"[write] {args.out}")

@@ -215,6 +215,12 @@ def vlm_draft_openai_schema() -> dict:
     the full ``vlm_draft_schema`` still validates the parsed draft.
     """
 
+    norm_point = {
+        "type": "array",
+        "items": {"type": "number", "minimum": 0, "maximum": 1},
+        "minItems": 2,
+        "maxItems": 2,
+    }
     return {
         "type": "object",
         "properties": {
@@ -224,8 +230,8 @@ def vlm_draft_openai_schema() -> dict:
                     "type": "object",
                     "properties": {
                         "lengthMm": {"type": "number"},
-                        "pixelStart": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
-                        "pixelEnd": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+                        "pixelStart": norm_point,
+                        "pixelEnd": norm_point,
                         "text": {"type": "string"},
                         "confidence": {"type": "number"},
                     },
@@ -241,7 +247,7 @@ def vlm_draft_openai_schema() -> dict:
                         "type": {"type": "string", "enum": ["bedroom", "living", "dining", "livingDining", "kitchen", "bathroom", "balcony", "study", "other"]},
                         "name": {"type": "string"},
                         "areaLabelM2": {"type": "number"},
-                        "polygon": {"type": "array", "items": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}, "minItems": 3},
+                        "polygon": {"type": "array", "items": norm_point, "minItems": 3},
                         "confidence": {"type": "number"},
                     },
                     "required": ["type", "polygon"],
@@ -255,8 +261,8 @@ def vlm_draft_openai_schema() -> dict:
                     "properties": {
                         "type": {"type": "string", "enum": ["door", "window", "doorway"]},
                         "evidence": {"type": "array", "items": {"type": "string", "enum": ["none", "doorArc", "doorLeaf", "parallelLines"]}},
-                        "pixelStart": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
-                        "pixelEnd": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+                        "pixelStart": norm_point,
+                        "pixelEnd": norm_point,
                         "confidence": {"type": "number"},
                     },
                     "required": ["type", "pixelStart", "pixelEnd"],

@@ -81,7 +81,9 @@ class CancelledRun(Exception):
 
 
 class VisionUnavailable(Exception):
-    pass
+    def __init__(self, message: str, evidence: dict | None = None) -> None:
+        super().__init__(message)
+        self.evidence = evidence or {}
 
 
 def new_trace_id() -> str:
@@ -207,6 +209,11 @@ def orchestrate(
             try:
                 vlm_stage = _run_vision(image_bytes, vision_config, prompt_version, vision_mode)
                 stages.append(vlm_stage)
+            except VisionUnavailable as error:
+                stages.append(StageGraph(
+                    "vision", "failed", str(error), data={"evidence": error.evidence}
+                ))
+                vlm_stage = None
             except Exception as error:
                 stages.append(StageGraph("vision", "failed", str(error)))
                 vlm_stage = None
@@ -246,7 +253,7 @@ def orchestrate(
 def _run_vision(image_bytes, vision_config, prompt_version, vision_mode) -> StageGraph:
     """Run the VLM parse through the provider adapter."""
 
-    from ..vision.provider import VisionProvider
+    from ..vision.provider import VisionError, VisionProvider, VisionRunResult
     from ..vision.tuzi_responses import TuziResponsesVisionProvider
     from ..vision.input_artifact import prepare_vision_payload
 
@@ -258,7 +265,10 @@ def _run_vision(image_bytes, vision_config, prompt_version, vision_mode) -> Stag
     job = VisionJobKey(
         imageSha256=artifact.processedSha256,
         provider="tuzi", baseUrlProfile=config.baseUrl,
-        requestedModel=config.primaryModel, promptVersion=prompt_version,
+        requestedModel=(
+            config.primaryModel if config.primaryModel == config.reviewModel
+            else f"{config.primaryModel}|fallback:{config.reviewModel}"
+        ), promptVersion=prompt_version,
         draftSchemaVersion=artifact.draftSchemaVersion,
         preprocessingVersion=f"{artifact.preprocessingVersion}:crop0:enhance0",
     )
@@ -277,11 +287,32 @@ def _run_vision(image_bytes, vision_config, prompt_version, vision_mode) -> Stag
     provider: VisionProvider = TuziResponsesVisionProvider(config)
     try:
         result = provider.parse(request, provider_bytes)
+        if (
+            result.draft is None
+            and config.reviewModel != config.primaryModel
+            and result.error is not VisionError.VISION_CONTENT_FILTERED
+        ):
+            primary_error = result.error.value if result.error else "vision unavailable"
+            fallback = provider.parse(
+                request.model_copy(update={"model": config.reviewModel}), provider_bytes
+            )
+            detail = (
+                f"primary {config.primaryModel} failed: {primary_error}; "
+                f"fallback {config.reviewModel} "
+                + ("accepted" if fallback.draft is not None else "failed")
+            )
+            result = VisionRunResult(
+                draft=fallback.draft,
+                evidence={**fallback.evidence, "errorDetail": detail[:2048]},
+                error=fallback.error,
+            )
     finally:
         provider.close()
 
     if result.draft is None:
-        raise VisionUnavailable(result.error.value if result.error else "vision unavailable")
+        raise VisionUnavailable(
+            result.error.value if result.error else "vision unavailable", result.evidence
+        )
     # SHADOW records the draft but does not publish it.
     draft = _remap_draft_to_source(result.draft, artifact)
     evidence = {

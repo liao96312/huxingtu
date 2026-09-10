@@ -173,6 +173,15 @@ def test_opening_endpoints_must_differ() -> None:
         )
 
 
+def test_provider_schema_exposes_normalised_coordinate_bounds() -> None:
+    from pano_platform.vision.contracts import vlm_draft_openai_schema
+
+    schema = vlm_draft_openai_schema()
+    point = schema["properties"]["rooms"]["items"]["properties"]["polygon"]["items"]
+    assert point["items"]["minimum"] == 0
+    assert point["items"]["maximum"] == 1
+
+
 def test_room_polygon_repeats_first_point_rejected() -> None:
     with pytest.raises(ValidationError, match="repeat its first point"):
         RoomDraft(
@@ -180,6 +189,26 @@ def test_room_polygon_repeats_first_point_rejected() -> None:
             polygon=[[0.1, 0.1], [0.5, 0.1], [0.5, 0.5], [0.1, 0.1]],
             confidence=0.9,
         )
+
+
+def test_provider_parser_normalises_explicit_polygon_closure() -> None:
+    import json
+
+    from pano_platform.vision.provider import parse_draft
+
+    payload = {
+        "scaleCandidates": [],
+        "rooms": [{
+            "type": "bedroom",
+            "polygon": [[0.1, 0.1], [0.5, 0.1], [0.5, 0.5], [0.1, 0.1]],
+        }],
+        "openings": [],
+        "warnings": [],
+    }
+
+    draft = parse_draft(json.dumps(payload))
+
+    assert len(draft.rooms[0].polygon) == 3
 
 
 def test_signed_area_sign_and_orientation_independent() -> None:

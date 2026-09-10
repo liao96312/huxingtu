@@ -172,6 +172,10 @@ def parse_draft(text: str) -> VlmDraft:
         raise ValueError("provider returned non-JSON output") from error
     if not isinstance(value, dict):
         raise ValueError("provider JSON is not an object")
+    for room in value.get("rooms", ()):
+        polygon = room.get("polygon") if isinstance(room, dict) else None
+        if isinstance(polygon, list) and len(polygon) >= 4 and polygon[0] == polygon[-1]:
+            room["polygon"] = polygon[:-1]
     return VlmDraft.model_validate(value)
 
 
