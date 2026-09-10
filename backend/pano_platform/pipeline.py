@@ -888,6 +888,14 @@ def _render_opening_width(opening) -> float:
     return max(opening.width, minimum)
 
 
+def _opening_render_instruction(kind: str, width: int) -> str:
+    if kind == "window":
+        return f"window {width}mm wide with frame and glazing"
+    if width > 1000:
+        return f"door {width}mm wide as a closed double-leaf or two-panel sliding door, never one oversized leaf"
+    return f"door {width}mm wide as one closed 750-900mm hinged leaf fitted inside its frame"
+
+
 def render_structural_erp(layout: LayoutRevision, room: dict, width: int = ERP_WIDTH) -> np.ndarray:
     """Render a deterministic 2:1 ERP from vector walls with door/window holes."""
 
@@ -1017,8 +1025,9 @@ def _generate_ai_panorama(
         f"{style.designStyle} {room_type} interior. Preserve every wall, architectural opening, camera position, "
         "projection and the left/right seam. This is a topology-locked edit, not a free redesign. "
         f"{opening_hint} Do not add or remove any architectural opening. Every listed door must be a complete "
-        "residential door assembly with a properly sized frame, casing, hinged door leaf and visible door handle; "
-        "show it closed or slightly ajar, never as an empty wall hole. Every listed window must have a complete "
+        "residential door assembly with a properly sized frame, casing, door leaf and visible door handle. Keep all "
+        "door leaves closed within their frames; no open leaf may project into the room or toward the camera. "
+        "Every listed window must have a complete "
         "frame and glazing, never an empty wall slit. Do not invent extra room doors, hallway doors, balcony doors, "
         "windows, wall cutouts, closets, wardrobes, cabinet doors or cupboard doors. If an opening is not specified, "
         "keep that wall blank. Use simple furniture and handleless cabinetry. "
@@ -1125,7 +1134,7 @@ def _opening_hint(layout: LayoutRevision, room) -> str:
         f"{kind}×{sum(item[0] == kind for item in allowed)}"
         for kind in sorted({item[0] for item in allowed})
     )
-    dimensions = ", ".join(f"{kind} {opening_width}mm wide" for kind, opening_width in allowed)
+    dimensions = "; ".join(_opening_render_instruction(kind, opening_width) for kind, opening_width in allowed)
     return (
         f"Architectural openings allowed in this room: exactly {len(allowed)} total ({counts}); "
         f"required clear widths: {dimensions}; no others."
