@@ -896,6 +896,30 @@ def _opening_render_instruction(kind: str, width: int) -> str:
     return f"door {width}mm wide as one closed 750-900mm hinged leaf fitted inside its frame"
 
 
+def _choose_erp_seam_yaw(layout: LayoutRevision, nodes: dict, cx: float, cy: float) -> float:
+    """Place the ERP seam as far as possible from every known opening."""
+
+    candidates = np.linspace(0.0, 2 * np.pi, 720, endpoint=False)
+    clearance = np.full(candidates.shape, np.inf)
+    for opening in layout.openings:
+        edge = next((item for item in layout.edges if item.id == opening.wallEdgeId), None)
+        if edge is None:
+            continue
+        start, end = nodes[edge.startNodeId], nodes[edge.endNodeId]
+        length = math.hypot(end.x - start.x, end.y - start.y)
+        if length <= 0:
+            continue
+        ratio = (opening.offset + opening.width / 2) / length
+        ox = start.x + (end.x - start.x) * ratio
+        oy = start.y + (end.y - start.y) * ratio
+        bearing = math.atan2(oy - cy, ox - cx) % (2 * np.pi)
+        distance = max(1.0, math.hypot(ox - cx, oy - cy))
+        half_width = math.atan2(_render_opening_width(opening) / 2, distance)
+        angular_distance = np.abs(np.angle(np.exp(1j * (candidates - bearing))))
+        clearance = np.minimum(clearance, angular_distance - half_width)
+    return float(candidates[int(np.argmax(clearance))]) if np.isfinite(clearance).any() else 0.0
+
+
 def render_structural_erp(layout: LayoutRevision, room: dict, width: int = ERP_WIDTH) -> np.ndarray:
     """Render a deterministic 2:1 ERP from vector walls with door/window holes."""
 
@@ -905,7 +929,8 @@ def render_structural_erp(layout: LayoutRevision, room: dict, width: int = ERP_W
     cx, cy, cz = float(camera.x), float(camera.y), 1500.0
     nodes = {node.id: node for node in layout.nodes}
     edges = layout.edges
-    angles = (np.arange(width, dtype=np.float64) / width) * (2 * np.pi)
+    seam_yaw = _choose_erp_seam_yaw(layout, nodes, cx, cy)
+    angles = (np.arange(width, dtype=np.float64) / width) * (2 * np.pi) + seam_yaw
     directions = np.stack((np.cos(angles), np.sin(angles)), axis=1)
     distances = np.full((width, len(edges)), np.inf, dtype=np.float64)
 
