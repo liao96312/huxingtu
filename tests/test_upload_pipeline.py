@@ -103,8 +103,8 @@ def test_door_hotspots_link_only_two_nearby_rooms() -> None:
     room_payload["contentHash"] = canonical_sha256(room_payload)
     rooms = DerivedRoomSet.model_validate(room_payload)
     assert _render_opening_width(layout.openings[0]) == 800
+    assert _render_opening_width(layout.openings[0].model_copy(update={"width": 1371})) == 900
     assert "door 800mm wide as one closed 750-900mm hinged leaf" in _opening_hint(layout, rooms.rooms[0])
-    assert "closed double-leaf" in _opening_render_instruction("door", 1371)
     hotspots = _build_room_hotspots(layout, rooms, {"a": "a-main", "b": "b-main"})
     assert hotspots["a"][0]["targetSceneId"] == "b-main"
     assert hotspots["b"][0]["targetSceneId"] == "a-main"

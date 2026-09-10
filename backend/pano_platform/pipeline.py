@@ -40,6 +40,7 @@ DEFAULT_DATA_ROOT = ROOT / "datasets" / "derived"
 ERP_WIDTH = 2048
 WALL_HEIGHT_MM = 2800.0
 MIN_RENDER_DOOR_WIDTH_MM = 800.0
+MAX_RENDER_DOOR_WIDTH_MM = 900.0
 MIN_RENDER_WINDOW_WIDTH_MM = 900.0
 STYLE_CATALOG_PATH = ROOT / "datasets" / "style-catalog.v1.json"
 
@@ -884,15 +885,14 @@ def _resolve_realesrgan_tool() -> Path:
 
 
 def _render_opening_width(opening) -> float:
-    minimum = MIN_RENDER_WINDOW_WIDTH_MM if opening.type.value == "window" else MIN_RENDER_DOOR_WIDTH_MM
-    return max(opening.width, minimum)
+    if opening.type.value == "window":
+        return max(opening.width, MIN_RENDER_WINDOW_WIDTH_MM)
+    return min(MAX_RENDER_DOOR_WIDTH_MM, max(opening.width, MIN_RENDER_DOOR_WIDTH_MM))
 
 
 def _opening_render_instruction(kind: str, width: int) -> str:
     if kind == "window":
         return f"window {width}mm wide with frame and glazing"
-    if width > 1000:
-        return f"door {width}mm wide as a closed double-leaf or two-panel sliding door, never one oversized leaf"
     return f"door {width}mm wide as one closed 750-900mm hinged leaf fitted inside its frame"
 
 
