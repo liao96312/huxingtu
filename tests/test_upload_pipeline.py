@@ -234,6 +234,7 @@ def test_pipeline_reports_monotonic_automatic_progress(tmp_path, monkeypatch) ->
     assert updates[-1] == (100, "done")
     assert [value for value, _ in updates] == sorted(value for value, _ in updates)
     assert {stage for _, stage in updates} >= {"parse", "geometry", "structure-preview", "panorama-complete", "done"}
+    assert any(stage.startswith("panorama-room-") for _, stage in updates)
 
 
 def test_one_structural_room_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> None:

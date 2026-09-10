@@ -125,6 +125,7 @@ def run_upload_pipeline(
         report(60, "structure-preview")
         manifest, ai_generated_count, ai_failed_rooms, superres_count, superres_failed_rooms = _render_panoramas(
             project_id, layout, rooms, generate_ai=generate_ai, style_id=style.id,
+            progress_callback=report,
         )
         report(95, "panorama-complete")
     except PipelineNotReady as error:
@@ -534,6 +535,7 @@ def _render_panoramas(
     *,
     generate_ai: bool,
     style_id: str = "modern",
+    progress_callback: Callable[[int, str], None] | None = None,
 ) -> tuple[PanoManifest, int, list[str], int, list[str]]:
     style = load_style_context(style_id)
     scenes = []
@@ -616,6 +618,11 @@ def _render_panoramas(
             },
             "initialView": {"yaw": 0.0, "pitch": 0.0, "fov": 82.0},
         })
+        if progress_callback is not None:
+            progress_callback(
+                60 + round(34 * (order + 1) / len(ordered_rooms)),
+                f"panorama-room-{order + 1}-of-{len(ordered_rooms)}",
+            )
 
     scene_by_room = {scene["roomId"]: scene["id"] for scene in scenes}
     hotspots_by_room = _build_room_hotspots(layout, rooms, scene_by_room)
