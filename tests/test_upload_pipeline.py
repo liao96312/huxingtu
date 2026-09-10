@@ -12,7 +12,10 @@ from pano_platform.floorplan.parse import ParseRun, ParseStatus, StageGraph, Vis
 from pano_platform.floorplan.parse import orchestrate
 from pano_platform.floorplan.wall_graph import WallGraph, WallSegment
 from pano_platform.contracts import DerivedRoomSet, LayoutRevision, PanoManifest, SceneGeometry, canonical_sha256
-from pano_platform.pipeline import _build_room_hotspots, _enclosing_room_map, _publish_preview, _render_panoramas
+from pano_platform.pipeline import (
+    _build_room_hotspots, _enclosing_room_map, _opening_hint, _publish_preview,
+    _render_opening_width, _render_panoramas,
+)
 
 
 def _preview_run() -> ParseRun:
@@ -99,6 +102,8 @@ def test_door_hotspots_link_only_two_nearby_rooms() -> None:
     }
     room_payload["contentHash"] = canonical_sha256(room_payload)
     rooms = DerivedRoomSet.model_validate(room_payload)
+    assert _render_opening_width(layout.openings[0]) == 800
+    assert "door 800mm wide" in _opening_hint(layout, rooms.rooms[0])
     hotspots = _build_room_hotspots(layout, rooms, {"a": "a-main", "b": "b-main"})
     assert hotspots["a"][0]["targetSceneId"] == "b-main"
     assert hotspots["b"][0]["targetSceneId"] == "a-main"

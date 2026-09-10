@@ -74,8 +74,7 @@ if (-not $NoBack) {
         "-m","uvicorn","pano_platform.main:app","--app-dir","$Root\backend",
         "--host","127.0.0.1","--port","$BackendPort"
     ) -WorkingDirectory $Root -WindowStyle Hidden -PassThru
-    $backend.Id | Out-File (Join-Path $Root "datasets\debug\pano-api.pid")
-    Ok "backend PID=$($backend.Id)  (log redirected to datasets\debug\pano-api.log)"
+    Info "backend launcher PID=$($backend.Id)"
 } else {
     Warn "backend skipped (--NoBack)"
 }
@@ -111,7 +110,16 @@ if (-not $NoBack) {
     while ((Get-Date) -lt $deadline) {
         try {
             $r = Invoke-RestMethod -Uri "http://127.0.0.1:$BackendPort/api/health" -TimeoutSec 3
-            if ($r.status -eq "ok") { Ok "backend healthy: $($r.status) v$($r.version)"; break }
+            if ($r.status -eq "ok") {
+                $backendListener = Get-NetTCPConnection -LocalPort $BackendPort -State Listen -ErrorAction SilentlyContinue |
+                    Where-Object LocalAddress -in @("127.0.0.1", "0.0.0.0") |
+                    Select-Object -First 1
+                if ($backendListener) {
+                    $backendListener.OwningProcess | Out-File (Join-Path $Root "datasets\debug\pano-api.pid")
+                }
+                Ok "backend healthy: $($r.status) v$($r.version) PID=$($backendListener.OwningProcess)"
+                break
+            }
         } catch { Start-Sleep -Milliseconds 800 }
     }
     if (-not $r) { Warn "backend healthcheck not confirmed, see log: $BackendLog" }

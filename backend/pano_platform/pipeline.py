@@ -39,6 +39,8 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_ROOT = ROOT / "datasets" / "derived"
 ERP_WIDTH = 2048
 WALL_HEIGHT_MM = 2800.0
+MIN_RENDER_DOOR_WIDTH_MM = 800.0
+MIN_RENDER_WINDOW_WIDTH_MM = 900.0
 STYLE_CATALOG_PATH = ROOT / "datasets" / "style-catalog.v1.json"
 
 
@@ -881,6 +883,11 @@ def _resolve_realesrgan_tool() -> Path:
     raise RuntimeError("Real-ESRGAN executable not found")
 
 
+def _render_opening_width(opening) -> float:
+    minimum = MIN_RENDER_WINDOW_WIDTH_MM if opening.type.value == "window" else MIN_RENDER_DOOR_WIDTH_MM
+    return max(opening.width, minimum)
+
+
 def render_structural_erp(layout: LayoutRevision, room: dict, width: int = ERP_WIDTH) -> np.ndarray:
     """Render a deterministic 2:1 ERP from vector walls with door/window holes."""
 
@@ -893,14 +900,12 @@ def render_structural_erp(layout: LayoutRevision, room: dict, width: int = ERP_W
     angles = (np.arange(width, dtype=np.float64) / width) * (2 * np.pi)
     directions = np.stack((np.cos(angles), np.sin(angles)), axis=1)
     distances = np.full((width, len(edges)), np.inf, dtype=np.float64)
-    alongs = np.zeros_like(distances)
 
     for index, edge in enumerate(edges):
         a, b = nodes[edge.startNodeId], nodes[edge.endNodeId]
         hit_t, hit_u = _ray_segment_intersections(cx, cy, directions, a.x, a.y, b.x, b.y)
         valid = (hit_t > 1e-3) & (hit_u >= 0) & (hit_u <= 1)
         distances[valid, index] = hit_t[valid]
-        alongs[valid, index] = hit_u[valid] * math.hypot(b.x - a.x, b.y - a.y)
 
     order = np.argsort(distances, axis=1)
     pitch = np.pi / 2 - ((np.arange(height, dtype=np.float64) + 0.5) / height) * np.pi
@@ -911,6 +916,40 @@ def render_structural_erp(layout: LayoutRevision, room: dict, width: int = ERP_W
     openings_by_edge: dict[str, list] = {}
     for opening in layout.openings:
         openings_by_edge.setdefault(opening.wallEdgeId, []).append(opening)
+    render_openings_by_edge: dict[str, list[tuple[float, float, float, float, float, float, float]]] = {}
+    for edge in edges:
+        edge_start, edge_end = nodes[edge.startNodeId], nodes[edge.endNodeId]
+        edge_dx, edge_dy = edge_end.x - edge_start.x, edge_end.y - edge_start.y
+        edge_length = math.hypot(edge_dx, edge_dy)
+        if edge_length <= 0:
+            continue
+        edge_ux, edge_uy = edge_dx / edge_length, edge_dy / edge_length
+        apertures = []
+        for parent_edge in edges:
+            parent_start, parent_end = nodes[parent_edge.startNodeId], nodes[parent_edge.endNodeId]
+            parent_dx, parent_dy = parent_end.x - parent_start.x, parent_end.y - parent_start.y
+            parent_length = math.hypot(parent_dx, parent_dy)
+            if parent_length <= 0:
+                continue
+            parent_ux, parent_uy = parent_dx / parent_length, parent_dy / parent_length
+            if abs(edge_ux * parent_uy - edge_uy * parent_ux) > 0.01:
+                continue
+            line_distance = abs(
+                (edge_start.x - parent_start.x) * parent_uy
+                - (edge_start.y - parent_start.y) * parent_ux
+            )
+            if line_distance > max(edge.thickness, parent_edge.thickness):
+                continue
+            for opening in openings_by_edge.get(parent_edge.id, []):
+                center_distance = opening.offset + opening.width / 2
+                apertures.append((
+                    parent_start.x + parent_ux * center_distance,
+                    parent_start.y + parent_uy * center_distance,
+                    parent_ux, parent_uy,
+                    _render_opening_width(opening),
+                    opening.sill or 0.0, opening.height,
+                ))
+        render_openings_by_edge[edge.id] = apertures
 
     columns = np.arange(width)
     for rank in range(len(edges)):
@@ -925,11 +964,13 @@ def render_structural_erp(layout: LayoutRevision, room: dict, width: int = ERP_W
             selected = edge_indices == edge_index
             if not selected.any():
                 continue
-            along = alongs[columns, edge_indices]
-            for opening in openings_by_edge.get(edge.id, []):
-                inside_width = selected & (along >= opening.offset) & (along <= opening.offset + opening.width)
-                sill = opening.sill or 0.0
-                hole = inside_width[None, :] & (z >= sill) & (z <= sill + opening.height)
+            safe_distance = np.where(finite, distance, 0.0)
+            hit_x = cx + directions[:, 0] * safe_distance
+            hit_y = cy + directions[:, 1] * safe_distance
+            for center_x, center_y, opening_ux, opening_uy, render_width, sill, opening_height in render_openings_by_edge.get(edge.id, []):
+                longitudinal = (hit_x - center_x) * opening_ux + (hit_y - center_y) * opening_uy
+                inside_width = selected & (np.abs(longitudinal) <= render_width / 2)
+                hole = inside_width[None, :] & (z >= sill) & (z <= sill + opening_height)
                 solid &= ~hole
         paint = unset & solid
         if paint.any():
@@ -975,10 +1016,12 @@ def _generate_ai_panorama(
         "Transform this exact structural 2:1 equirectangular 360 panorama into a photorealistic "
         f"{style.designStyle} {room_type} interior. Preserve every wall, architectural opening, camera position, "
         "projection and the left/right seam. This is a topology-locked edit, not a free redesign. "
-        f"{opening_hint} Do not add or remove any architectural opening. Do not invent room doors, hallway doors, "
-        "balcony doors, windows, wall cutouts, closets, wardrobes, cabinet doors, cupboard doors, handles, or "
-        "door-shaped panels that are not present in the reference. If an opening is not specified, keep that wall "
-        "blank. Use simple furniture with flat, handleless surfaces. "
+        f"{opening_hint} Do not add or remove any architectural opening. Every listed door must be a complete "
+        "residential door assembly with a properly sized frame, casing, hinged door leaf and visible door handle; "
+        "show it closed or slightly ajar, never as an empty wall hole. Every listed window must have a complete "
+        "frame and glazing, never an empty wall slit. Do not invent extra room doors, hallway doors, balcony doors, "
+        "windows, wall cutouts, closets, wardrobes, cabinet doors or cupboard doors. If an opening is not specified, "
+        "keep that wall blank. Use simple furniture and handleless cabinetry. "
         f"Style requirements: {style.promptSuffix} Preferred palette: {', '.join(style.palette)}. "
         f"Preferred materials: {', '.join(style.materials)}. Return a seamless 2:1 ERP."
     )
@@ -1075,11 +1118,18 @@ def _opening_hint(layout: LayoutRevision, room) -> str:
             start.y + uy * (opening.offset + opening.width / 2) / length,
         )
         if polygon.boundary.distance(midpoint) <= max(180.0, opening.width * 0.35):
-            allowed.append(opening.type.value)
+            allowed.append((opening.type.value, round(_render_opening_width(opening))))
     if not allowed:
         return "Architectural openings allowed in this room: exactly 0 (all walls must remain solid)."
-    counts = ", ".join(f"{kind}×{allowed.count(kind)}" for kind in sorted(set(allowed)))
-    return f"Architectural openings allowed in this room: exactly {len(allowed)} total ({counts}); no others."
+    counts = ", ".join(
+        f"{kind}×{sum(item[0] == kind for item in allowed)}"
+        for kind in sorted({item[0] for item in allowed})
+    )
+    dimensions = ", ".join(f"{kind} {opening_width}mm wide" for kind, opening_width in allowed)
+    return (
+        f"Architectural openings allowed in this room: exactly {len(allowed)} total ({counts}); "
+        f"required clear widths: {dimensions}; no others."
+    )
 
 
 def load_preview_scene_geometry(project_id: str) -> SceneGeometry:
