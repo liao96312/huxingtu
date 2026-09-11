@@ -15,7 +15,7 @@ from pano_platform.contracts import DerivedRoomSet, LayoutRevision, PanoManifest
 from pano_platform.pipeline import (
     _build_room_hotspots, _choose_erp_seam_yaw, _enclosing_room_map, _opening_hint,
     _opening_render_instruction, _publish_preview,
-    _render_opening_width, _render_panoramas,
+    _render_opening_width, _render_panoramas, _tuzi_image_settings,
 )
 
 
@@ -69,6 +69,14 @@ def test_preview_geometry_and_erp_are_published(tmp_path, monkeypatch) -> None:
     assert room_evidence["unsupportedWallRoomIds"] == []
     assert room_evidence["implausiblySmallRoomIds"] == []
     assert room_evidence["suspectedEnclosingRooms"] == []
+
+
+def test_image_25_4k_is_the_default_with_environment_override(monkeypatch) -> None:
+    for name in ("TUZI_IMAGE_MODEL", "TUZI_IMAGE_QUALITY", "TUZI_IMAGE_SIZE"):
+        monkeypatch.delenv(name, raising=False)
+    assert _tuzi_image_settings() == ("gpt-image-2.5", "4k", "4096x2048")
+    monkeypatch.setenv("TUZI_IMAGE_MODEL", "gpt-image-2")
+    assert _tuzi_image_settings()[0] == "gpt-image-2"
 
 
 def test_door_hotspots_link_only_two_nearby_rooms() -> None:

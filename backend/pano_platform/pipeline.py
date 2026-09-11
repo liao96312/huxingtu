@@ -570,7 +570,7 @@ def _render_panoramas(
         if generate_ai:
             try:
                 candidate = _generate_ai_panorama(
-                    structural, folder / "ai-erp-2048x1024.jpg", room.type,
+                    structural, folder / "ai-erp-source.jpg", room.type,
                     _opening_hint(layout, room), style,
                 )
                 qa = _qa_ai_panorama_structure(structural, candidate)
@@ -598,12 +598,15 @@ def _render_panoramas(
                 superres_failed_rooms.append(room.name)
 
         proxy = folder / "proxy-1024x512.jpg"
+        proxy_2k = folder / "proxy-2048x1024.jpg"
         thumb = folder / "thumb-320x160.jpg"
         loaded = cv2.imread(str(original), cv2.IMREAD_COLOR)
+        original_height, original_width = loaded.shape[:2]
         asset_4k = superres_paths["proxy4k"] if superres_paths else None
-        asset_2k = superres_paths["proxy2k"] if superres_paths else original
+        asset_2k = superres_paths["proxy2k"] if superres_paths else proxy_2k
         asset_1k = superres_paths["proxy1k"] if superres_paths else proxy
         if not superres_paths:
+            cv2.imwrite(str(proxy_2k), cv2.resize(loaded, (2048, 1024), interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 92])
             cv2.imwrite(str(proxy), cv2.resize(loaded, (1024, 512), interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 90])
         cv2.imwrite(str(thumb), cv2.resize(loaded, (320, 160), interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 85])
         base = f"/artifacts/{project_id}/panorama/{scene_id}"
@@ -613,7 +616,7 @@ def _render_panoramas(
             "title": f"{room.name}{' AI+超分预览' if superres_paths else ' AI预览' if ai_ready else ' 结构预览'}",
             "order": order,
             "assets": {
-                "original": {"url": f"{base}/{original_name}", "width": 6144 if superres_paths else 2048, "height": 3072 if superres_paths else 1024, "contentType": "image/jpeg"},
+                "original": {"url": f"{base}/{original_name}", "width": original_width, "height": original_height, "contentType": "image/jpeg"},
                 "proxy4k": {"url": f"{base}/{asset_4k.name}", "width": 4096, "height": 2048, "contentType": "image/jpeg"} if asset_4k else None,
                 "proxy2k": {"url": f"{base}/{asset_2k.name}", "width": 2048, "height": 1024, "contentType": "image/jpeg"},
                 "proxy1k": {"url": f"{base}/{asset_1k.name}", "width": 1024, "height": 512, "contentType": "image/jpeg"},
@@ -850,6 +853,7 @@ def _upscale_with_realesrgan(source: Path, folder: Path) -> dict[str, Path]:
         sys.executable, str(ROOT / "scripts" / "upscale_ai_panorama.py"),
         "--source", str(source), "--output-dir", str(folder),
         "--output-base", base, "--tool", str(tool),
+        "--preserve-source", "--output-size", "8192x4096",
     ]
     child_env = os.environ.copy()
     backend_path = str(ROOT / "backend")
@@ -861,7 +865,7 @@ def _upscale_with_realesrgan(source: Path, folder: Path) -> dict[str, Path]:
         detail = (completed.stderr or completed.stdout or "Real-ESRGAN failed").strip()
         raise RuntimeError(detail[-1000:])
     paths = {
-        "original": folder / f"{base}-6144x3072.jpg",
+        "original": folder / f"{base}-8192x4096.jpg",
         "proxy4k": folder / f"{base}-proxy-4096x2048.jpg",
         "proxy2k": folder / f"{base}-proxy-2048x1024.jpg",
         "proxy1k": folder / f"{base}-proxy-1024x512.jpg",
@@ -1045,6 +1049,7 @@ def _generate_ai_panorama(
     if not key:
         raise RuntimeError("TUZI_API_KEY missing")
     style = style_context or load_style_context("modern")
+    model, quality, size = _tuzi_image_settings()
     prompt = (
         "Transform this exact structural 2:1 equirectangular 360 panorama into a photorealistic "
         f"{style.designStyle} {room_type} interior. Preserve every wall, architectural opening, camera position, "
@@ -1055,12 +1060,15 @@ def _generate_ai_panorama(
         "Every listed window must have a complete "
         "frame and glazing, never an empty wall slit. Do not invent extra room doors, hallway doors, balcony doors, "
         "windows, wall cutouts, closets, wardrobes, cabinet doors or cupboard doors. If an opening is not specified, "
-        "keep that wall blank. Use simple furniture and handleless cabinetry. "
+        "keep that wall blank. Use simple furniture and handleless cabinetry. All walls must use uniform, clean, "
+        "solid-color matte latex paint with even coverage. Do not use microcement, limewash, stone texture, marbling, "
+        "mottling, stains, patches, cloudy gradients or decorative wall texture. Use one physically consistent daylight "
+        "direction with even exposure; do not create wall washers, unexplained light pools or dirty-looking shadows. "
         f"Style requirements: {style.promptSuffix} Preferred palette: {', '.join(style.palette)}. "
         f"Preferred materials: {', '.join(style.materials)}. Return a seamless 2:1 ERP."
     )
     idempotency_key = hashlib.sha256(
-        source.read_bytes() + prompt.encode("utf-8") + b"gpt-image-2:2k"
+        source.read_bytes() + prompt.encode("utf-8") + f"{model}:{quality}:{size}".encode()
     ).hexdigest()
     session = _build_tuzi_image_session(requests, HTTPAdapter, Retry)
     try:
@@ -1068,7 +1076,7 @@ def _generate_ai_panorama(
             response = session.post(
                 f"{os.environ.get('TUZI_BASE_URL', 'https://api.tu-zi.com').rstrip('/')}/v1/images/edits",
                 headers={"Authorization": f"Bearer {key}", "Idempotency-Key": idempotency_key},
-                data={"model": "gpt-image-2", "prompt": prompt, "n": "1", "size": "2048x1024", "quality": "2k", "response_format": "url"},
+                data={"model": model, "prompt": prompt, "n": "1", "size": size, "quality": quality, "response_format": "url"},
                 files={"image": (source.name, image, "image/jpeg")}, timeout=_tuzi_image_timeout(),
             )
         response.raise_for_status()
@@ -1090,7 +1098,10 @@ def _generate_ai_panorama(
     decoded = cv2.imdecode(np.frombuffer(payload, np.uint8), cv2.IMREAD_COLOR)
     if decoded is None:
         raise RuntimeError("AI image decode failed")
-    normalized = cv2.resize(decoded, (2048, 1024), interpolation=cv2.INTER_LANCZOS4)
+    if abs(decoded.shape[1] / decoded.shape[0] - 2.0) > 0.05:
+        raise RuntimeError("AI image is not a near-2:1 panorama")
+    normalized_width = decoded.shape[1] - decoded.shape[1] % 2
+    normalized = cv2.resize(decoded, (normalized_width, normalized_width // 2), interpolation=cv2.INTER_LANCZOS4)
     strip = 64
     for offset in range(strip):
         alpha = 0.5 * (1 + math.cos(math.pi * offset / strip))
@@ -1099,6 +1110,14 @@ def _generate_ai_panorama(
         normalized[:, -1 - offset] = np.clip(normalized[:, -1 - offset] * (1 - alpha) + average * alpha, 0, 255)
     cv2.imwrite(str(output), normalized, [cv2.IMWRITE_JPEG_QUALITY, 94])
     return output
+
+
+def _tuzi_image_settings() -> tuple[str, str, str]:
+    return (
+        (os.environ.get("TUZI_IMAGE_MODEL") or "gpt-image-2.5").strip(),
+        (os.environ.get("TUZI_IMAGE_QUALITY") or "4k").strip(),
+        (os.environ.get("TUZI_IMAGE_SIZE") or "4096x2048").strip(),
+    )
 
 
 def _build_tuzi_image_session(requests_module, adapter_type, retry_type):
