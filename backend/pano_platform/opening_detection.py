@@ -20,6 +20,7 @@ class OpeningDetectionProfile:
 
 
 DEFAULT_OPENING_PROFILE = OpeningDetectionProfile()
+DOOR_ARC_MAX_RADIUS_AT_800PX = 65
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,8 @@ class DoorArcProposal:
     center: tuple[float, float]
     radius_px: float
     arc_score: float
+    base_angle: int | None = None
+    use_one_sided_interval: bool = False
 
 
 @dataclass(frozen=True)
@@ -143,7 +146,7 @@ def detect_door_arc_proposals(grayscale: np.ndarray) -> list[DoorArcProposal]:
     short_edge = min(grayscale.shape[:2])
     scale = short_edge / 800
     min_radius = max(4, round(8 * scale))
-    max_radius = max(min_radius + 2, round(50 * scale))
+    max_radius = max(min_radius + 2, round(DOOR_ARC_MAX_RADIUS_AT_800PX * scale))
     circles = cv2.HoughCircles(
         grayscale,
         cv2.HOUGH_GRADIENT,
@@ -168,7 +171,7 @@ def detect_door_arc_proposals(grayscale: np.ndarray) -> list[DoorArcProposal]:
     maximum_wall_distance = max(3, round(9 * scale))
     proposals = []
     for center_x, center_y, radius in circles[0]:
-        score, _ = _best_quarter_arc(grayscale, (center_x, center_y), radius)
+        score, base_angle = _best_quarter_arc(grayscale, (center_x, center_y), radius)
         x = min(grayscale.shape[1] - 1, max(0, round(center_x)))
         y = min(grayscale.shape[0] - 1, max(0, round(center_y)))
         if score >= 0.88 and wall_distance[y, x] <= maximum_wall_distance:
@@ -181,6 +184,8 @@ def detect_door_arc_proposals(grayscale: np.ndarray) -> list[DoorArcProposal]:
                 center=(float(center_x), float(center_y)),
                 radius_px=float(radius),
                 arc_score=score,
+                base_angle=int(base_angle),
+                use_one_sided_interval=radius > round(50 * scale),
             ))
     return _deduplicate_proposals(proposals, scale)
 

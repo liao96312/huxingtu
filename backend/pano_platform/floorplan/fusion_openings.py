@@ -277,7 +277,24 @@ def arbitrate_cv_door_arcs(
         for segment in graph.segments:
             projected = _project_to_segment(center, segment)
             if projected["distance"] <= max(12.0, graph.wall_width_px * 2.5):
-                nearest.append((projected["distance"], 0 if segment.virtual else 1, segment, projected))
+                segment_length = hypot(
+                    segment.end[0] - segment.start[0], segment.end[1] - segment.start[1]
+                )
+                segment_unit = (
+                    (segment.end[0] - segment.start[0]) / segment_length,
+                    (segment.end[1] - segment.start[1]) / segment_length,
+                ) if segment_length > 0 else (0.0, 0.0)
+                sign = _arc_wall_sign(proposal, segment, segment_unit)
+                available = (
+                    segment_length - projected["along_span"] if sign == 1
+                    else projected["along_span"] if sign == -1
+                    else segment_length
+                )
+                short_in_arc_direction = available < float(proposal.radius_px) * 0.7
+                nearest.append((
+                    short_in_arc_direction, 0 if segment.virtual else 1,
+                    projected["distance"], segment, projected,
+                ))
         if not nearest:
             rejected.append(FusedOpening(
                 opening_id, "door", "", center, center, None, "rejected",
@@ -286,7 +303,7 @@ def arbitrate_cv_door_arcs(
             reason_codes.append("CV_ARC_NO_WALL_EDGE")
             continue
 
-        _, _, segment, projected = min(nearest, key=lambda item: (item[1], item[0]))
+        _, _, _, segment, projected = min(nearest, key=lambda item: item[:3])
         length = hypot(segment.end[0] - segment.start[0], segment.end[1] - segment.start[1])
         if length <= 0:
             continue
@@ -334,9 +351,16 @@ def arbitrate_cv_door_arcs(
             # The detected circle radius is the leaf sweep, while the door
             # opening spans both sides of the projected centreline. Use the
             # full sweep as the half-width estimate and clamp it to the wall.
-            half = max(1.0, float(proposal.radius_px))
-            start_along = max(0.0, projected["along_span"] - half)
-            end_along = min(length, projected["along_span"] + half)
+            radius = max(1.0, float(proposal.radius_px))
+            sign = _arc_wall_sign(proposal, segment, unit)
+            if sign is None:
+                start_along = max(0.0, projected["along_span"] - radius)
+                end_along = min(length, projected["along_span"] + radius)
+            else:
+                start_along, end_along = sorted((
+                    projected["along_span"], projected["along_span"] + sign * radius,
+                ))
+                start_along, end_along = max(0.0, start_along), min(length, end_along)
             width_px = end_along - start_along
             start_px = (segment.start[0] + unit[0] * start_along, segment.start[1] + unit[1] * start_along)
             end_px = (segment.start[0] + unit[0] * end_along, segment.start[1] + unit[1] * end_along)
@@ -388,6 +412,19 @@ def arbitrate_cv_door_arcs(
         confirmed=tuple(confirmed), candidates=(), rejected=tuple(rejected),
         reason_codes=tuple(dict.fromkeys(reason_codes)),
     )
+
+
+def _arc_wall_sign(proposal, segment, unit) -> int | None:
+    """Map the detected quarter-arc quadrant to its one-sided wall direction."""
+
+    base_angle = getattr(proposal, "base_angle", None)
+    if base_angle is None or not getattr(proposal, "use_one_sided_interval", False):
+        return None
+    if segment.axis == "horizontal":
+        direction = (1.0 if base_angle in (0, 270) else -1.0, 0.0)
+    else:
+        direction = (0.0, 1.0 if base_angle in (0, 90) else -1.0)
+    return 1 if direction[0] * unit[0] + direction[1] * unit[1] >= 0 else -1
 
 
 def arbitrate_openings(

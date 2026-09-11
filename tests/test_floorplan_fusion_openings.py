@@ -162,6 +162,55 @@ def test_cv_door_arc_can_recover_leaf_that_hides_wall_gap() -> None:
     assert 500 <= result.confirmed[0].width_mm <= 1500
 
 
+def test_door_arc_quadrant_places_solid_wall_opening_on_hinge_side() -> None:
+    solid_graph = WallGraph(
+        horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
+        segments=(WallSegment("h1", "horizontal", (50.0, 100.0), (450.0, 100.0), 13.0, False),),
+        gaps=(), mm_per_px=10.0, wall_width_px=13.0,
+    )
+    proposal = SimpleNamespace(
+        center=(250.0, 100.0), radius_px=70.0, arc_score=1.0,
+        base_angle=0, use_one_sided_interval=True,
+    )
+    room_polygons = [
+        SimpleNamespace(id="top", polygon_px=((50, 50), (450, 50), (450, 95), (50, 95))),
+        SimpleNamespace(id="bottom", polygon_px=((50, 105), (450, 105), (450, 150), (50, 150))),
+    ]
+
+    result = arbitrate_cv_door_arcs([proposal], solid_graph, room_polygons, 1000, 1000)
+
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].start_px == (250.0, 100.0)
+    assert result.confirmed[0].end_px == (320.0, 100.0)
+    assert result.confirmed[0].width_mm == 700.0
+
+
+def test_door_arc_prefers_nearby_wall_with_space_in_swing_direction() -> None:
+    graph_with_short_edge = WallGraph(
+        horizontal_axes=(100.0, 110.0), vertical_axes=(50.0, 450.0),
+        segments=(
+            WallSegment("short", "horizontal", (50.0, 100.0), (250.0, 100.0), 13.0, False),
+            WallSegment("full", "horizontal", (50.0, 110.0), (450.0, 110.0), 13.0, False),
+        ),
+        gaps=(), mm_per_px=10.0, wall_width_px=13.0,
+    )
+    proposal = SimpleNamespace(
+        center=(250.0, 100.0), radius_px=70.0, arc_score=1.0,
+        base_angle=0, use_one_sided_interval=True,
+    )
+    room_polygons = [
+        SimpleNamespace(id="top", polygon_px=((50, 40), (450, 40), (450, 105), (50, 105))),
+        SimpleNamespace(id="bottom", polygon_px=((50, 115), (450, 115), (450, 170), (50, 170))),
+    ]
+
+    result = arbitrate_cv_door_arcs([proposal], graph_with_short_edge, room_polygons, 1000, 1000)
+
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].wall_edge_id == "full"
+    assert result.confirmed[0].start_px == (250.0, 110.0)
+    assert result.confirmed[0].end_px == (320.0, 110.0)
+
+
 def test_strong_arc_tolerates_bootstrap_scale_underestimate() -> None:
     solid_graph = WallGraph(
         horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
