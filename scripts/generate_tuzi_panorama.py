@@ -43,6 +43,9 @@ def main() -> None:
     parser.add_argument("--base-url", default=os.getenv("TUZI_BASE_URL", "https://api.tu-zi.com"))
     parser.add_argument("--prompt-kind", choices=("living", "kitchen"), default="living")
     parser.add_argument("--style")
+    parser.add_argument("--model", default="gpt-image-2")
+    parser.add_argument("--quality", default="2k")
+    parser.add_argument("--size", default="2048x1024")
     args = parser.parse_args()
     args.source = args.source.resolve()
     args.output = args.output.resolve()
@@ -58,11 +61,13 @@ def main() -> None:
         prompt += f"\nStyleContext designStyle={style_context['designStyle']}; visualMode={style_context['visualMode']}; inspirations={', '.join(style_context['inspirations'])}. {style_context['promptSuffix']}"
     prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
     source_hash = hashlib.sha256(source_bytes).hexdigest()
-    idempotency_key = hashlib.sha256(f"fp001:gpt-image-2:{args.output.stem}:{source_hash}:{prompt_hash}".encode()).hexdigest()
+    idempotency_key = hashlib.sha256(
+        f"fp001:{args.model}:{args.quality}:{args.size}:{args.output.stem}:{source_hash}:{prompt_hash}".encode()
+    ).hexdigest()
     headers = {"Authorization": f"Bearer {key}", "Idempotency-Key": idempotency_key}
     data = {
-        "model": "gpt-image-2", "prompt": prompt, "n": "1", "size": "2048x1024",
-        "quality": "2k", "response_format": "url",
+        "model": args.model, "prompt": prompt, "n": "1", "size": args.size,
+        "quality": args.quality, "response_format": "url",
     }
     api_session = requests.Session()
     api_session.mount("https://", HTTPAdapter(max_retries=Retry(
@@ -98,7 +103,7 @@ def main() -> None:
     args.output.write_bytes(output_bytes)
     record = {
         "schemaVersion": "0.1.0", "provider": "tuzi", "endpoint": "/v1/images/edits",
-        "model": "gpt-image-2", "quality": "2k", "requestedSize": "2048x1024",
+        "model": args.model, "quality": args.quality, "requestedSize": args.size,
         "styleContextId": None if style_context is None else style_context["id"],
         "sourceFile": str(args.source.relative_to(ROOT)).replace("\\", "/"), "sourceSha256": source_hash,
         "promptSha256": prompt_hash, "idempotencyKey": idempotency_key,

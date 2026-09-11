@@ -22,6 +22,8 @@ parser.add_argument("--source", type=Path)
 parser.add_argument("--output-base")
 parser.add_argument("--output-dir", type=Path)
 parser.add_argument("--tool", type=Path)
+parser.add_argument("--preserve-source", action="store_true")
+parser.add_argument("--output-size", default="6144x3072")
 args = parser.parse_args()
 SCENE = args.scene
 AI = args.output_dir.resolve() if args.output_dir else ROOT / "datasets/derived/fp-001/panorama" / SCENE / "ai"
@@ -38,16 +40,28 @@ if not TOOL.is_file():
     raise SystemExit("Real-ESRGAN executable not found; set REALESRGAN_TOOL or install tools/realesrgan")
 MODELS = TOOL.parent / "models"
 TILE_DIR = AI / ".realesrgan-tiles"
-OUTPUT = AI / f"{BASE}-6144x3072.jpg"
+try:
+    TARGET_WIDTH, TARGET_HEIGHT = (int(value) for value in args.output_size.lower().split("x", 1))
+except ValueError as error:
+    raise SystemExit("--output-size must look like 8192x4096") from error
+if TARGET_WIDTH != TARGET_HEIGHT * 2:
+    raise SystemExit("--output-size must be a 2:1 panorama")
+OUTPUT = AI / f"{BASE}-{TARGET_WIDTH}x{TARGET_HEIGHT}.jpg"
 PROXY_4K = AI / f"{BASE}-proxy-4096x2048.jpg"
 PROXY_2K = AI / f"{BASE}-proxy-2048x1024.jpg"
 PROXY_1K = AI / f"{BASE}-proxy-1024x512.jpg"
 image = cv2.imread(str(SOURCE), cv2.IMREAD_COLOR)
-if image is None or image.shape[1] != image.shape[0] * 2:
-    raise SystemExit("a valid 2:1 panorama source is required")
-if image.shape[:2] != (1024, 2048):
+if image is None:
+    raise SystemExit("a readable panorama source is required")
+if image.shape[1] != image.shape[0] * 2:
+    if abs(image.shape[1] / image.shape[0] - 2.0) > 0.05:
+        raise SystemExit("a near-2:1 panorama source is required")
+    image = cv2.resize(image, (image.shape[1], image.shape[1] // 2), interpolation=cv2.INTER_LANCZOS4)
+if not args.preserve_source and image.shape[:2] != (1024, 2048):
     image = cv2.resize(image, (2048, 1024), interpolation=cv2.INTER_LANCZOS4)
-pad, model_scale, scale = 64, 4, 3
+pad, model_scale = 64, 4
+working_scale = 2 if image.shape[1] > 2048 else model_scale
+scale = TARGET_WIDTH / image.shape[1]
 padded = np.concatenate((image[:, -pad:], image, image[:, :pad]), axis=1)
 tile_size, minimum_overlap = 512, 96
 
@@ -58,12 +72,12 @@ def tile_starts(length: int) -> list[int]:
 
 
 def tile_weight(index: int, starts: list[int]) -> np.ndarray:
-    weight = np.ones(tile_size * model_scale, np.float32)
+    weight = np.ones(tile_size * working_scale, np.float32)
     if index > 0:
-        overlap = (starts[index - 1] + tile_size - starts[index]) * model_scale
+        overlap = (starts[index - 1] + tile_size - starts[index]) * working_scale
         weight[:overlap] *= np.linspace(0, 1, overlap, dtype=np.float32)
     if index + 1 < len(starts):
-        overlap = (starts[index] + tile_size - starts[index + 1]) * model_scale
+        overlap = (starts[index] + tile_size - starts[index + 1]) * working_scale
         weight[-overlap:] *= np.linspace(1, 0, overlap, dtype=np.float32)
     return weight
 
@@ -71,7 +85,7 @@ def tile_weight(index: int, starts: list[int]) -> np.ndarray:
 shutil.rmtree(TILE_DIR, ignore_errors=True)
 TILE_DIR.mkdir(parents=True)
 x_starts, y_starts = tile_starts(padded.shape[1]), tile_starts(padded.shape[0])
-output_shape = (padded.shape[0] * model_scale, padded.shape[1] * model_scale)
+output_shape = (padded.shape[0] * working_scale, padded.shape[1] * working_scale)
 accumulator = np.zeros((*output_shape, 3), np.float32)
 weight_sum = np.zeros(output_shape, np.float32)
 for y_index, y in enumerate(y_starts):
@@ -86,13 +100,15 @@ for y_index, y in enumerate(y_starts):
         restored = cv2.imread(str(output_tile), cv2.IMREAD_COLOR)
         if restored is None or restored.shape[:2] != (tile_size * model_scale, tile_size * model_scale):
             raise SystemExit(f"unexpected restored tile {output_tile.name}")
+        if working_scale != model_scale:
+            restored = cv2.resize(restored, (tile_size * working_scale, tile_size * working_scale), interpolation=cv2.INTER_AREA)
         weight = np.outer(tile_weight(y_index, y_starts), tile_weight(x_index, x_starts))
-        ys, xs = y * model_scale, x * model_scale
-        accumulator[ys:ys + tile_size * model_scale, xs:xs + tile_size * model_scale] += restored * weight[..., None]
-        weight_sum[ys:ys + tile_size * model_scale, xs:xs + tile_size * model_scale] += weight
+        ys, xs = y * working_scale, x * working_scale
+        accumulator[ys:ys + tile_size * working_scale, xs:xs + tile_size * working_scale] += restored * weight[..., None]
+        weight_sum[ys:ys + tile_size * working_scale, xs:xs + tile_size * working_scale] += weight
 upscaled = np.clip(accumulator / np.maximum(weight_sum[..., None], 1e-6), 0, 255).astype(np.uint8)
-cropped_native = upscaled[:, pad * model_scale:-pad * model_scale]
-cropped = cv2.resize(cropped_native, (image.shape[1] * scale, image.shape[0] * scale), interpolation=cv2.INTER_LANCZOS4)
+cropped_native = upscaled[:, pad * working_scale:-pad * working_scale]
+cropped = cv2.resize(cropped_native, (TARGET_WIDTH, TARGET_HEIGHT), interpolation=cv2.INTER_LANCZOS4)
 final_blend = 24
 for distance in range(final_blend):
     alpha = 0.5 * (1 + np.cos(np.pi * distance / final_blend))
@@ -132,7 +148,7 @@ if args.source:
     }
     (AI / f"{BASE}.upscale.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2), encoding="utf-8")
     shutil.rmtree(TILE_DIR, ignore_errors=True)
-    print(f"Real-ESRGAN 3x -> {cropped.shape[1]}x{cropped.shape[0]}; seam MAE={seam:.4f}")
+    print(f"Real-ESRGAN {scale:.2f}x -> {cropped.shape[1]}x{cropped.shape[0]}; seam MAE={seam:.4f}")
     raise SystemExit(0)
 record = json.loads(record_path.read_text(encoding="utf-8"))
 record["upscale"] = {
