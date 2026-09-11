@@ -16,6 +16,7 @@ from pano_platform.pipeline import (
     _build_room_hotspots, _choose_erp_seam_yaw, _enclosing_room_map, _opening_hint,
     _opening_render_instruction, _publish_preview,
     _render_opening_width, _render_panoramas, _tuzi_image_settings,
+    _wall_cleanliness_proxy,
 )
 
 
@@ -77,6 +78,19 @@ def test_image_25_4k_is_the_default_with_environment_override(monkeypatch) -> No
     assert _tuzi_image_settings() == ("gpt-image-2.5", "4k", "4096x2048")
     monkeypatch.setenv("TUZI_IMAGE_MODEL", "gpt-image-2")
     assert _tuzi_image_settings()[0] == "gpt-image-2"
+
+
+def test_wall_cleanliness_rejects_cloudy_painted_wall() -> None:
+    import cv2
+    import numpy as np
+
+    reference = np.full((256, 512, 3), 220, np.uint8)
+    candidate = reference.copy()
+    for x in range(40, 500, 80):
+        cv2.circle(candidate, (x, 120), 28, (145, 145, 145), -1)
+    result = _wall_cleanliness_proxy(reference, candidate, "livingDining")
+    assert result["status"] == "rejected"
+    assert result["lowFrequencyUnevennessP90"] > result["threshold"]
 
 
 def test_door_hotspots_link_only_two_nearby_rooms() -> None:

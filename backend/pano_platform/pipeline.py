@@ -573,7 +573,7 @@ def _render_panoramas(
                     structural, folder / "ai-erp-source.jpg", room.type,
                     _opening_hint(layout, room), style,
                 )
-                qa = _qa_ai_panorama_structure(structural, candidate)
+                qa = _qa_ai_panorama_structure(structural, candidate, room.type)
                 (folder / "ai-structure-qa.json").write_text(
                     json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
                 )
@@ -750,7 +750,7 @@ def _fallback_structural_erp() -> np.ndarray:
     return image
 
 
-def _qa_ai_panorama_structure(reference: Path, candidate: Path) -> dict[str, Any]:
+def _qa_ai_panorama_structure(reference: Path, candidate: Path, room_type: str | None = None) -> dict[str, Any]:
     """Check coarse ERP topology before promoting an AI panorama.
 
     This is deliberately a proxy gate, not semantic segmentation.  It catches
@@ -822,6 +822,9 @@ def _qa_ai_panorama_structure(reference: Path, candidate: Path) -> dict[str, Any
         reasons.append("STRUCTURE_EDGE_DENSITY_DRIFT")
     if candidate_long_lines > max(24, reference_long_lines * 5):
         reasons.append("STRUCTURE_LONG_LINE_DENSITY_DRIFT")
+    cleanliness = _wall_cleanliness_proxy(reference_image, candidate_image, room_type)
+    if cleanliness["status"] == "rejected":
+        reasons.append("WALL_SURFACE_UNEVEN")
     return {
         "schemaVersion": "0.1.0",
         "method": "low-frequency-wrapped-edge-proxy-v1",
@@ -838,9 +841,44 @@ def _qa_ai_panorama_structure(reference: Path, candidate: Path) -> dict[str, Any
         "candidatePrecisionWithinTolerance": round(candidate_precision, 4),
         "referenceLongLineCount": reference_long_lines,
         "candidateLongLineCount": candidate_long_lines,
+        "wallCleanliness": cleanliness,
         "reasonCodes": reasons or ["STRUCTURE_PROXY_WITHIN_GATE"],
         "semanticIoU": None,
         "semanticF1": None,
+    }
+
+
+def _wall_cleanliness_proxy(reference: np.ndarray, candidate: np.ndarray, room_type: str | None) -> dict[str, Any]:
+    """Reject obvious low-frequency blotches only where painted walls dominate."""
+
+    eligible = room_type in {"living", "livingDining", "bedroom", "study", "other"}
+    if not eligible:
+        return {"status": "skipped", "reason": "ROOM_TYPE_NOT_ELIGIBLE"}
+    reference = cv2.resize(reference, (512, 256), interpolation=cv2.INTER_AREA)
+    candidate = cv2.resize(candidate, (512, 256), interpolation=cv2.INTER_AREA)
+    rows = np.arange(256)[:, None]
+    reference_chroma = reference.max(axis=2) - reference.min(axis=2)
+    candidate_chroma = candidate.max(axis=2) - candidate.min(axis=2)
+    brightness = candidate.mean(axis=2)
+    mask = (
+        (rows >= 64) & (rows < 174)
+        & (reference_chroma < 22) & (candidate_chroma < 60)
+        & (brightness > 85) & (brightness < 245)
+    )
+    mask = cv2.erode(mask.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
+    coverage = float(mask.mean())
+    if coverage < 0.1:
+        return {"status": "skipped", "reason": "INSUFFICIENT_PAINTED_WALL_COVERAGE", "coverage": round(coverage, 4)}
+    gray = cv2.cvtColor(candidate, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    unevenness = np.abs(
+        cv2.GaussianBlur(gray, (0, 0), 3) - cv2.GaussianBlur(gray, (0, 0), 18)
+    )
+    p90 = float(np.percentile(unevenness[mask], 90))
+    return {
+        "status": "rejected" if p90 > 30 else "accepted",
+        "coverage": round(coverage, 4),
+        "lowFrequencyUnevennessP90": round(p90, 2),
+        "threshold": 30.0,
     }
 
 
