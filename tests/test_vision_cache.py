@@ -7,6 +7,8 @@ import time
 import pytest
 
 from pano_platform.vision.cache import CachedVisionResult, VisionJobKey, VisionResultCache
+from pano_platform.vision.contracts import VlmDraft
+from pano_platform.vision.evidence import normalized_draft_hash
 
 
 def make_key(**overrides) -> VisionJobKey:
@@ -97,3 +99,29 @@ def test_cache_evicts_oldest_beyond_capacity() -> None:
     assert cache.get(k1.jobKey) is None
     assert cache.get(k2.jobKey) is not None
     assert cache.get(k3.jobKey) is not None
+
+
+def test_disk_cache_survives_new_instance_and_rejects_corruption(tmp_path) -> None:
+    key = make_key()
+    draft = VlmDraft.model_validate({
+        "rooms": [{
+            "type": "bedroom",
+            "polygon": [[0.1, 0.1], [0.8, 0.1], [0.8, 0.8]],
+        }],
+    })
+    result = CachedVisionResult(
+        jobKey=key.jobKey,
+        normalizedDraftSha256=normalized_draft_hash(draft),
+        rawResponseSha256="r" * 64,
+        evidence={"provider": "tuzi"},
+        createdAt=time.time(),
+        draft=draft,
+    )
+    VisionResultCache(disk_dir=tmp_path).put(result)
+
+    restored = VisionResultCache(disk_dir=tmp_path).get(key.jobKey)
+    assert restored is not None and restored.draft == draft
+
+    (tmp_path / f"{key.jobKey}.json").write_text("{broken", encoding="utf-8")
+    assert VisionResultCache(disk_dir=tmp_path).get(key.jobKey) is None
+    assert not (tmp_path / f"{key.jobKey}.json").exists()

@@ -306,7 +306,7 @@ normalizedDraftSha256
 status/errorCode
 ```
 
-缓存只复用完全相同的任务键；模型、Prompt、Schema或预处理变化必须生成新任务。旧LayoutRevision的视觉结果不得写入新Revision。
+缓存只复用完全相同的任务键；模型、Prompt、Schema或预处理变化必须生成新任务。已通过契约和Hash校验的Draft以原子文件写入`PANO_DATA_ROOT/_vision_cache`，默认保留6小时、最多256项，可跨本机进程和服务重启复用；损坏、过期或Hash不一致的条目自动删除。旧LayoutRevision的视觉结果不得写入新Revision。跨实例in-flight租约仍属于正式分布式任务层，不由本地缓存冒充。
 
 ## 7. 安全与隐私
 

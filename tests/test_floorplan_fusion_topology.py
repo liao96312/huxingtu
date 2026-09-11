@@ -82,3 +82,15 @@ def test_different_room_types_with_large_overlap_need_review() -> None:
     assert not result.closed
     assert len(result.needs_review) == 2
     assert "ROOM_OVERLAP_CONFLICT" in result.reason_codes
+
+
+def test_small_adjacent_room_trims_large_room_without_double_rejection() -> None:
+    bedroom = typed_room(((100, 100), (400, 100), (400, 400), (100, 400)), "r1", "bedroom")
+    bathroom = typed_room(((350, 100), (450, 100), (450, 250), (350, 250)), "r2", "bathroom")
+    result = close_rooms((bedroom, bathroom), graph())
+
+    assert len(result.closed) == 2
+    assert not result.needs_review
+    assert "ROOM_OVERLAP_TRIMMED" in result.reason_codes
+    from shapely.geometry import Polygon
+    assert Polygon(result.closed[0].polygon_px).intersection(Polygon(result.closed[1].polygon_px)).area == 0

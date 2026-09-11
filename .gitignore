@@ -26,6 +26,7 @@ datasets/derived/verify-*/
 datasets/derived/door-window-review/
 datasets/derived/_pipeline_tasks/
 datasets/derived/_shares/
+datasets/derived/_vision_cache/
 
 # third-party CLI binaries (do not commit large executables)
 tools/cloudflared.exe

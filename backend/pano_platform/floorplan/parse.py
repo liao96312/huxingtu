@@ -25,7 +25,7 @@ from ..vision.cache import CachedVisionResult, VisionJobKey, VisionResultCache
 from ..vision.evidence import normalized_draft_hash
 
 
-_VISION_CACHE = VisionResultCache()
+_VISION_CACHE = VisionResultCache(disk_dir=VisionResultCache.default_disk_dir())
 
 
 class VisionMode(StrEnum):

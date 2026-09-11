@@ -86,7 +86,7 @@ def close_rooms(fused_rooms: tuple[FusedRoom, ...], graph: WallGraph) -> RoomsFu
 def _resolve_room_overlaps(
     rooms: list[ClosedRoom], duplicate_ratio: float = 0.85, conflict_ratio: float = 0.35
 ) -> tuple[list[ClosedRoom], list[ClosedRoom], list[str]]:
-    """Suppress same-type duplicates and reject conflicting room overlaps."""
+    """Suppress duplicates, safely trim nested small rooms, reject the rest."""
 
     if len(rooms) < 2:
         return rooms, [], []
@@ -95,6 +95,7 @@ def _resolve_room_overlaps(
     ordered = sorted(rooms, key=lambda room: (-Polygon(room.polygon_px).area, room.id))
     suppressed: set[str] = set()
     conflicts: set[str] = set()
+    trimmed = False
     for index, left in enumerate(ordered):
         if left.id in suppressed:
             continue
@@ -108,7 +109,13 @@ def _resolve_room_overlaps(
             if ratio >= duplicate_ratio and left.type == right.type:
                 suppressed.add(right.id)
             elif ratio >= conflict_ratio:
-                conflicts.update((left.id, right.id))
+                replacement = _trim_large_room_around_nested_small(left, right, left_polygon, right_polygon)
+                if replacement is not None:
+                    left, left_polygon = replacement
+                    ordered[index] = left
+                    trimmed = True
+                else:
+                    conflicts.update((left.id, right.id))
 
     kept = [room for room in ordered if room.id not in suppressed and room.id not in conflicts]
     review = [
@@ -118,9 +125,42 @@ def _resolve_room_overlaps(
     codes = []
     if suppressed:
         codes.append("DUPLICATE_ROOM_SUPPRESSED")
+    if trimmed:
+        codes.append("ROOM_OVERLAP_TRIMMED")
     if conflicts:
         codes.append("ROOM_OVERLAP_CONFLICT")
     return kept, review, codes
+
+
+def _trim_large_room_around_nested_small(left, right, left_polygon, right_polygon):
+    """Keep both rooms only when subtracting a clearly nested minority is safe."""
+
+    from shapely.geometry import Polygon
+
+    large_area = left_polygon.area
+    small_area = right_polygon.area
+    intersection = left_polygon.intersection(right_polygon).area
+    if (
+        left.type == right.type
+        or large_area <= 0
+        or small_area / large_area > 0.4
+        or intersection / small_area < 0.35
+        or intersection / large_area > 0.3
+    ):
+        return None
+    difference = left_polygon.difference(right_polygon)
+    if not isinstance(difference, Polygon) or difference.interiors or not difference.is_valid:
+        return None
+    points = tuple((float(x), float(y)) for x, y in list(difference.exterior.coords)[:-1])
+    if len(points) < 3:
+        return None
+    room = replace(
+        left,
+        polygon_px=points,
+        area_mm2=left.area_mm2 * difference.area / large_area,
+        reason_codes=tuple((*left.reason_codes, "ROOM_OVERLAP_TRIMMED")),
+    )
+    return room, difference
 
 
 def _orthogonalize(

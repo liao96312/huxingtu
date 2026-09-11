@@ -24,8 +24,9 @@ from pano_platform.floorplan.parse import (
     new_trace_id,
     orchestrate,
     _run_vision,
-    _VISION_CACHE,
 )
+from pano_platform.floorplan import parse as parse_module
+from pano_platform.vision.cache import VisionResultCache
 
 
 def _png(width=64, height=40) -> bytes:
@@ -174,7 +175,7 @@ def test_vision_stage_reuses_validated_draft_cache(monkeypatch) -> None:
         "baseUrl": "https://cache-test.invalid", "apiKey": "secret",
         "primaryModel": "test-model", "reviewModel": "test-model",
     })
-    _VISION_CACHE.clear()
+    monkeypatch.setattr(parse_module, "_VISION_CACHE", VisionResultCache())
     first = _run_vision(_png(), config, "floorplan_parse_v1", VisionMode.ASSISTED)
     second = _run_vision(_png(), config, "floorplan_parse_v1", VisionMode.ASSISTED)
     assert calls == 1
@@ -218,7 +219,7 @@ def test_vision_stage_falls_back_to_review_model(monkeypatch) -> None:
         "baseUrl": "https://fallback-test.invalid", "apiKey": "secret",
         "primaryModel": "primary", "reviewModel": "fallback",
     })
-    _VISION_CACHE.clear()
+    monkeypatch.setattr(parse_module, "_VISION_CACHE", VisionResultCache())
 
     stage = _run_vision(_png(), config, "floorplan_parse_v1", VisionMode.ASSISTED)
 
