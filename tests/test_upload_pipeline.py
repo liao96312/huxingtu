@@ -14,7 +14,8 @@ from pano_platform.floorplan.wall_graph import WallGraph, WallSegment
 from pano_platform.contracts import DerivedRoomSet, LayoutRevision, PanoManifest, SceneGeometry, canonical_sha256
 from pano_platform.pipeline import (
     _build_room_hotspots, _choose_erp_seam_yaw, _enclosing_room_map, _opening_hint,
-    _opening_render_instruction, _publish_preview,
+    _opening_render_instruction, _publish_preview, _render_opening_height,
+    _evaluate_opening_semantics, _opening_semantic_retry_instruction,
     _render_opening_width, _render_panoramas, _tuzi_image_settings,
     _wall_cleanliness_proxy,
 )
@@ -125,13 +126,28 @@ def test_door_hotspots_link_only_two_nearby_rooms() -> None:
     }
     room_payload["contentHash"] = canonical_sha256(room_payload)
     rooms = DerivedRoomSet.model_validate(room_payload)
-    assert _render_opening_width(layout.openings[0]) == 800
+    assert _render_opening_width(layout.openings[0]) == 900
     assert _render_opening_width(layout.openings[0].model_copy(update={"width": 1371})) == 900
-    assert "door 800mm wide as one closed 750-900mm hinged leaf" in _opening_hint(layout, rooms.rooms[0])
+    assert _render_opening_height(layout.openings[0].model_copy(update={"height": 2600})) == 2100
+    assert "door opening exactly 900mm wide and 2100mm high" in _opening_hint(layout, rooms.rooms[0])
     assert abs(_choose_erp_seam_yaw(layout, {node.id: node for node in layout.nodes}, 500, 500) - 3.14159) < 0.01
     hotspots = _build_room_hotspots(layout, rooms, {"a": "a-main", "b": "b-main"})
     assert hotspots["a"][0]["targetSceneId"] == "b-main"
     assert hotspots["b"][0]["targetSceneId"] == "a-main"
+
+
+def test_opening_semantic_qa_rejects_extra_door() -> None:
+    result = _evaluate_opening_semantics({
+        "doorCount": 3,
+        "windowCount": 2,
+        "narrowDoorCount": 0,
+        "doorHeadAlignment": "aligned",
+    }, {"doorCount": 2, "windowCount": 2})
+    assert result["status"] == "rejected"
+    assert result["reasonCodes"] == ["AI_DOOR_COUNT_MISMATCH"]
+    retry = _opening_semantic_retry_instruction(result)
+    assert "rendered 3 doors and 2 windows" in retry
+    assert "exactly 2 doors and 2 windows" in retry
 
 
 def test_enclosing_shell_is_identified_without_deleting_rooms() -> None:
@@ -310,6 +326,7 @@ def test_ai_renders_every_room(tmp_path, monkeypatch) -> None:
         return paths
 
     monkeypatch.setattr(pipeline, "_generate_ai_panorama", fake_ai)
+    monkeypatch.setattr(pipeline, "_qa_ai_opening_semantics", lambda candidate, expected: {"status": "accepted", "reasonCodes": []})
     monkeypatch.setattr(pipeline, "_upscale_with_realesrgan", fake_superres)
     manifest, ai_generated_count, failed_rooms, superres_count, superres_failed = _render_panoramas(
         "upload-ai", layout, rooms, generate_ai=True, style_id="cream"
@@ -321,6 +338,57 @@ def test_ai_renders_every_room(tmp_path, monkeypatch) -> None:
     assert all(scene.assets.original.url.endswith("ai-erp-6144x3072.jpg") for scene in manifest.scenes)
     assert styles_seen == ["cream", "cream"]
     assert "奶油风" in manifest.share.title
+
+
+def test_opening_mismatch_gets_one_corrective_regeneration(tmp_path, monkeypatch) -> None:
+    import shutil
+    from pano_platform import pipeline
+
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
+    layout, rooms, _ = _publish_preview("upload-retry", b"fixture", _preview_run())
+    rooms = rooms.model_copy(update={"rooms": rooms.rooms[:1]})
+    hints = []
+    semantic_results = []
+    semantic_calls = 0
+
+    def fake_ai(source, output, room_type, opening_hint="", style_context=None):
+        hints.append(opening_hint)
+        shutil.copy2(source, output)
+        return output
+
+    def fake_semantic(candidate, expected):
+        nonlocal semantic_calls
+        semantic_calls += 1
+        observed = {
+            "doorCount": 3 if semantic_calls == 1 else expected["doorCount"],
+            "windowCount": expected["windowCount"],
+            "narrowDoorCount": 0,
+            "doorHeadAlignment": "aligned",
+        }
+        result = _evaluate_opening_semantics(observed, expected)
+        semantic_results.append(result)
+        return result
+
+    def fake_superres(source, folder):
+        paths = {key: folder / name for key, name in {
+            "original": "ai-erp-8192x4096.jpg", "proxy4k": "ai-erp-proxy-4096x2048.jpg",
+            "proxy2k": "ai-erp-proxy-2048x1024.jpg", "proxy1k": "ai-erp-proxy-1024x512.jpg",
+        }.items()}
+        for path in paths.values():
+            shutil.copy2(source, path)
+        return paths
+
+    monkeypatch.setattr(pipeline, "_generate_ai_panorama", fake_ai)
+    monkeypatch.setattr(pipeline, "_qa_ai_panorama_structure", lambda *args: {"status": "accepted", "reasonCodes": []})
+    monkeypatch.setattr(pipeline, "_qa_ai_opening_semantics", fake_semantic)
+    monkeypatch.setattr(pipeline, "_opening_semantic_retry_instruction", lambda qa: " previous attempt was rejected")
+    monkeypatch.setattr(pipeline, "_upscale_with_realesrgan", fake_superres)
+
+    _, count, failed, superres_count, _ = _render_panoramas("upload-retry", layout, rooms, generate_ai=True)
+    assert semantic_calls == 2, semantic_results
+    assert len(hints) == 2
+    assert "previous attempt was rejected" in hints[1]
+    assert count == superres_count == 1 and failed == []
 
 
 def test_one_ai_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> None:
@@ -345,6 +413,7 @@ def test_one_ai_failure_does_not_block_other_rooms(tmp_path, monkeypatch) -> Non
         return paths
 
     monkeypatch.setattr(pipeline, "_generate_ai_panorama", partial_ai)
+    monkeypatch.setattr(pipeline, "_qa_ai_opening_semantics", lambda candidate, expected: {"status": "accepted", "reasonCodes": []})
     monkeypatch.setattr(pipeline, "_upscale_with_realesrgan", fake_superres)
     manifest, count, failed, superres_count, superres_failed = _render_panoramas("upload-partial", layout, rooms, generate_ai=True)
     assert count == 1

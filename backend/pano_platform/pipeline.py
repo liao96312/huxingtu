@@ -39,8 +39,8 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_ROOT = ROOT / "datasets" / "derived"
 ERP_WIDTH = 2048
 WALL_HEIGHT_MM = 2800.0
-MIN_RENDER_DOOR_WIDTH_MM = 800.0
-MAX_RENDER_DOOR_WIDTH_MM = 900.0
+RENDER_DOOR_WIDTH_MM = 900.0
+RENDER_DOOR_HEIGHT_MM = 2100.0
 MIN_RENDER_WINDOW_WIDTH_MM = 900.0
 STYLE_CATALOG_PATH = ROOT / "datasets" / "style-catalog.v1.json"
 
@@ -569,11 +569,27 @@ def _render_panoramas(
         ai_ready = False
         if generate_ai:
             try:
-                candidate = _generate_ai_panorama(
-                    structural, folder / "ai-erp-source.jpg", room.type,
-                    _opening_hint(layout, room), style,
-                )
-                qa = _qa_ai_panorama_structure(structural, candidate, room.type)
+                opening_hint = _opening_hint(layout, room)
+                expected_openings = _expected_room_opening_counts(layout, room)
+                for attempt in range(2):
+                    candidate = _generate_ai_panorama(
+                        structural,
+                        folder / ("ai-erp-source.jpg" if attempt == 0 else "ai-erp-source-retry.jpg"),
+                        room.type, opening_hint, style,
+                    )
+                    qa = _qa_ai_panorama_structure(structural, candidate, room.type)
+                    if qa["status"] == "accepted":
+                        semantic_qa = _qa_ai_opening_semantics(candidate, expected_openings)
+                        qa["openingSemantics"] = semantic_qa
+                        if semantic_qa["status"] != "accepted":
+                            qa["status"] = "rejected"
+                            qa["reasonCodes"] = list(dict.fromkeys((
+                                *qa["reasonCodes"], *semantic_qa["reasonCodes"],
+                            )))
+                        if semantic_qa["status"] == "rejected" and attempt == 0:
+                            opening_hint += _opening_semantic_retry_instruction(semantic_qa)
+                            continue
+                    break
                 (folder / "ai-structure-qa.json").write_text(
                     json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8"
                 )
@@ -929,13 +945,20 @@ def _resolve_realesrgan_tool() -> Path:
 def _render_opening_width(opening) -> float:
     if opening.type.value == "window":
         return max(opening.width, MIN_RENDER_WINDOW_WIDTH_MM)
-    return min(MAX_RENDER_DOOR_WIDTH_MM, max(opening.width, MIN_RENDER_DOOR_WIDTH_MM))
+    return RENDER_DOOR_WIDTH_MM
 
 
-def _opening_render_instruction(kind: str, width: int) -> str:
+def _render_opening_height(opening) -> float:
+    return opening.height if opening.type.value == "window" else RENDER_DOOR_HEIGHT_MM
+
+
+def _opening_render_instruction(kind: str, width: int, height: int) -> str:
     if kind == "window":
         return f"window {width}mm wide with frame and glazing"
-    return f"door {width}mm wide as one closed 750-900mm hinged leaf fitted inside its frame"
+    return (
+        f"door opening exactly {width}mm wide and {height}mm high with one closed 820-850mm hinged leaf; "
+        "use the same frame thickness and head height as every other door"
+    )
 
 
 def _choose_erp_seam_yaw(layout: LayoutRevision, nodes: dict, cx: float, cy: float) -> float:
@@ -1022,7 +1045,7 @@ def render_structural_erp(layout: LayoutRevision, room: dict, width: int = ERP_W
                     parent_start.y + parent_uy * center_distance,
                     parent_ux, parent_uy,
                     _render_opening_width(opening),
-                    opening.sill or 0.0, opening.height,
+                    opening.sill or 0.0, _render_opening_height(opening),
                 ))
         render_openings_by_edge[edge.id] = apertures
 
@@ -1095,6 +1118,9 @@ def _generate_ai_panorama(
         f"{opening_hint} Do not add or remove any architectural opening. Every listed door must be a complete "
         "residential door assembly with a properly sized frame, casing, door leaf and visible door handle. Keep all "
         "door leaves closed within their frames; no open leaf may project into the room or toward the camera. "
+        "Every ordinary door opening must be 900mm wide and exactly 2100mm high from the same finished-floor datum. "
+        "All door heads must align, and all doors must share identical frame thickness, casing width and leaf proportions. "
+        "Never turn a door into a narrow decorative panel, cabinet front, half-height door or oversized portal. "
         "Every listed window must have a complete "
         "frame and glazing, never an empty wall slit. Do not invent extra room doors, hallway doors, balcony doors, "
         "windows, wall cutouts, closets, wardrobes, cabinet doors or cupboard doors. If an opening is not specified, "
@@ -1187,8 +1213,131 @@ def _tuzi_image_timeout() -> tuple[int, int]:
     return (20, read_timeout)
 
 
+def _qa_ai_opening_semantics(candidate: Path, expected: dict[str, int]) -> dict[str, Any]:
+    """Use the configured review VLM to fail closed on visible opening drift."""
+
+    import requests
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+    from .vision.provider import extract_output_text, to_data_uri
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "doorCount": {"type": "integer", "minimum": 0, "maximum": 16},
+            "windowCount": {"type": "integer", "minimum": 0, "maximum": 16},
+            "narrowDoorCount": {"type": "integer", "minimum": 0, "maximum": 16},
+            "doorHeadAlignment": {"type": "string", "enum": ["aligned", "misaligned", "uncertain"]},
+        },
+        "required": ["doorCount", "windowCount", "narrowDoorCount", "doorHeadAlignment"],
+        "additionalProperties": False,
+    }
+    prompt = (
+        "Inspect this complete 2:1 equirectangular room panorama. Count every distinct visible architectural door "
+        "and window exactly once, remembering the left and right edges touch. A narrow door is visibly much narrower "
+        "than an ordinary residential hinged door. Judge whether the top edges of all door frames share a consistent "
+        "physical height after allowing for panorama perspective. Return only the schema JSON."
+    )
+    session = _build_tuzi_image_session(requests, HTTPAdapter, Retry)
+    try:
+        key = os.environ.get("TUZI_API_KEY", "").strip()
+        model = os.environ.get("TUZI_VISION_REVIEW_MODEL", "").strip()
+        if not key or not model:
+            raise ValueError("semantic QA configuration missing")
+        response = session.post(
+            f"{os.environ.get('TUZI_BASE_URL', 'https://api.tu-zi.com').rstrip('/')}/v1/chat/completions",
+            headers={"Authorization": f"Bearer {key}"},
+            json={
+                "model": model,
+                "messages": [{"role": "user", "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": to_data_uri(candidate.read_bytes())}},
+                ]}],
+                "response_format": {"type": "json_schema", "json_schema": {
+                    "name": "room_opening_qa_v1", "strict": True, "schema": schema,
+                }},
+                "max_tokens": 256,
+            },
+            timeout=_tuzi_image_timeout(),
+        )
+        response.raise_for_status()
+        text = extract_output_text(response.json())
+        if text is None:
+            raise ValueError("semantic QA response missing")
+        return _evaluate_opening_semantics(json.loads(text), expected, model)
+    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError, requests.RequestException):
+        return {"status": "unavailable", "expected": expected, "reasonCodes": ["OPENING_SEMANTIC_QA_UNAVAILABLE"]}
+    finally:
+        session.close()
+
+
+def _evaluate_opening_semantics(observed: dict, expected: dict[str, int], model: str = "test") -> dict[str, Any]:
+    required = {"doorCount", "windowCount", "narrowDoorCount", "doorHeadAlignment"}
+    if set(observed) != required or any(
+        isinstance(observed[key], bool) or not isinstance(observed[key], int) or not 0 <= observed[key] <= 16
+        for key in ("doorCount", "windowCount", "narrowDoorCount")
+    ) or observed["doorHeadAlignment"] not in {"aligned", "misaligned", "uncertain"}:
+        raise ValueError("invalid opening semantic QA payload")
+    reasons = []
+    if observed["doorCount"] != expected["doorCount"]:
+        reasons.append("AI_DOOR_COUNT_MISMATCH")
+    if observed["windowCount"] != expected["windowCount"]:
+        reasons.append("AI_WINDOW_COUNT_MISMATCH")
+    if observed["narrowDoorCount"]:
+        reasons.append("AI_NARROW_DOOR_RENDERED")
+    if observed["doorCount"] > 1 and observed["doorHeadAlignment"] != "aligned":
+        reasons.append("AI_DOOR_HEADS_MISALIGNED")
+    return {
+        "status": "rejected" if reasons else "accepted",
+        "model": model,
+        "expected": expected,
+        "observed": observed,
+        "reasonCodes": reasons or ["AI_OPENINGS_MATCH_EXPECTED"],
+    }
+
+
+def _opening_semantic_retry_instruction(semantic_qa: dict) -> str:
+    expected = semantic_qa["expected"]
+    observed = semantic_qa["observed"]
+    return (
+        " The previous attempt was rejected by visual QA: it rendered "
+        f"{observed['doorCount']} doors and {observed['windowCount']} windows, but the structural reference requires "
+        f"exactly {expected['doorCount']} doors and {expected['windowCount']} windows. Regenerate from the original "
+        "structural reference. Remove every extra or narrow door-shaped panel, keep all unspecified areas as continuous "
+        "blank painted wall, and align every door head. This correction is mandatory."
+    )
+
+
+def _expected_room_opening_counts(layout: LayoutRevision, room) -> dict[str, int]:
+    specs = _room_opening_specs(layout, room)
+    return {
+        "doorCount": sum(item[0] == "door" for item in specs),
+        "windowCount": sum(item[0] == "window" for item in specs),
+    }
+
+
 def _opening_hint(layout: LayoutRevision, room) -> str:
     """Describe only the allowed architectural openings for this room."""
+
+    allowed = _room_opening_specs(layout, room)
+    if not allowed:
+        return "Architectural openings allowed in this room: exactly 0 (all walls must remain solid)."
+    counts = ", ".join(
+        f"{kind}×{sum(item[0] == kind for item in allowed)}"
+        for kind in sorted({item[0] for item in allowed})
+    )
+    dimensions = "; ".join(
+        _opening_render_instruction(kind, opening_width, opening_height)
+        for kind, opening_width, opening_height in allowed
+    )
+    return (
+        f"Architectural openings allowed in this room: exactly {len(allowed)} total ({counts}); "
+        f"required clear widths: {dimensions}; no others."
+    )
+
+
+def _room_opening_specs(layout: LayoutRevision, room) -> list[tuple[str, int, int]]:
+    """Return the rendering-only opening whitelist for one room."""
 
     from shapely.geometry import Point
 
@@ -1209,18 +1358,12 @@ def _opening_hint(layout: LayoutRevision, room) -> str:
             start.y + uy * (opening.offset + opening.width / 2) / length,
         )
         if polygon.boundary.distance(midpoint) <= max(180.0, opening.width * 0.35):
-            allowed.append((opening.type.value, round(_render_opening_width(opening))))
-    if not allowed:
-        return "Architectural openings allowed in this room: exactly 0 (all walls must remain solid)."
-    counts = ", ".join(
-        f"{kind}×{sum(item[0] == kind for item in allowed)}"
-        for kind in sorted({item[0] for item in allowed})
-    )
-    dimensions = "; ".join(_opening_render_instruction(kind, opening_width) for kind, opening_width in allowed)
-    return (
-        f"Architectural openings allowed in this room: exactly {len(allowed)} total ({counts}); "
-        f"required clear widths: {dimensions}; no others."
-    )
+            allowed.append((
+                opening.type.value,
+                round(_render_opening_width(opening)),
+                round(_render_opening_height(opening)),
+            ))
+    return allowed
 
 
 def load_preview_scene_geometry(project_id: str) -> SceneGeometry:
