@@ -139,7 +139,7 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
             ) if exterior[0] != exterior[1] else WINDOW_WIDTH_MIN_MM
             if width_mm is None or not bootstrap_minimum_width <= width_mm <= WINDOW_WIDTH_MAX_MM:
                 reasons.append("CV_WINDOW_WALL_LINES_WIDTH_OUT_OF_PROFILE")
-            if set(side_rooms[0]) & set(side_rooms[1]) and exterior[0] != exterior[1]:
+            if side_rooms[0] and side_rooms[1] and exterior[0] != exterior[1]:
                 side_rooms = (
                     () if exterior[0] else side_rooms[0],
                     () if exterior[1] else side_rooms[1],

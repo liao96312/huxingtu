@@ -397,6 +397,29 @@ def test_exterior_double_lines_allow_bootstrap_scale_tolerance(monkeypatch) -> N
     assert "CV_WINDOW_BOOTSTRAP_SCALE_TOLERANCE" in result.confirmed[0].reason_codes
 
 
+def test_pixel_exterior_overrides_two_different_coarse_room_ids(monkeypatch) -> None:
+    from pano_platform.floorplan import fusion_openings
+
+    solid_graph = WallGraph(
+        horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
+        segments=(WallSegment("solid", "horizontal", (50.0, 100.0), (450.0, 100.0), 13.0, False),),
+        gaps=(), mm_per_px=10.0, wall_width_px=13.0,
+    )
+    ink = np.zeros((200, 500), np.uint8)
+    ink[92, 200:301] = 1
+    ink[108, 200:301] = 1
+    coarse_rooms = [
+        SimpleNamespace(id="outside-shell", polygon_px=((50, 20), (450, 20), (450, 95), (50, 95))),
+        SimpleNamespace(id="inside", polygon_px=((50, 105), (450, 105), (450, 180), (50, 180))),
+    ]
+    monkeypatch.setattr(fusion_openings, "_pixel_exterior_sides", lambda *args: (False, True))
+
+    result = arbitrate_cv_windows(solid_graph, coarse_rooms, ink)
+
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].side_room_ids == (("inside",), ())
+
+
 def test_window_is_not_duplicated_across_gap_and_wall_paths() -> None:
     g = graph()
     spanning = WallSegment("solid", "horizontal", (50.0, 100.0), (450.0, 100.0), 13.0, False)
