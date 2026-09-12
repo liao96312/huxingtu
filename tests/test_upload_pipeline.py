@@ -229,7 +229,8 @@ def test_connected_window_panes_survive_into_automatic_pipeline(tmp_path, monkey
         generate_ai=False,
     )
 
-    assert result["automaticCvWindowCount"] == 1
+    # Full-axis pane scanning recovers the second visible top-right balcony window.
+    assert result["automaticCvWindowCount"] == 2
 
 
 def test_weak_recognition_still_publishes_envelope_preview(tmp_path, monkeypatch) -> None:

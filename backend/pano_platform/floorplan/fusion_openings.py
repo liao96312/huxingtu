@@ -15,7 +15,7 @@ candidate set rather than the ``LayoutRevision``. Nothing is published silently.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from math import hypot
 
 from .fusion_evidence import FusionEvidence
@@ -68,6 +68,7 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
                 room_polygons.append((getattr(room, "id", "room"), Polygon(polygon)))
     except Exception:
         room_polygons = []
+    exterior_labels, exterior_ids = _exterior_components(annotation_mask)
 
     for index, segment in enumerate(item for item in graph.segments if item.virtual):
         if not _has_window_evidence(annotation_mask, segment):
@@ -102,10 +103,22 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
 
     wall_candidates = []
     wall_candidate_index = 0
+    axis_groups = {}
     for segment in (item for item in graph.segments if not item.virtual):
-        for start, end in _window_intervals_on_wall(annotation_mask, segment, graph):
+        fixed = segment.start[1] if segment.axis == "horizontal" else segment.start[0]
+        axis_groups.setdefault((segment.axis, round(fixed, 3)), []).append(segment)
+    for (axis, fixed), group in axis_groups.items():
+        height, width = annotation_mask.shape[:2] if annotation_mask is not None else (0, 0)
+        representative = max(group, key=lambda item: hypot(item.end[0] - item.start[0], item.end[1] - item.start[1]))
+        scan_segment = replace(
+            representative,
+            start=(0.0, fixed) if axis == "horizontal" else (fixed, 0.0),
+            end=(float(width - 1), fixed) if axis == "horizontal" else (fixed, float(height - 1)),
+        )
+        for start, end in _window_intervals_on_wall(annotation_mask, scan_segment, graph):
             identifier = f"cv_window_wall_candidate_{wall_candidate_index:03d}"
             wall_candidate_index += 1
+            segment = max(group, key=lambda item: _interval_overlap_length(start, end, item.start, item.end))
             reasons = []
             if any(
                 _point_segment_distance(tuple(arc.center), start, end) <= float(arc.radius_px)
@@ -120,6 +133,14 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
                 start, end, segment, room_polygons, graph.wall_width_px,
                 sample_offset_factor=3.0,
             )
+            exterior = _pixel_exterior_sides(
+                exterior_labels, exterior_ids, start, end, graph.wall_width_px
+            )
+            if set(side_rooms[0]) & set(side_rooms[1]) and exterior[0] != exterior[1]:
+                side_rooms = (
+                    () if exterior[0] else side_rooms[0],
+                    () if exterior[1] else side_rooms[1],
+                )
             if not side_rooms[0] and not side_rooms[1]:
                 reasons.append("CV_WINDOW_WALL_LINES_NO_ADJACENT_ROOM")
             elif set(side_rooms[0]) & set(side_rooms[1]):
@@ -166,6 +187,42 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
         confirmed=tuple(confirmed), candidates=(), rejected=tuple(rejected),
         reason_codes=tuple(dict.fromkeys(reason_codes)),
     )
+
+
+def _interval_overlap_length(a1, a2, b1, b2) -> float:
+    axis = 0 if abs(a2[0] - a1[0]) >= abs(a2[1] - a1[1]) else 1
+    left, right = sorted((a1[axis], a2[axis])), sorted((b1[axis], b2[axis]))
+    return max(0.0, min(left[1], right[1]) - max(left[0], right[0]))
+
+
+def _exterior_components(mask):
+    if mask is None:
+        return None, set()
+    import cv2
+    import numpy as np
+
+    barrier = cv2.dilate((mask > 0).astype(np.uint8), np.ones((3, 3), np.uint8))
+    _, labels = cv2.connectedComponents((barrier == 0).astype(np.uint8), connectivity=4)
+    exterior = set(labels[0, :]) | set(labels[-1, :]) | set(labels[:, 0]) | set(labels[:, -1])
+    exterior.discard(0)
+    return labels, exterior
+
+
+def _pixel_exterior_sides(labels, exterior_ids, start, end, wall_width_px):
+    if labels is None:
+        return False, False
+    length = hypot(end[0] - start[0], end[1] - start[1])
+    if length <= 0:
+        return False, False
+    midpoint = ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2)
+    normal = (-(end[1] - start[1]) / length, (end[0] - start[0]) / length)
+    offset = max(8.0, wall_width_px * 3.0)
+    result = []
+    for sign in (1, -1):
+        x = min(labels.shape[1] - 1, max(0, round(midpoint[0] + normal[0] * offset * sign)))
+        y = min(labels.shape[0] - 1, max(0, round(midpoint[1] + normal[1] * offset * sign)))
+        result.append(int(labels[y, x]) in exterior_ids)
+    return tuple(result)
 
 
 def _window_intervals_on_wall(mask, segment, graph: WallGraph):

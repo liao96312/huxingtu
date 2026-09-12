@@ -14,6 +14,7 @@ import os
 import subprocess
 import sys
 from collections.abc import Callable
+from dataclasses import replace
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -336,6 +337,7 @@ def _publish_preview(
             nodes.append({"id": identifier, "x": key[0] * mm_per_px, "y": key[1] * mm_per_px})
         return node_ids[key]
 
+    layout_segments = _extend_window_carriers(graph.segments, confirmed_openings)
     edges = [
         {
             "id": segment.id,
@@ -345,13 +347,13 @@ def _publish_preview(
             "height": WALL_HEIGHT_MM,
             "confidence": 0.5,
         }
-        for segment in graph.segments
+        for segment in layout_segments
         if segment.start != segment.end
     ]
     if len(nodes) < 3 or len(edges) < 3:
         raise PipelineNotReady("有效墙段少于3条，不能构建3D场景")
 
-    segments = {segment.id: segment for segment in graph.segments}
+    segments = {segment.id: segment for segment in layout_segments}
     openings = []
     for item in confirmed_openings:
         segment = segments.get(item.wall_edge_id)
@@ -462,6 +464,25 @@ def _publish_preview(
     _write_model(folder / "rooms.preview-v1.json", rooms)
     _write_model(folder / "scene-geometry.preview-v1.json", scene)
     return layout, rooms, scene
+
+
+def _extend_window_carriers(segments, openings):
+    """Extend only a confirmed window's chosen collinear edge to hold its full span."""
+
+    by_id = {segment.id: segment for segment in segments}
+    for opening in openings:
+        if opening.type != "window" or opening.wall_edge_id not in by_id:
+            continue
+        segment = by_id[opening.wall_edge_id]
+        if segment.axis == "horizontal":
+            low = min(segment.start[0], segment.end[0], opening.start_px[0], opening.end_px[0])
+            high = max(segment.start[0], segment.end[0], opening.start_px[0], opening.end_px[0])
+            by_id[segment.id] = replace(segment, start=(low, segment.start[1]), end=(high, segment.start[1]))
+        else:
+            low = min(segment.start[1], segment.end[1], opening.start_px[1], opening.end_px[1])
+            high = max(segment.start[1], segment.end[1], opening.start_px[1], opening.end_px[1])
+            by_id[segment.id] = replace(segment, start=(segment.start[0], low), end=(segment.start[0], high))
+    return tuple(by_id[segment.id] for segment in segments)
 
 
 def _estimate_preview_scale(width: int, height: int) -> float:

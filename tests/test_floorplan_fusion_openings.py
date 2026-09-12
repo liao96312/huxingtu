@@ -315,6 +315,27 @@ def test_parallel_panes_can_cut_an_existing_exterior_wall() -> None:
     assert "CV_WINDOW_WALL_LINES_AUTOMATIC" in result.confirmed[0].reason_codes
 
 
+def test_full_axis_panes_are_not_truncated_by_short_carrier_edge() -> None:
+    short_graph = WallGraph(
+        horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
+        segments=(WallSegment("short", "horizontal", (250.0, 100.0), (300.0, 100.0), 13.0, False),),
+        gaps=(), mm_per_px=10.0, wall_width_px=13.0,
+    )
+    ink = np.zeros((200, 500), np.uint8)
+    ink[92, 200:301] = 1
+    ink[108, 200:301] = 1
+    room_above = SimpleNamespace(
+        id="top", polygon_px=((150, 20), (350, 20), (350, 70), (150, 70))
+    )
+
+    result = arbitrate_cv_windows(short_graph, [room_above], ink)
+
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].wall_edge_id == "short"
+    assert result.confirmed[0].start_px == (200, 100.0)
+    assert result.confirmed[0].end_px == (300, 100.0)
+
+
 def test_parallel_panes_overlapping_a_door_arc_are_not_a_window() -> None:
     solid_graph = WallGraph(
         horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
