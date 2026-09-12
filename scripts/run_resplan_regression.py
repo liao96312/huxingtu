@@ -7,6 +7,7 @@ are synthetic rasters generated from vector truth, not customer accuracy proof.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import os
 import sys
@@ -125,6 +126,12 @@ def main() -> int:
             [item for item in predicted_opening_geometry if item["type"] == "window"],
             [item for item in truth["openings"] if item["type"] == "window"],
         )
+        rejected_openings = json.loads(
+            (args.artifacts / sample_id / "automatic-cv-openings.json").read_text(encoding="utf-8")
+        )["rejected"]
+        rejection_reasons = Counter(
+            reason for opening in rejected_openings for reason in opening["reasonCodes"]
+        )
         samples.append({
             "sampleId": sample_id,
             "pipelineStatus": result.get("pipelineStatus"),
@@ -145,6 +152,7 @@ def main() -> int:
             "openingMetrics": opening_score,
             "doorMetrics": door_score,
             "windowMetrics": window_score,
+            "openingRejectionReasons": dict(sorted(rejection_reasons.items())),
         })
 
     totals = {
@@ -162,6 +170,10 @@ def main() -> int:
             sum(item[name]["falseNegative"] for item in samples),
         )
     metrics["roomMeanIoU"] = round(sum(item["roomMeanIoU"] for item in samples) / len(samples), 4) if samples else 0.0
+    rejection_reasons = Counter()
+    for item in samples:
+        rejection_reasons.update(item["openingRejectionReasons"])
+    metrics["openingRejectionReasons"] = dict(sorted(rejection_reasons.items()))
     report = {
         "dataset": manifest["dataset"],
         "sourceVersion": manifest["sourceVersion"],

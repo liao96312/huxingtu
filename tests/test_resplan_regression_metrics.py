@@ -1,3 +1,5 @@
+from collections import Counter
+
 from scripts.run_resplan_regression import opening_metrics
 
 
@@ -19,3 +21,10 @@ def test_opening_metrics_match_by_type_endpoints_and_sample_scope() -> None:
         "truePositive": 1, "falsePositive": 1, "falseNegative": 1,
         "precision": 0.5, "recall": 0.5, "f1": 0.5,
     }
+
+
+def test_rejection_reason_counters_add_without_losing_categories() -> None:
+    total = Counter()
+    total.update({"SHORT_WINDOW_FRAGMENT": 2, "NO_ROOM": 1})
+    total.update({"SHORT_WINDOW_FRAGMENT": 3})
+    assert dict(sorted(total.items())) == {"NO_ROOM": 1, "SHORT_WINDOW_FRAGMENT": 5}

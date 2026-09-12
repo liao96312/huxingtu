@@ -101,22 +101,37 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
             ))
 
     wall_candidates = []
+    wall_candidate_index = 0
     for segment in (item for item in graph.segments if not item.virtual):
         for start, end in _window_intervals_on_wall(annotation_mask, segment, graph):
+            identifier = f"cv_window_wall_candidate_{wall_candidate_index:03d}"
+            wall_candidate_index += 1
+            reasons = []
             if any(
                 _point_segment_distance(tuple(arc.center), start, end) <= float(arc.radius_px)
                 for arc in door_arcs
             ):
-                continue
+                reasons.append("CV_WINDOW_WALL_LINES_DOOR_ARC_OVERLAP")
             width_px = hypot(end[0] - start[0], end[1] - start[1])
             width_mm = width_px * graph.mm_per_px if graph.mm_per_px > 0 else None
             if width_mm is None or not WINDOW_WIDTH_MIN_MM <= width_mm <= WINDOW_WIDTH_MAX_MM:
-                continue
+                reasons.append("CV_WINDOW_WALL_LINES_WIDTH_OUT_OF_PROFILE")
             side_rooms = _room_sides_for_segment(
                 start, end, segment, room_polygons, graph.wall_width_px,
                 sample_offset_factor=3.0,
             )
-            if bool(side_rooms[0]) == bool(side_rooms[1]):
+            if not side_rooms[0] and not side_rooms[1]:
+                reasons.append("CV_WINDOW_WALL_LINES_NO_ADJACENT_ROOM")
+            elif set(side_rooms[0]) & set(side_rooms[1]):
+                reasons.append("CV_WINDOW_WALL_LINES_SAME_ROOM_BOTH_SIDES")
+            elif side_rooms[0] and side_rooms[1]:
+                reasons.append("CV_WINDOW_WALL_LINES_BETWEEN_INTERIOR_ROOMS")
+            if reasons:
+                rejected.append(FusedOpening(
+                    identifier, "window", segment.id, start, end,
+                    width_mm, "rejected", tuple(reasons), side_rooms,
+                ))
+                reason_codes.extend(reasons)
                 continue
             wall_candidates.append((segment, start, end, width_mm, side_rooms))
 
