@@ -127,8 +127,6 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
                 reasons.append("CV_WINDOW_WALL_LINES_DOOR_ARC_OVERLAP")
             width_px = hypot(end[0] - start[0], end[1] - start[1])
             width_mm = width_px * graph.mm_per_px if graph.mm_per_px > 0 else None
-            if width_mm is None or not WINDOW_WIDTH_MIN_MM <= width_mm <= WINDOW_WIDTH_MAX_MM:
-                reasons.append("CV_WINDOW_WALL_LINES_WIDTH_OUT_OF_PROFILE")
             side_rooms = _room_sides_for_segment(
                 start, end, segment, room_polygons, graph.wall_width_px,
                 sample_offset_factor=3.0,
@@ -136,6 +134,11 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
             exterior = _pixel_exterior_sides(
                 exterior_labels, exterior_ids, start, end, graph.wall_width_px
             )
+            bootstrap_minimum_width = max(
+                0.0, WINDOW_WIDTH_MIN_MM * 0.8 - max(0.0, graph.mm_per_px)
+            ) if exterior[0] != exterior[1] else WINDOW_WIDTH_MIN_MM
+            if width_mm is None or not bootstrap_minimum_width <= width_mm <= WINDOW_WIDTH_MAX_MM:
+                reasons.append("CV_WINDOW_WALL_LINES_WIDTH_OUT_OF_PROFILE")
             if set(side_rooms[0]) & set(side_rooms[1]) and exterior[0] != exterior[1]:
                 side_rooms = (
                     () if exterior[0] else side_rooms[0],
@@ -154,12 +157,15 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
                 ))
                 reason_codes.extend(reasons)
                 continue
-            wall_candidates.append((segment, start, end, width_mm, side_rooms))
+            wall_candidates.append((
+                segment, start, end, width_mm, side_rooms,
+                width_mm < WINDOW_WIDTH_MIN_MM,
+            ))
 
     kept = []
     segments_by_id = {item.id: item for item in graph.segments}
     for candidate in sorted(wall_candidates, key=lambda item: -item[3]):
-        segment, start, end, _, _ = candidate
+        segment, start, end, _, _, _ = candidate
         if any(
             item.type == "window"
             and (existing_segment := segments_by_id.get(item.wall_edge_id)) is not None
@@ -177,10 +183,13 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
         ):
             continue
         kept.append(candidate)
-    for index, (segment, start, end, width_mm, side_rooms) in enumerate(kept):
+    for index, (segment, start, end, width_mm, side_rooms, bootstrap_tolerance) in enumerate(kept):
+        confirmation_codes = ["CV_WINDOW_WALL_LINES_AUTOMATIC"]
+        if bootstrap_tolerance:
+            confirmation_codes.append("CV_WINDOW_BOOTSTRAP_SCALE_TOLERANCE")
         confirmed.append(FusedOpening(
             f"cv_window_wall_{index:03d}", "window", segment.id, start, end,
-            width_mm, "confirmed", ("CV_WINDOW_WALL_LINES_AUTOMATIC",), side_rooms,
+            width_mm, "confirmed", tuple(confirmation_codes), side_rooms,
         ))
 
     return OpeningsFusionResult(

@@ -375,6 +375,28 @@ def test_short_parallel_panes_are_recorded_as_rejected_window_fragment() -> None
     assert "CV_WINDOW_WALL_LINES_WIDTH_OUT_OF_PROFILE" in result.rejected[0].reason_codes
 
 
+def test_exterior_double_lines_allow_bootstrap_scale_tolerance(monkeypatch) -> None:
+    from pano_platform.floorplan import fusion_openings
+
+    solid_graph = WallGraph(
+        horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
+        segments=(WallSegment("solid", "horizontal", (50.0, 100.0), (450.0, 100.0), 13.0, False),),
+        gaps=(), mm_per_px=10.0, wall_width_px=13.0,
+    )
+    ink = np.zeros((200, 500), np.uint8)
+    ink[92, 200:226] = 1
+    ink[108, 200:226] = 1
+    room_above = SimpleNamespace(
+        id="top", polygon_px=((50, 20), (450, 20), (450, 70), (50, 70))
+    )
+    monkeypatch.setattr(fusion_openings, "_pixel_exterior_sides", lambda *args: (True, False))
+
+    result = arbitrate_cv_windows(solid_graph, [room_above], ink)
+
+    assert len(result.confirmed) == 1
+    assert "CV_WINDOW_BOOTSTRAP_SCALE_TOLERANCE" in result.confirmed[0].reason_codes
+
+
 def test_window_is_not_duplicated_across_gap_and_wall_paths() -> None:
     g = graph()
     spanning = WallSegment("solid", "horizontal", (50.0, 100.0), (450.0, 100.0), 13.0, False)
