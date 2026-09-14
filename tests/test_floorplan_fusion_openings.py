@@ -356,6 +356,25 @@ def test_parallel_panes_overlapping_a_door_arc_are_not_a_window() -> None:
     assert "CV_WINDOW_WALL_LINES_DOOR_ARC_OVERLAP" in result.rejected[0].reason_codes
 
 
+def test_nearby_door_sweep_does_not_suppress_window_when_hinge_is_outside_interval() -> None:
+    solid_graph = WallGraph(
+        horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
+        segments=(WallSegment("solid", "horizontal", (50.0, 100.0), (450.0, 100.0), 13.0, False),),
+        gaps=(), mm_per_px=10.0, wall_width_px=13.0,
+    )
+    ink = np.zeros((200, 500), np.uint8)
+    ink[92, 200:301] = 1
+    ink[108, 200:301] = 1
+    room_above = SimpleNamespace(
+        id="top", polygon_px=((50, 20), (450, 20), (450, 70), (50, 70))
+    )
+    nearby_door = SimpleNamespace(center=(350.0, 100.0), radius_px=70.0)
+
+    result = arbitrate_cv_windows(solid_graph, [room_above], ink, [nearby_door])
+
+    assert len(result.confirmed) == 1
+
+
 def test_short_parallel_panes_are_recorded_as_rejected_window_fragment() -> None:
     solid_graph = WallGraph(
         horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),

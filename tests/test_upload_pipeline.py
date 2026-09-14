@@ -233,6 +233,19 @@ def test_connected_window_panes_survive_into_automatic_pipeline(tmp_path, monkey
     assert result["automaticCvWindowCount"] == 2
 
 
+def test_neighboring_door_sweep_does_not_hide_real_window(tmp_path, monkeypatch) -> None:
+    from pano_platform.pipeline import run_upload_pipeline
+
+    monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
+    image_path = Path(__file__).parents[1] / "datasets/source/desktop-9/fp-106.png"
+    result = run_upload_pipeline(
+        image_path.read_bytes(), project_id="window-near-door", allow_external_vision=False,
+        generate_ai=False,
+    )
+
+    assert result["automaticCvWindowCount"] == 1
+
+
 def test_weak_recognition_still_publishes_envelope_preview(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
     run = ParseRun(

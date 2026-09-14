@@ -121,7 +121,7 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
             segment = max(group, key=lambda item: _interval_overlap_length(start, end, item.start, item.end))
             reasons = []
             if any(
-                _point_segment_distance(tuple(arc.center), start, end) <= float(arc.radius_px)
+                _door_arc_occupies_window_interval(arc, start, end, graph.wall_width_px)
                 for arc in door_arcs
             ):
                 reasons.append("CV_WINDOW_WALL_LINES_DOOR_ARC_OVERLAP")
@@ -297,6 +297,21 @@ def _point_segment_distance(point, start, end) -> float:
         return hypot(point[0] - start[0], point[1] - start[1])
     along = max(0.0, min(1.0, ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / length_squared))
     return hypot(point[0] - start[0] - along * dx, point[1] - start[1] - along * dy)
+
+
+def _door_arc_occupies_window_interval(arc, start, end, wall_width_px: float) -> bool:
+    """A door vetoes panes only when its hinge lies on this wall interval."""
+
+    horizontal = abs(end[0] - start[0]) >= abs(end[1] - start[1])
+    axis, perpendicular = (0, 1) if horizontal else (1, 0)
+    center = tuple(float(value) for value in arc.center)
+    fixed = (start[perpendicular] + end[perpendicular]) / 2
+    tolerance = max(8.0, wall_width_px * 1.5)
+    low, high = sorted((start[axis], end[axis]))
+    return (
+        abs(center[perpendicular] - fixed) <= tolerance
+        and low - tolerance <= center[axis] <= high + tolerance
+    )
 
 
 def _parallel_interval_overlap(a1, a2, b1, b2, wall_width_px: float) -> bool:
