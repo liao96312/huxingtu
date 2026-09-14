@@ -170,7 +170,7 @@ def test_door_arc_quadrant_places_solid_wall_opening_on_hinge_side() -> None:
     )
     proposal = SimpleNamespace(
         center=(250.0, 100.0), radius_px=70.0, arc_score=1.0,
-        base_angle=0, use_one_sided_interval=True,
+        base_angle=0, use_one_sided_interval=False,
     )
     room_polygons = [
         SimpleNamespace(id="top", polygon_px=((50, 50), (450, 50), (450, 95), (50, 95))),

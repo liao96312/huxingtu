@@ -396,7 +396,7 @@ def arbitrate_cv_door_arcs(
                     (segment.end[0] - segment.start[0]) / segment_length,
                     (segment.end[1] - segment.start[1]) / segment_length,
                 ) if segment_length > 0 else (0.0, 0.0)
-                sign = _arc_wall_sign(proposal, segment, segment_unit)
+                sign = _arc_wall_sign(proposal, segment, segment_unit, require_opt_in=True)
                 available = (
                     segment_length - projected["along_span"] if sign == 1
                     else projected["along_span"] if sign == -1
@@ -526,11 +526,13 @@ def arbitrate_cv_door_arcs(
     )
 
 
-def _arc_wall_sign(proposal, segment, unit) -> int | None:
+def _arc_wall_sign(proposal, segment, unit, *, require_opt_in: bool = False) -> int | None:
     """Map the detected quarter-arc quadrant to its one-sided wall direction."""
 
     base_angle = getattr(proposal, "base_angle", None)
-    if base_angle is None or not getattr(proposal, "use_one_sided_interval", False):
+    if base_angle is None or (
+        require_opt_in and not getattr(proposal, "use_one_sided_interval", False)
+    ):
         return None
     if segment.axis == "horizontal":
         direction = (1.0 if base_angle in (0, 270) else -1.0, 0.0)
