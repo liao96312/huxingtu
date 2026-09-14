@@ -166,16 +166,32 @@ def arbitrate_cv_windows(graph: WallGraph, rooms, annotation_mask, door_arcs=())
     segments_by_id = {item.id: item for item in graph.segments}
     for candidate in sorted(wall_candidates, key=lambda item: -item[3]):
         segment, start, end, _, _, _ = candidate
-        if any(
+        overlapping_confirmed = [
+            item for item in confirmed
+            if (
             item.type == "window"
             and (existing_segment := segments_by_id.get(item.wall_edge_id)) is not None
             and segment.axis == existing_segment.axis
             and _parallel_interval_overlap(
                 start, end, item.start_px, item.end_px, graph.wall_width_px
             )
-            for item in confirmed
-        ):
-            continue
+            )
+        ]
+        if overlapping_confirmed:
+            candidate_length = hypot(end[0] - start[0], end[1] - start[1])
+            existing = overlapping_confirmed[0]
+            existing_length = hypot(
+                existing.end_px[0] - existing.start_px[0],
+                existing.end_px[1] - existing.start_px[1],
+            )
+            if (
+                len(overlapping_confirmed) == 1
+                and "CV_WINDOW_AUTOMATIC" in existing.reason_codes
+                and candidate_length >= existing_length * 1.25
+            ):
+                confirmed.remove(existing)
+            else:
+                continue
         if any(
             segment.axis == existing[0].axis
             and _parallel_interval_overlap(start, end, existing[1], existing[2], graph.wall_width_px)

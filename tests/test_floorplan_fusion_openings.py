@@ -336,6 +336,31 @@ def test_full_axis_panes_are_not_truncated_by_short_carrier_edge() -> None:
     assert result.confirmed[0].end_px == (300, 100.0)
 
 
+def test_complete_panes_replace_narrow_overlapping_virtual_gap() -> None:
+    graph_with_narrow_gap = WallGraph(
+        horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
+        segments=(
+            WallSegment("solid", "horizontal", (50.0, 100.0), (450.0, 100.0), 13.0, False),
+            WallSegment("gap", "horizontal", (230.0, 100.0), (270.0, 100.0), 13.0, True),
+        ),
+        gaps=(GapCandidate("gap", "horizontal", (230.0, 100.0), (270.0, 100.0), 40.0),),
+        mm_per_px=10.0, wall_width_px=13.0,
+    )
+    ink = np.zeros((200, 500), np.uint8)
+    ink[92, 200:301] = 1
+    ink[108, 200:301] = 1
+    room_above = SimpleNamespace(
+        id="top", polygon_px=((50, 20), (450, 20), (450, 70), (50, 70))
+    )
+
+    result = arbitrate_cv_windows(graph_with_narrow_gap, [room_above], ink)
+
+    assert len(result.confirmed) == 1
+    assert result.confirmed[0].wall_edge_id == "solid"
+    assert result.confirmed[0].start_px == (200, 100.0)
+    assert result.confirmed[0].end_px == (300, 100.0)
+
+
 def test_parallel_panes_overlapping_a_door_arc_are_not_a_window() -> None:
     solid_graph = WallGraph(
         horizontal_axes=(100.0,), vertical_axes=(50.0, 450.0),
