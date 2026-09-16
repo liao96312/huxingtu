@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="4096" height="2048" viewBox="0 0 4096 2048">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="1">
+      <stop offset="0" stop-color="#26343d" />
+      <stop offset="0.25" stop-color="#416674" />
+      <stop offset="0.5" stop-color="#866a54" />
+      <stop offset="0.75" stop-color="#416674" />
+      <stop offset="1" stop-color="#26343d" />
+    </linearGradient>
+    <pattern id="grid" width="256" height="256" patternUnits="userSpaceOnUse">
+      <path d="M256 0H0V256" fill="none" stroke="#fff" stroke-opacity="0.18" stroke-width="3" />
+    </pattern>
+  </defs>
+  <rect width="4096" height="2048" fill="url(#sky)" />
+  <rect y="1024" width="4096" height="1024" fill="#1d2428" fill-opacity="0.62" />
+  <rect width="4096" height="2048" fill="url(#grid)" />
+  <path d="M0 1024H4096" stroke="#fff" stroke-opacity="0.72" stroke-width="6" />
+  <g fill="#fff" font-family="system-ui, sans-serif" font-size="92" font-weight="700" text-anchor="middle">
+    <text x="0" y="940">N 0°</text>
+    <text x="1024" y="940">E 90°</text>
+    <text x="2048" y="940">S 180°</text>
+    <text x="3072" y="940">W 270°</text>
+    <text x="4096" y="940">N 360°</text>
+  </g>
+  <g fill="#fff" fill-opacity="0.82" font-family="system-ui, sans-serif" font-size="48" text-anchor="middle">
+    <text x="2048" y="170">ZENITH</text>
+    <text x="2048" y="1940">NADIR</text>
+    <text x="2048" y="1120">EQUIRECTANGULAR GOLDEN FIXTURE · 2:1</text>
+  </g>
+</svg>

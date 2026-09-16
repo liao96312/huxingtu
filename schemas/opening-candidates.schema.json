@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/opening-candidates/0.1.0",
+  "title": "OpeningCandidateSet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "projectId", "layoutRevisionId", "sourceLayoutHash", "status", "candidates", "contentHash"],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "projectId": { "type": "string", "minLength": 1 },
+    "layoutRevisionId": { "type": "string", "minLength": 1 },
+    "sourceLayoutHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "status": { "const": "needsReview" },
+    "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+    "contentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  },
+  "$defs": {
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "wallEdgeId", "offset", "width", "confidence", "method", "pixelStart", "pixelEnd", "sideARoomId", "sideBRoomId"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["door", "window"] },
+        "wallEdgeId": { "type": "string", "minLength": 1 },
+        "offset": { "type": "number", "minimum": 0 },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "method": { "type": "string", "minLength": 1 },
+        "pixelStart": { "$ref": "#/$defs/point" },
+        "pixelEnd": { "$ref": "#/$defs/point" },
+        "arcScore": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "sideARoomId": { "type": ["string", "null"] },
+        "sideBRoomId": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "roomId": "room_living_dining",
+  "reference": "datasets/derived/fp-001/panorama/living-main/control/semantic/semantic-erp-2048x1024.png",
+  "candidate": "datasets/derived/fp-001/panorama/living-main/ai/living-main-gpt-image-2-v1-proxy-2048x1024.jpg",
+  "method": "semantic-boundary-to-canny-chamfer-v1",
+  "tolerancePx": 6,
+  "allStructureEdges": {
+    "pixelCount": 15590,
+    "recallWithin6px": 0.392,
+    "meanChamferPx": 15.0279,
+    "p95ChamferPx": 57.1813
+  },
+  "doorWindowEdges": {
+    "pixelCount": 6996,
+    "recallWithin6px": 0.3846,
+    "meanChamferPx": 11.1621,
+    "p95ChamferPx": 26.7839
+  },
+  "candidateEdgeDensity": 0.0146,
+  "sharpnessLaplacianVariance": 213.9344,
+  "regionIoU": null,
+  "edgeF1": null,
+  "status": "needsReview",
+  "reasonCodes": [
+    "EDGE_RECALL_PROXY_ONLY",
+    "AI_SEMANTIC_SEGMENTATION_REQUIRED_FOR_IOU_AND_F1"
+  ]
+}

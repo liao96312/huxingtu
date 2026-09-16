@@ -1,0 +1,21 @@
+{
+  "samples": 1,
+  "roomMiou": 0.4889418322395037,
+  "roomCountAccuracy": 0.0,
+  "openingsF1": 0.0,
+  "jsonEffectiveRate": 0.0,
+  "avgVisionLatencyMs": 0.0,
+  "thresholds": {
+    "roomMiou": 0.9,
+    "roomCountAccuracy": 0.9,
+    "openingsF1": 0.9,
+    "jsonEffectiveRate": 1.0
+  },
+  "met": {
+    "roomMiou": false,
+    "roomCountAccuracy": false,
+    "openingsF1": false,
+    "jsonEffectiveRate": false
+  },
+  "releaseReady": false
+}

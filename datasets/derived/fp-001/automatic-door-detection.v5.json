@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "sourceLayoutHash": "4eac75c4a4b63784bb53b9abd58e2dd04570f0d5fec96c7d666fba2e874b1b3c",
+  "detector": "opencv-hough-circles+quarter-arc+nearest-wall+room-topology",
+  "accepted": [
+    {
+      "openingId": "opening_auto_hough_01",
+      "wallEdgeId": "w_kitchen_left_upper",
+      "pixelStart": {
+        "x": 433.0,
+        "y": 233.5
+      },
+      "pixelEnd": {
+        "x": 433.0,
+        "y": 258.0
+      },
+      "widthMm": 708.6153564453125,
+      "arcScore": 1.0,
+      "sideRoomIds": [
+        "room_bath",
+        "room_kitchen"
+      ],
+      "confidence": 0.9
+    }
+  ],
+  "ignored": [
+    {
+      "wallEdgeId": "w_kitchen_left_lower",
+      "reason": "overlaps-confirmed-opening"
+    },
+    {
+      "wallEdgeId": "w_outer_right_living",
+      "reason": "overlaps-confirmed-opening"
+    },
+    {
+      "wallEdgeId": "w_bed_center_bottom",
+      "reason": "overlaps-confirmed-opening"
+    }
+  ],
+  "outputLayoutHash": "600599c78cd3488a7bc3dd552711dd65c5b53ab457fb7e2dce4bdc760ca610fe",
+  "contentHash": "fb13d002327f2af3b13f02d27ce13958dde9f1329103612c78f2afbac029e743"
+}

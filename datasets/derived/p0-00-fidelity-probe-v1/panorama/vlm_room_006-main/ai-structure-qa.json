@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "0.1.0",
+  "method": "low-frequency-wrapped-edge-proxy-v1",
+  "status": "rejected",
+  "tolerancePx": 8,
+  "referenceWidth": 2048,
+  "referenceHeight": 1024,
+  "candidateWidth": 3824,
+  "candidateHeight": 1912,
+  "referenceEdgeDensity": 0.006035,
+  "candidateEdgeDensity": 0.041634,
+  "edgeDensityRatio": 6.8989,
+  "referenceRecallWithinTolerance": 0.8761,
+  "candidatePrecisionWithinTolerance": 0.1915,
+  "referenceLongLineCount": 8,
+  "candidateLongLineCount": 18,
+  "seamMae": 2.208,
+  "wallCleanliness": {
+    "status": "accepted",
+    "coverage": 0.314,
+    "lowFrequencyUnevennessP90": 27.71,
+    "threshold": 30.0
+  },
+  "reasonCodes": [
+    "STRUCTURE_EDGE_PRECISION_LOW",
+    "AI_WALLS_NOT_PLANAR",
+    "AI_SEAM_BROKEN"
+  ],
+  "semanticIoU": null,
+  "semanticF1": null,
+  "openingSemantics": {
+    "status": "rejected",
+    "model": "gemini-3.5-flash-lite",
+    "expected": {
+      "doorCount": 3,
+      "windowCount": 0
+    },
+    "observed": {
+      "doorCount": 3,
+      "windowCount": 0,
+      "narrowDoorCount": 0,
+      "doorHeadAlignment": "aligned",
+      "wallsPlanar": "no",
+      "doorScalePlausible": "yes",
+      "furnitureOverlap": false,
+      "duplicateFurniture": false,
+      "seamClean": "no"
+    },
+    "reasonCodes": [
+      "AI_WALLS_NOT_PLANAR",
+      "AI_SEAM_BROKEN"
+    ]
+  }
+}

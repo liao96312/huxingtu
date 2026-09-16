@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "artifact:fp001:panorama-result:living-main-gpt-image-2-v1:6k",
+  "projectId": "fp001",
+  "artifactType": "panoramaResult",
+  "contentHash": "fd8f7fa2dacb4d898816e20259edbd2e974e8a4c79aca7ce6bb28615aa65d12a",
+  "byteLength": 2614684,
+  "contentType": "image/jpeg",
+  "generator": {
+    "name": "tuzi-gpt-image-2+real-esrgan-wrap",
+    "version": "0.1.0"
+  },
+  "inputDigests": [
+    "3c982848ef188a6914829f0f787aaf6816f85b1b0f0314885223ea446bc5580b"
+  ],
+  "createdAt": "2026-08-25T03:59:16.061468Z",
+  "metadata": {
+    "schemaVersion": "0.1.0",
+    "provider": "tuzi",
+    "endpoint": "/v1/images/edits",
+    "model": "gpt-image-2",
+    "quality": "2k",
+    "requestedSize": "2048x1024",
+    "sourceFile": "datasets/derived/fp-001/panorama/living-main/living-main-erp-2048x1024.png",
+    "sourceSha256": "3c982848ef188a6914829f0f787aaf6816f85b1b0f0314885223ea446bc5580b",
+    "promptSha256": "ad41c2c48d6f76ff7e18259f01c27ed82ede9ecd9a2433351dd23750fa4144ad",
+    "rawFile": "datasets/derived/fp-001/panorama/living-main/ai/living-main-gpt-image-2-v1.png",
+    "rawSha256": "15ae06110aa721ed72a7c2d4a1cd44bfd2febe64770be294207934d8aaa3ada4",
+    "rawWidth": 1774,
+    "rawHeight": 887,
+    "rawSeamMae": 19.929,
+    "outputFile": "datasets/derived/fp-001/panorama/living-main/ai/living-main-gpt-image-2-v1-normalized-2048x1024.jpg",
+    "outputSha256": "24d1e701d3c0eff07d9228cc0d4d510e35be0e25e67394d1020850fb6b9c5c65",
+    "outputWidth": 2048,
+    "outputHeight": 1024,
+    "outputSeamMae": 0.0,
+    "normalization": {
+      "resize": "lanczos4",
+      "seamBlendStripPx": 96,
+      "jpegQuality": 94
+    },
+    "status": "needsStructureReview",
+    "createdAt": "2026-08-25T01:39:36.740766+00:00",
+    "upscale": {
+      "tool": "Real-ESRGAN-ncnn-vulkan",
+      "model": "realesrgan-x4plus",
+      "modelScale": 4,
+      "scale": 3,
+      "wrapPaddingInputPx": 64,
+      "finalSeamBlendPx": 24,
+      "tileMode": "manual-overlap",
+      "tileSize": 512,
+      "minimumOverlap": 96,
+      "tileGrid": [
+        5,
+        3
+      ],
+      "outputSeamMae": 0.0,
+      "assets": [
+        {
+          "file": "living-main-gpt-image-2-v1-6144x3072.jpg",
+          "width": 6144,
+          "height": 3072,
+          "byteLength": 2614684,
+          "sha256": "fd8f7fa2dacb4d898816e20259edbd2e974e8a4c79aca7ce6bb28615aa65d12a"
+        },
+        {
+          "file": "living-main-gpt-image-2-v1-proxy-4096x2048.jpg",
+          "width": 4096,
+          "height": 2048,
+          "byteLength": 888508,
+          "sha256": "2bde684e3ed401aed59dba3904782c3e2a1081026bb815d9a502f0b7ccc69400"
+        },
+        {
+          "file": "living-main-gpt-image-2-v1-proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "byteLength": 215951,
+          "sha256": "80956835ac2d47dc84b0bea87792017b32c31477a7e2a2270979d7fbdb0c7f0c"
+        },
+        {
+          "file": "living-main-gpt-image-2-v1-proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "byteLength": 57326,
+          "sha256": "a4433362a5372d1dcccacd219ba7f1c0f9e3f012cb63e58042cb1c76351ca83f"
+        }
+      ]
+    }
+  }
+}

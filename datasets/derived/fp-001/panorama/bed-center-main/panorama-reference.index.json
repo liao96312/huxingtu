@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "scene": "bed-center-main",
+  "renderPass": "rgb",
+  "projection": "equirectangular",
+  "file": "bed-center-main-erp-2048x1024.png",
+  "width": 2048,
+  "height": 1024,
+  "byteLength": 114008,
+  "sha256": "5144c277787829cd63a30c9c1d13c6ee970f92546f7f0dcb151a570cd0066a9b",
+  "seamMae": 0.0,
+  "cubemapIndex": "cubemap/cubemap.index.json"
+}

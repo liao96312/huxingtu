@@ -1,0 +1,351 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "desktop-9-poc",
+  "revision": 2,
+  "purpose": "poc",
+  "samples": [
+    {
+      "id": "fp-101",
+      "split": "train",
+      "floorIndex": 0,
+      "floorCount": 1,
+      "inputKind": "orthogonalFloorplan",
+      "scopeTier": "p0Candidate",
+      "image": {
+        "file": "source/desktop-9/fp-101.png",
+        "sha256": "7ecfc15f321221bc93466ee0080ed531399fa2183607de816ceba3459914d165",
+        "byteLength": 384519,
+        "width": 799,
+        "height": 799,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": [
+          "testing",
+          "benchmark"
+        ],
+        "allowTraining": false
+      },
+      "sourceGrant": {
+        "allowExternalVision": true,
+        "suppliedAt": "2026-08-28T00:00:00+08:00",
+        "origin": "userDesktop-recovered"
+      },
+      "dimensionUnitHint": "mm",
+      "roomHints": [],
+      "expectedGate": {
+        "decision": "needsReview",
+        "reasonCodes": [
+          "SCALE_CONFIRMATION_REQUIRED"
+        ]
+      },
+      "notes": "从桌面恢复的9张正交户型图；已授权发送 Tuzi 视觉处理；split 已冻结。"
+    },
+    {
+      "id": "fp-102",
+      "split": "train",
+      "floorIndex": 0,
+      "floorCount": 1,
+      "inputKind": "orthogonalFloorplan",
+      "scopeTier": "p0Candidate",
+      "image": {
+        "file": "source/desktop-9/fp-102.png",
+        "sha256": "1fed20d0cd074fdf6caf56905aad32202d1f8eb21a6c3751de0b7c998e7fb800",
+        "byteLength": 348666,
+        "width": 798,
+        "height": 798,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": [
+          "testing",
+          "benchmark"
+        ],
+        "allowTraining": false
+      },
+      "sourceGrant": {
+        "allowExternalVision": true,
+        "suppliedAt": "2026-08-28T00:00:00+08:00",
+        "origin": "userDesktop-recovered"
+      },
+      "dimensionUnitHint": "mm",
+      "roomHints": [],
+      "expectedGate": {
+        "decision": "needsReview",
+        "reasonCodes": [
+          "SCALE_CONFIRMATION_REQUIRED"
+        ]
+      },
+      "notes": "从桌面恢复的9张正交户型图；已授权发送 Tuzi 视觉处理；split 已冻结。"
+    },
+    {
+      "id": "fp-103",
+      "split": "train",
+      "floorIndex": 0,
+      "floorCount": 1,
+      "inputKind": "orthogonalFloorplan",
+      "scopeTier": "p0Candidate",
+      "image": {
+        "file": "source/desktop-9/fp-103.png",
+        "sha256": "652c928286c358c01d9e7489a7a67079ce7782a8627bbad6716f4749294f93e1",
+        "byteLength": 417721,
+        "width": 798,
+        "height": 798,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": [
+          "testing",
+          "benchmark"
+        ],
+        "allowTraining": false
+      },
+      "sourceGrant": {
+        "allowExternalVision": true,
+        "suppliedAt": "2026-08-28T00:00:00+08:00",
+        "origin": "userDesktop-recovered"
+      },
+      "dimensionUnitHint": "mm",
+      "roomHints": [],
+      "expectedGate": {
+        "decision": "needsReview",
+        "reasonCodes": [
+          "SCALE_CONFIRMATION_REQUIRED"
+        ]
+      },
+      "notes": "从桌面恢复的9张正交户型图；已授权发送 Tuzi 视觉处理；split 已冻结。"
+    },
+    {
+      "id": "fp-104",
+      "split": "train",
+      "floorIndex": 0,
+      "floorCount": 1,
+      "inputKind": "orthogonalFloorplan",
+      "scopeTier": "p0Candidate",
+      "image": {
+        "file": "source/desktop-9/fp-104.png",
+        "sha256": "6b5efd6cec243ab5032db52fb20c623bd624e13430b15e92939db126bbb6abb9",
+        "byteLength": 309199,
+        "width": 800,
+        "height": 799,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": [
+          "testing",
+          "benchmark"
+        ],
+        "allowTraining": false
+      },
+      "sourceGrant": {
+        "allowExternalVision": true,
+        "suppliedAt": "2026-08-28T00:00:00+08:00",
+        "origin": "userDesktop-recovered"
+      },
+      "dimensionUnitHint": "mm",
+      "roomHints": [],
+      "expectedGate": {
+        "decision": "needsReview",
+        "reasonCodes": [
+          "SCALE_CONFIRMATION_REQUIRED"
+        ]
+      },
+      "notes": "从桌面恢复的9张正交户型图；已授权发送 Tuzi 视觉处理；split 已冻结。"
+    },
+    {
+      "id": "fp-105",
+      "split": "train",
+      "floorIndex": 0,
+      "floorCount": 1,
+      "inputKind": "orthogonalFloorplan",
+      "scopeTier": "p0Candidate",
+      "image": {
+        "file": "source/desktop-9/fp-105.png",
+        "sha256": "0ee0d11ebab0cd6b759733751fcb202128c3f4a14b41349ecc2f13b2cf21769b",
+        "byteLength": 601848,
+        "width": 799,
+        "height": 799,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": [
+          "testing",
+          "benchmark"
+        ],
+        "allowTraining": false
+      },
+      "sourceGrant": {
+        "allowExternalVision": true,
+        "suppliedAt": "2026-08-28T00:00:00+08:00",
+        "origin": "userDesktop-recovered"
+      },
+      "dimensionUnitHint": "mm",
+      "roomHints": [],
+      "expectedGate": {
+        "decision": "needsReview",
+        "reasonCodes": [
+          "SCALE_CONFIRMATION_REQUIRED"
+        ]
+      },
+      "notes": "从桌面恢复的9张正交户型图；已授权发送 Tuzi 视觉处理；split 已冻结。"
+    },
+    {
+      "id": "fp-106",
+      "split": "train",
+      "floorIndex": 0,
+      "floorCount": 1,
+      "inputKind": "orthogonalFloorplan",
+      "scopeTier": "p0Candidate",
+      "image": {
+        "file": "source/desktop-9/fp-106.png",
+        "sha256": "cb02d228d9451d1c7a56a9d7de6610bf22cf01a49d19faf63393e5906c4c1145",
+        "byteLength": 456624,
+        "width": 798,
+        "height": 798,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": [
+          "testing",
+          "benchmark"
+        ],
+        "allowTraining": false
+      },
+      "sourceGrant": {
+        "allowExternalVision": true,
+        "suppliedAt": "2026-08-28T00:00:00+08:00",
+        "origin": "userDesktop-recovered"
+      },
+      "dimensionUnitHint": "mm",
+      "roomHints": [],
+      "expectedGate": {
+        "decision": "needsReview",
+        "reasonCodes": [
+          "SCALE_CONFIRMATION_REQUIRED"
+        ]
+      },
+      "notes": "从桌面恢复的9张正交户型图；已授权发送 Tuzi 视觉处理；split 已冻结。"
+    },
+    {
+      "id": "fp-107",
+      "split": "val",
+      "floorIndex": 0,
+      "floorCount": 1,
+      "inputKind": "orthogonalFloorplan",
+      "scopeTier": "p0Candidate",
+      "image": {
+        "file": "source/desktop-9/fp-107.png",
+        "sha256": "78e5e53ca2b3c4a4e4cca789b9f39bdae182655ef0d98a9c748f89576692aa62",
+        "byteLength": 506195,
+        "width": 798,
+        "height": 798,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": [
+          "testing",
+          "benchmark"
+        ],
+        "allowTraining": false
+      },
+      "sourceGrant": {
+        "allowExternalVision": true,
+        "suppliedAt": "2026-08-28T00:00:00+08:00",
+        "origin": "userDesktop-recovered"
+      },
+      "dimensionUnitHint": "mm",
+      "roomHints": [],
+      "expectedGate": {
+        "decision": "needsReview",
+        "reasonCodes": [
+          "SCALE_CONFIRMATION_REQUIRED"
+        ]
+      },
+      "notes": "从桌面恢复的9张正交户型图；已授权发送 Tuzi 视觉处理；split 已冻结。"
+    },
+    {
+      "id": "fp-108",
+      "split": "test",
+      "floorIndex": 0,
+      "floorCount": 1,
+      "inputKind": "orthogonalFloorplan",
+      "scopeTier": "p0Candidate",
+      "image": {
+        "file": "source/desktop-9/fp-108.png",
+        "sha256": "1e6e76623e114bb751a268f7fc0948ee9df2930e0428bbbb5e6f156ea33bd48b",
+        "byteLength": 199176,
+        "width": 767,
+        "height": 709,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": [
+          "testing",
+          "benchmark"
+        ],
+        "allowTraining": false
+      },
+      "sourceGrant": {
+        "allowExternalVision": true,
+        "suppliedAt": "2026-08-28T00:00:00+08:00",
+        "origin": "userDesktop-recovered"
+      },
+      "dimensionUnitHint": "mm",
+      "roomHints": [],
+      "expectedGate": {
+        "decision": "needsReview",
+        "reasonCodes": [
+          "SCALE_CONFIRMATION_REQUIRED"
+        ]
+      },
+      "notes": "从桌面恢复的9张正交户型图；已授权发送 Tuzi 视觉处理；split 已冻结。"
+    },
+    {
+      "id": "fp-109",
+      "split": "test",
+      "floorIndex": 0,
+      "floorCount": 1,
+      "inputKind": "orthogonalFloorplan",
+      "scopeTier": "p0Candidate",
+      "image": {
+        "file": "source/desktop-9/fp-109.png",
+        "sha256": "80fbb407b8fef236ce12b4d6ffb74ddf8e120801c9443406f5e34049e5fc3bdb",
+        "byteLength": 395133,
+        "width": 801,
+        "height": 795,
+        "contentType": "image/png"
+      },
+      "source": {
+        "origin": "userDesktop",
+        "authorizedUses": [
+          "testing",
+          "benchmark"
+        ],
+        "allowTraining": false
+      },
+      "sourceGrant": {
+        "allowExternalVision": true,
+        "suppliedAt": "2026-08-28T00:00:00+08:00",
+        "origin": "userDesktop-recovered"
+      },
+      "dimensionUnitHint": "mm",
+      "roomHints": [],
+      "expectedGate": {
+        "decision": "needsReview",
+        "reasonCodes": [
+          "SCALE_CONFIRMATION_REQUIRED"
+        ]
+      },
+      "notes": "从桌面恢复的9张正交户型图；已授权发送 Tuzi 视觉处理；split 已冻结。"
+    }
+  ],
+  "contentHash": "0467b88f6a9f5cc2518d96e19656014b1a8a97713220499d0d2366e4f6f65488"
+}

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "artifact:fp001:cubemap:living-main:1024",
+  "projectId": "fp001",
+  "artifactType": "cubemapSet",
+  "contentHash": "a2c530078f7c61e647c7252ddcbb7b22000859f12d95869b4ddc6748985c9bec",
+  "byteLength": 2198,
+  "contentType": "application/json",
+  "generator": {
+    "name": "three-cubemap-capture",
+    "version": "0.1.0"
+  },
+  "inputDigests": [
+    "c21b457aa7f6b15af38f7c947bb1d84fa93fc26e02f6ad4dacc0fa01f4b71ad6"
+  ],
+  "createdAt": "2026-08-25T04:31:00.729000Z",
+  "metadata": {
+    "roomId": "room_living_dining",
+    "faces": [
+      {
+        "face": "px",
+        "file": "px.png",
+        "width": 1024,
+        "height": 1024,
+        "byteLength": 19513,
+        "sha256": "0dca47bda4dd2cdc520835e7f3d831e2b51b038cd382a3a7f5a69dfc0195a4bf"
+      },
+      {
+        "face": "nx",
+        "file": "nx.png",
+        "width": 1024,
+        "height": 1024,
+        "byteLength": 106378,
+        "sha256": "855990951a03e6ca9e76bfceb8f2e7487205e3275e03435cc26fb0cebb286ade"
+      },
+      {
+        "face": "py",
+        "file": "py.png",
+        "width": 1024,
+        "height": 1024,
+        "byteLength": 5235,
+        "sha256": "161397bdbc4a0411100e21c0af98142443e3c684b91bee01458cf9b2a6cc9d72"
+      },
+      {
+        "face": "ny",
+        "file": "ny.png",
+        "width": 1024,
+        "height": 1024,
+        "byteLength": 59949,
+        "sha256": "d0d54e0cff10237d935416173dbb3783a7d72e295a2daf8931534e7262703178"
+      },
+      {
+        "face": "pz",
+        "file": "pz.png",
+        "width": 1024,
+        "height": 1024,
+        "byteLength": 22026,
+        "sha256": "1565de874196ba4951df8f71094e75fca5d6de0e3a6a323660b2132bfe924212"
+      },
+      {
+        "face": "nz",
+        "file": "nz.png",
+        "width": 1024,
+        "height": 1024,
+        "byteLength": 84843,
+        "sha256": "68d4675ff10539e903c558a87adb908172db1404cb73f6274e73f89e2d491267"
+      }
+    ]
+  }
+}

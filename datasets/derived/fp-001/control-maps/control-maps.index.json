@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "layoutRevisionId": "layout_fp001_auto_r5",
+  "camera": {
+    "width": 1024,
+    "height": 768,
+    "fov": 48,
+    "near": 5,
+    "far": 30,
+    "position": [
+      10,
+      11,
+      13
+    ],
+    "target": [
+      4,
+      1,
+      -3.5
+    ]
+  },
+  "generatedAt": "2026-08-25T01:18:33.701Z",
+  "assets": [
+    {
+      "pass": "rgb",
+      "file": "fp001-r5-rgb-1024x768.png",
+      "width": 1024,
+      "height": 768,
+      "byteLength": 31562,
+      "sha256": "45be43b4aaa0c384adae66ed0bad671a50abc52f3992206f5dd14f7b971c4180"
+    },
+    {
+      "pass": "edge",
+      "file": "fp001-r5-edge-1024x768.png",
+      "width": 1024,
+      "height": 768,
+      "byteLength": 32430,
+      "sha256": "1fe1036c2c5470f082e57e7c5bef8f7d5adf34d5e7cc9bc44d2aeba9c8f34b12"
+    },
+    {
+      "pass": "normal",
+      "file": "fp001-r5-normal-1024x768.png",
+      "width": 1024,
+      "height": 768,
+      "byteLength": 17034,
+      "sha256": "52559315f6fcb285f3d07d7b5e5d89f72009864d19da8bf74e8dd98ed724fba5"
+    },
+    {
+      "pass": "depth",
+      "file": "fp001-r5-depth-1024x768.png",
+      "width": 1024,
+      "height": 768,
+      "byteLength": 16438,
+      "sha256": "ff5ed42af189175b2dc6cfaaeed58fb7223642554aa8dacae1ea15e364e4ba0f"
+    },
+    {
+      "pass": "semantic",
+      "file": "fp001-r5-semantic-1024x768.png",
+      "width": 1024,
+      "height": 768,
+      "byteLength": 7631,
+      "sha256": "d472382ced1cf845bf094e76eea5a3220ee7ecef4203d3bdc95d00edaac1e415"
+    }
+  ]
+}

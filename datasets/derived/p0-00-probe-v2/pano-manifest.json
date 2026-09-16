@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-probe-v2",
+  "revision": 1,
+  "defaultSceneId": "vlm_room_006-main",
+  "projection": "equirectangular",
+  "scenes": [
+    {
+      "id": "vlm_room_006-main",
+      "roomId": "vlm_room_006",
+      "roomName": "客餐厅",
+      "title": "客餐厅 无比例尺归一化结构预览（AI结果已拒绝）",
+      "order": 0,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-probe-v2/panorama/vlm_room_006-main/structural-no-metadata-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-probe-v2/panorama/vlm_room_006-main/structural-no-metadata-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-probe-v2/panorama/vlm_room_006-main/structural-no-metadata-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-probe-v2/panorama/vlm_room_006-main/structural-no-metadata-thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 167.578125,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": []
+    }
+  ],
+  "share": {
+    "title": "p0-00-probe-v2 · 现代全景预览"
+  },
+  "contentHash": "4303f0308a10e5bd1cf4aa44827c0f90de5199021e731e388a62a5d49ec0bc93"
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/dataset-manifest/0.1.0",
+  "title": "DatasetManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "revision", "purpose", "samples", "contentHash"],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "revision": { "type": "integer", "minimum": 1 },
+    "purpose": { "const": "poc" },
+    "samples": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/sample" }
+    },
+    "contentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  },
+  "$defs": {
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "sha256", "byteLength", "width", "height", "contentType"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "byteLength": { "type": "integer", "minimum": 1 },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "contentType": { "enum": ["image/png", "image/jpeg", "image/webp"] }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "authorizedUses", "allowTraining"],
+      "properties": {
+        "origin": { "enum": ["userDesktop", "userUpload", "licensedDataset"] },
+        "authorizedUses": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["testing", "benchmark"] }
+        },
+        "allowTraining": { "type": "boolean" }
+      }
+    },
+    "expectedGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "reasonCodes"],
+      "properties": {
+        "decision": { "enum": ["accept", "needsReview", "reject"] },
+        "reasonCodes": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "sourceGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowExternalVision"],
+      "properties": {
+        "allowExternalVision": { "type": "boolean" },
+        "suppliedAt": { "type": "string", "format": "date-time" },
+        "origin": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "floorIndex",
+        "floorCount",
+        "inputKind",
+        "scopeTier",
+        "image",
+        "source",
+        "dimensionUnitHint",
+        "roomHints",
+        "expectedGate",
+        "notes"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "split": { "enum": ["train", "val", "test"] },
+        "sourceGrant": { "$ref": "#/$defs/sourceGrant" },
+        "pairGroupId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "floorIndex": { "type": "integer", "minimum": 0 },
+        "floorCount": { "type": "integer", "minimum": 1 },
+        "inputKind": { "enum": ["orthogonalFloorplan", "sitePlanGroundFloor", "upperFloorPlan"] },
+        "scopeTier": { "enum": ["p0Candidate", "p1Multilevel"] },
+        "image": { "$ref": "#/$defs/image" },
+        "source": { "$ref": "#/$defs/source" },
+        "dimensionUnitHint": { "enum": ["mm", "cm", "unknown"] },
+        "roomHints": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "expectedGate": { "$ref": "#/$defs/expectedGate" },
+        "notes": { "type": "string", "maxLength": 1024 }
+      }
+    }
+  }
+}

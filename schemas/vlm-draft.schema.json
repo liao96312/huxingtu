@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/vlm-draft/0.1.0",
+  "title": "VlmDraft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scaleCandidates", "rooms", "openings", "warnings"],
+  "properties": {
+    "scaleCandidates": { "type": "array", "maxItems": 32, "items": { "$ref": "#/$defs/scaleCandidate" } },
+    "rooms": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/roomDraft" } },
+    "openings": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/openingDraft" } },
+    "warnings": { "type": "array", "maxItems": 16, "items": { "type": "string" } }
+  },
+  "$defs": {
+    "normPoint": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "number", "minimum": 0, "maximum": 1 }
+    },
+    "scaleCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lengthMm", "pixelStart", "pixelEnd"],
+      "properties": {
+        "lengthMm": { "type": "number", "exclusiveMinimum": 0 },
+        "pixelStart": { "$ref": "#/$defs/normPoint" },
+        "pixelEnd": { "$ref": "#/$defs/normPoint" },
+        "text": { "type": "string", "maxLength": 64 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "roomDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "polygon"],
+      "properties": {
+        "type": { "enum": ["bedroom", "living", "dining", "livingDining", "kitchen", "bathroom", "balcony", "study", "other"] },
+        "name": { "type": ["string", "null"], "maxLength": 64 },
+        "areaLabelM2": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "polygon": { "type": "array", "minItems": 3, "maxItems": 64, "items": { "$ref": "#/$defs/normPoint" } },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "openingDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "pixelStart", "pixelEnd"],
+      "properties": {
+        "type": { "enum": ["door", "window", "doorway"] },
+        "evidence": { "type": "array", "items": { "enum": ["none", "doorArc", "doorLeaf", "parallelLines"] } },
+        "pixelStart": { "$ref": "#/$defs/normPoint" },
+        "pixelEnd": { "$ref": "#/$defs/normPoint" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

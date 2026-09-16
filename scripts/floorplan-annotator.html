@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>户型图真值标注器 v3</title>
+<style>
+:root{
+  --bg:#14161a; --panel:#1e2228; --border:#333a44; --text:#d8dee6; --dim:#9aa4b2;
+  --accent:#4f9cf9; --danger:#e5534b; --ok:#3fb96f; --warn:#ffb020;
+  --room:#f9c74f; --door:#4f9cf9; --win:#3fb96f; --gap:#b8b8b8; --scale:#ff8a5c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{display:flex;flex-direction:column;background:var(--bg);color:var(--text);
+  font:13px/1.5 "Microsoft YaHei","Segoe UI",system-ui,sans-serif;overflow:hidden}
+#app{display:flex;flex:1;min-height:0}
+
+/* left panel */
+#panel{width:320px;flex:none;overflow-y:auto;background:var(--panel);border-right:1px solid var(--border);padding:14px}
+#panel h1{font-size:15px}
+#panel .sub{color:var(--dim);font-size:11px;margin-top:2px}
+.section{margin-bottom:16px}
+.section>.label{font-size:12px;color:var(--dim);border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:8px}
+.section>.label b{color:var(--accent);margin-right:5px}
+input[type=text],input[type=number]{width:100%;background:#161a20;color:var(--text);border:1px solid var(--border);border-radius:5px;padding:7px 9px;font-size:13px}
+input:focus{outline:2px solid var(--accent)}
+.btn{display:inline-block;border:1px solid var(--border);border-radius:5px;background:#262c35;color:var(--text);padding:8px 12px;cursor:pointer;font-size:13px;user-select:none}
+.btn:hover{background:#2f3742}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#0b0e12;font-weight:600}
+.btn.danger{color:var(--danger)}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap}
+.btn-row .btn{flex:1;text-align:center;white-space:nowrap}
+#fileImg{display:none}
+
+/* category tabs (mutually independent) */
+.cat-tabs{display:flex;gap:6px;margin-bottom:8px}
+.cat-tab{flex:1;text-align:center;padding:9px 4px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:#1a1f26;font-size:13px;position:relative}
+.cat-tab:hover{background:#232a33}
+.cat-tab.active{border-color:var(--accent);background:#24354d}
+.cat-tab .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.cat-tab .cnt{position:absolute;top:-6px;right:-4px;background:var(--accent);color:#0b0e12;border-radius:9px;font-size:10px;padding:1px 6px;font-weight:700}
+.vis-toggle{display:flex;gap:6px;margin-bottom:10px}
+.vis-btn{flex:1;padding:6px 4px;border:1px solid var(--border);border-radius:5px;background:#1a1f26;cursor:pointer;font-size:12px;color:var(--dim);text-align:center}
+.vis-btn.on{color:var(--text);border-color:var(--accent)}
+.vis-btn.off{opacity:.45}
+
+/* option chips */
+.type-group{margin-bottom:10px}
+.type-group .tt{font-size:12px;color:var(--dim);margin-bottom:5px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:4px 10px;border-radius:14px;border:1px solid var(--border);background:#1a1f26;color:var(--text);cursor:pointer;font-size:12px}
+.chip.sel{background:var(--accent);border-color:var(--accent);color:#0b0e12;font-weight:600}
+
+/* object list */
+#objList{max-height:200px;overflow-y:auto;margin-top:6px}
+.obj-item{display:flex;align-items:center;gap:7px;padding:4px 7px;border-radius:4px;cursor:pointer;font-size:12px}
+.obj-item:hover{background:#262c35}
+.obj-item.sel{background:#2a3a52;outline:1px solid var(--accent)}
+.obj-item .tag{font-size:10px;padding:1px 6px;border-radius:3px;flex:none}
+.tag.room{background:#4a3d17;color:#f9c74f}.tag.door{background:#1d3d66;color:#9cc4ff}
+.tag.window{background:#1d4d36;color:#7fe0ae}.tag.doorway{background:#4a4a4a;color:#c8c8c8}.tag.scale{background:#5a3d1d;color:#ffd28a}
+.obj-item .del{margin-left:auto;color:var(--dim);cursor:pointer;padding:0 4px}
+.obj-item .del:hover{color:var(--danger)}
+
+/* canvas */
+#stage{flex:1;position:relative;min-width:0}
+#canvas{width:100%;height:100%;display:block;cursor:crosshair}
+#statusbar{height:28px;flex:none;display:flex;align-items:center;gap:18px;background:var(--panel);border-top:1px solid var(--border);padding:0 14px;font-size:12px;color:var(--dim)}
+.hint{font-size:11px;color:var(--dim);line-height:1.7}
+kbd{background:#333a44;border-radius:3px;padding:0 5px;font-size:11px;border:1px solid #454e5c}
+#exportMsg{font-size:12px;margin-top:8px;color:var(--ok);line-height:1.5}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="panel">
+    <h1>户型图真值标注器</h1>
+    <div class="sub">输出符合 docs/plan/annotation-spec-v1.md</div>
+
+    <div class="section">
+      <div class="label"><b>1</b> 图片</div>
+      <div class="btn-row"><button class="btn primary" id="btnPickImg">📂 选择户型图</button></div>
+      <input type="file" id="fileImg" accept="image/png,image/jpeg,image/webp">
+      <div id="imgInfo" class="hint" style="margin-top:6px">未加载图片</div>
+    </div>
+
+    <!-- category tabs: rooms / openings / scale, fully independent -->
+    <div class="section">
+      <div class="label"><b>2</b> 标注类别（互不影响，可分别显隐）</div>
+      <div class="cat-tabs">
+        <div class="cat-tab active" data-cat="room"><span class="dot" style="background:var(--room)"></span>房间<span class="cnt" id="cntRoom">0</span></div>
+        <div class="cat-tab" data-cat="opening"><span class="dot" style="background:var(--door)"></span>门窗<span class="cnt" id="cntOpening">0</span></div>
+        <div class="cat-tab" data-cat="scale"><span class="dot" style="background:var(--scale)"></span>比例尺<span class="cnt" id="cntScale">0</span></div>
+      </div>
+      <div class="vis-toggle">
+        <div class="vis-btn on" data-vis="room">显示房间</div>
+        <div class="vis-btn on" data-vis="opening">显示门窗</div>
+        <div class="vis-btn on" data-vis="scale">显示比例尺</div>
+      </div>
+
+      <div id="modeOpts"></div>
+    </div>
+
+    <div class="section">
+      <div class="label"><b>3</b> 已标内容 <span id="statText"></span></div>
+      <div id="objList"></div>
+      <div class="btn-row" style="margin-top:7px">
+        <button class="btn" id="btnUndo" title="Ctrl+Z">↩ 撤销</button>
+        <button class="btn danger" id="btnDelSel" title="Delete">✕ 删选中</button>
+        <button class="btn danger" id="btnClear">清空</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="label"><b>4</b> 保存 / 导出真值</div>
+      <div class="btn-row">
+        <button class="btn" id="btnSave" title="自动存到浏览器localStorage">💾 保存进度</button>
+        <button class="btn" id="btnImport">📥 导入JSON</button>
+      </div>
+      <button class="btn primary" id="btnExport" style="width:100%;margin-top:7px">⬇ 导出标注真值 JSON</button>
+      <input type="file" id="fileJson" accept=".json,application/json" style="display:none">
+      <div id="exportMsg"></div>
+    </div>
+
+    <div class="hint">
+      <b>鼠标</b>：滚轮缩放 · 按住空格+左键拖=移动 · 左键拖已标顶点微调<br>
+      <b>键</b>：<kbd>Esc</kbd>取消 · <kbd>Backspace</kbd>删最后一点 · <kbd>Enter</kbd>/<kbd>双击</kbd>=房间闭合 · <kbd>Del</kbd>删选中 · <kbd>Ctrl+Z</kbd>撤销<br>
+      <b>类别</b>：房间/门窗/比例尺三个类别完全独立，各自显示开关；标完可隐掉标记看原图
+    </div>
+  </div>
+
+  <div id="stage"><canvas id="canvas"></canvas></div>
+</div>
+<div id="statusbar">
+  <span id="modeHint" style="color:var(--accent);font-weight:600">类别：房间</span>
+  <span id="posInfo">x:– y:–</span>
+  <span id="zoomInfo">100%</span>
+</div>
+
+<script>
+"use strict";
+const COLORS={room:"#f9c74f",door:"#4f9cf9",window:"#3fb96f",doorway:"#b8b8b8",scale:"#ff8a5c"};
+const ROOM_TYPES=[["卧室","bedroom"],["客厅","living"],["餐厅","dining"],["客餐厅","livingDining"],["厨房","kitchen"],["卫生间","bathroom"],["阳台","balcony"],["书房","study"],["其他","other"]];
+const OPENING_TYPES=[["门","door"],["窗","window"],["垭口","doorway"]];
+const EVIDENCES=[["无","none"],["门弧","doorArc"],["门扇","doorLeaf"],["平行线","parallelLines"]];
+
+const state={
+  image:null, mode:"room", // room/opening/scale
+  roomType:"bedroom", openingType:"door", evidence:"none", scaleMm:3000,
+  rooms:[], openings:[], scales:[],
+  visible:{room:true,opening:true,scale:true},
+  pending:null, selected:null, undoStack:[],
+  view:{scale:1,ox:0,oy:0}, panning:false,lastPan:null, dragging:null, dirty:false,
+  counter:1, mouseImg:null, spaceKey:false,
+};
+
+const $=id=>document.getElementById(id);
+const canvas=$("canvas"), ctx=canvas.getContext("2d");
+const modeOpts=$("modeOpts");
+const MAX_UNDO=50;
+
+/* ---------- image ---------- */
+function sha256bytes(p){ // compute image sha for export
+  return crypto.subtle.digest("SHA-256",p).then(b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""));
+}
+function loadImage(file){
+  const url=URL.createObjectURL(file);
+  const img=new Image();
+  img.onload=async()=>{
+    state.image={file,url,_img:img,width:img.naturalWidth,height:img.naturalHeight,sha256:""};
+    fitView(); renderImageInfo();
+    try{ state.image.sha256=await sha256bytes(await file.arrayBuffer()); }catch(e){}
+    draw();
+  };
+  img.src=url;
+}
+function renderImageInfo(){const el=$("imgInfo");if(!state.image){el.textContent="未加载图片";return;}
+  el.textContent=`${state.image.width}×${state.image.height}px · ${state.image.sha256?state.image.sha256.slice(0,12)+"…":"SHA计算中"}`;}
+
+/* ---------- view ---------- */
+function fitView(){const w=canvas.clientWidth,h=canvas.clientHeight,iw=state.image.width,ih=state.image.height;
+  const s=Math.min((w*0.9)/iw,(h*0.9)/ih);state.view.scale=s;state.view.ox=(w-iw*s)/2;state.view.oy=(h-ih*s)/2;}
+function toScreen(p){return{x:p.x*state.view.scale+state.view.ox,y:p.y*state.view.scale+state.view.oy};}
+function toImage(sx,sy){return{x:(sx-state.view.ox)/state.view.scale,y:(sy-state.view.oy)/state.view.scale};}
+function r2(v){return Math.round(v*100)/100;}
+
+/* ---------- undo ---------- */
+function pushUndo(){state.undoStack.push(JSON.stringify({rooms:state.rooms,openings:state.openings,scales:state.scales,pending:state.pending,counter:state.counter}));
+  if(state.undoStack.length>MAX_UNDO)state.undoStack.shift();state.dirty=true;}
+function undo(){const s=state.undoStack.pop();if(!s)return;const d=JSON.parse(s);
+  state.rooms=d.rooms;state.openings=d.openings;state.scales=d.scales;state.pending=d.pending;state.counter=d.counter;state.selected=null;state.dragging=null;draw();}
+
+/* ---------- object ops (categories fully independent) ---------- */
+function nextId(kind){const p={room:"room",opening:"op",scale:"scale"}[kind];return`${p}_${String(state.counter++).padStart(3,"0")}`;}
+function addPoint(pt){
+  const p={x:r2(pt.x),y:r2(pt.y)};
+  if(!state.pending){state.pending={kind:state.mode,points:[]};pushUndo();}
+  state.pending.points.push(p);
+  const k=state.pending.kind;
+  if((k==="opening"||k==="scale")&&state.pending.points.length===2)finishPending();
+}
+function finishPending(){
+  const pend=state.pending;if(!pend)return;
+  if(pend.kind==="room"){
+    if(pend.points.length<3){state.pending=null;return;}
+    state.rooms.push({id:nextId("room"),type:state.roomType,polygon:pend.points.slice()});
+  }else if(pend.kind==="opening"){
+    state.openings.push({id:nextId("opening"),type:state.openingType,evidence:state.evidence,a:pend.points[0],b:pend.points[1]});
+  }else{
+    if(!(state.scaleMm>0)){state.pending=null;return;}
+    state.scales.push({id:nextId("scale"),a:pend.points[0],b:pend.points[1],lengthMm:state.scaleMm});
+  }
+  state.pending=null;draw();
+}
+function cancelPending(){if(state.pending){state.pending=null;draw();}}
+function popPendingPoint(){if(!state.pending)return;state.pending.points.pop();if(!state.pending.points.length)state.pending=null;draw();}
+function deleteSelected(){if(!state.selected)return;const{kind,index}=state.selected;pushUndo();
+  ({room:state.rooms,opening:state.openings,scale:state.scales})[kind].splice(index,1);state.selected=null;draw();}
+
+function allObjects(cat){
+  if(cat==="room")return state.rooms.map((o,i)=>({kind:"room",index:i,obj:o}));
+  if(cat==="opening")return state.openings.map((o,i)=>({kind:"opening",index:i,obj:o}));
+  return state.scales.map((o,i)=>({kind:"scale",index:i,obj:o}));
+}
+function objPoints(kind,obj){if(kind==="opening")return[obj.a,obj.b];if(kind==="room")return obj.polygon;return[obj.a,obj.b];}
+function arrFor(kind){return{room:state.rooms,opening:state.openings,scale:state.scales}[kind];}
+
+/* ---------- hit test ---------- */
+function hitTest(imgPt,tol){
+  if(state.selected){
+    const{kind,index}=state.selected;const arr=arrFor(kind);
+    if(arr&&arr[index]){const pts=objPoints(kind,arr[index]);for(let i=0;i<pts.length;i++)if(dist(pts[i],imgPt)<=tol)return{kind,index,pointIdx:i};}
+  }
+  for(const cat of["room","opening","scale"]){
+    if(!state.visible[cat])continue;
+    for(const it of allObjects(cat)){const pts=objPoints(it.kind,it.obj);
+      for(let i=0;i<pts.length;i++)if(dist(pts[i],imgPt)<=tol)return{kind:it.kind,index:it.index,pointIdx:i};}
+  }
+  return null;
+}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+function polyArea(poly){let a=0;for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length];a+=p.x*q.y-q.x*p.y;}return a/2;}
+
+/* ---------- draw ---------- */
+function cnRoom(t){for(const[c,v]of ROOM_TYPES)if(v===t)return c;return t;}
+function cnOpen(t){for(const[c,v]of OPENING_TYPES)if(v===t)return c;return t;}
+function resizeCanvas(){const dpr=window.devicePixelRatio||1,w=canvas.clientWidth,h=canvas.clientHeight;
+  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+function dot(p,c,r=4){ctx.fillStyle=c;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#111";ctx.lineWidth=1;ctx.stroke();}
+function label(p,text,c){ctx.font="11px sans-serif";const w=ctx.measureText(text).width+8;
+  ctx.fillStyle="rgba(0,0,0,.7)";ctx.fillRect(p.x+6,p.y-19,w,16);ctx.strokeStyle=c;ctx.strokeRect(p.x+6,p.y-19,w,16);ctx.fillStyle=c;ctx.fillText(text,p.x+10,p.y-7);}
+function draw(){
+  if(!canvas.width)return;
+  const W=canvas.clientWidth,H=canvas.clientHeight;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle="#181b20";ctx.fillRect(0,0,W,H);
+  const{scale,ox,oy}=state.view;
+  if(state.image){ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);ctx.imageSmoothingEnabled=scale<2?false:true;ctx.drawImage(state.image._img,0,0);ctx.restore();
+    ctx.strokeStyle="#3a4048";ctx.strokeRect(ox,oy,state.image.width*scale,state.image.height*scale);}
+
+  // pending per current mode
+  if(state.pending){const c=COLORS[state.mode==="room"?"room":state.mode==="opening"?state.openingType:"scale"];
+    ctx.strokeStyle=c;ctx.lineWidth=1.5;ctx.setLineDash([5,4]);const pts=state.pending.points.map(toScreen);
+    if(pts.length){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.stroke();}
+    ctx.setLineDash([]);for(const p of pts)dot(p,c);
+    if(state.pending.kind==="room"&&pts.length>=2){ctx.beginPath();ctx.moveTo(pts[pts.length-1].x,pts[pts.length-1].y);ctx.lineTo(pts[0].x,pts[0].y);ctx.stroke();}}
+
+  // objects (only visible categories)
+  if(state.visible.room)state.rooms.forEach((o,i)=>{
+    const c=COLORS.room,pts=o.polygon.map(toScreen),sel=state.selected&&state.selected.kind==="room"&&state.selected.index===i;
+    if(pts.length<3)return;ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x,pts[j].y);ctx.closePath();
+    ctx.fillStyle="rgba(249,199,79,.14)";ctx.fill();ctx.strokeStyle=c;ctx.lineWidth=sel?3:2;ctx.stroke();
+    const cx=pts.reduce((s,p)=>s+p.x,0)/pts.length,cy=pts.reduce((s,p)=>s+p.y,0)/pts.length;
+    label({x:cx,y:cy},cnRoom(o.type)+" "+Math.round(Math.abs(polyArea(o.polygon)))+"px²",c);for(const p of pts)dot(p,c,sel?5:3.4);});
+  if(state.visible.opening)state.openings.forEach((o,i)=>{
+    const c=COLORS[o.type],a=toScreen(o.a),b=toScreen(o.b),sel=state.selected&&state.selected.kind==="opening"&&state.selected.index===i;
+    ctx.strokeStyle=c;ctx.lineWidth=sel?3:2;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};ctx.beginPath();ctx.arc(mid.x,mid.y,5,0,Math.PI*2);ctx.stroke();
+    dot(a,c);dot(b,c);label(mid,cnOpen(o.type),c);});
+  if(state.visible.scale)state.scales.forEach((o,i)=>{
+    const c=COLORS.scale,a=toScreen(o.a),b=toScreen(o.b),sel=state.selected&&state.selected.kind==="scale"&&state.selected.index===i;
+    ctx.strokeStyle=c;ctx.lineWidth=sel?3:2;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    for(const p of[a,b]){ctx.beginPath();ctx.moveTo(p.x-6,p.y-6);ctx.lineTo(p.x+6,p.y+6);ctx.moveTo(p.x+6,p.y-6);ctx.lineTo(p.x-6,p.y+6);ctx.stroke();}
+    label({x:(a.x+b.x)/2,y:(a.y+b.y)/2},o.lengthMm+"mm",c);});
+
+  if(state.mouseImg){const s=toScreen(state.mouseImg);ctx.strokeStyle="rgba(255,255,255,.22)";ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(s.x,0);ctx.lineTo(s.x,H);ctx.moveTo(0,s.y);ctx.lineTo(W,s.y);ctx.stroke();}
+  renderList();renderStats();
+}
+
+/* ---------- mode options ---------- */
+function chips(group,key,pairs){
+  return`<div class="type-group"><div class="tt">${key}</div><div class="chips">`+pairs.map(([cn,v])=>
+    `<div class="chip${state[group]===v?" sel":""}" data-group="${group}" data-value="${v}">${cn}</div>`).join("")+`</div></div>`;
+}
+function renderModeOpts(){
+  const m=state.mode;modeOpts.innerHTML="";
+  if(m==="room"){modeOpts.innerHTML=chips("roomType","房间类型",ROOM_TYPES)+`<div class="hint">沿墙中线点顶点，Enter/双击闭合。每个房间一个多边形。</div>`;}
+  else if(m==="opening"){modeOpts.innerHTML=chips("openingType","开口类型",OPENING_TYPES)+chips("evidence","证据(可选)",EVIDENCES)+`<div class="hint">在墙缺口两端各点一下，两点成一条。</div>`;}
+  else{modeOpts.innerHTML=`<div class="type-group"><div class="tt">尺寸线毫米值</div><input type="number" id="inpMm" min="1" value="${state.scaleMm}"></div><div class="hint">点尺寸线两端，用来标定比例。</div>`;
+    const inp=$("inpMm");if(inp)inp.onchange=e=>state.scaleMm=parseFloat(e.target.value)||0;}
+  modeOpts.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{const g=c.dataset.group,v=c.dataset.value;
+    state[g]=v;modeOpts.querySelectorAll(".chip").forEach(x=>x.classList.toggle("sel",x.dataset.group===g&&x.dataset.value===v));draw();});
+}
+
+/* ---------- list / stats ---------- */
+function renderList(){
+  const el=$("objList"),cats=state.mode;
+  const items=allObjects(cats);
+  if(!items.length){el.innerHTML=`<div class="hint">该类别暂无标注</div>`;return;}
+  el.innerHTML=items.map(it=>{const o=it.obj;let tag,desc;
+    if(it.kind==="room"){tag=`<span class="tag room">房间</span>`;desc=`${cnRoom(o.type)}`;}
+    else if(it.kind==="opening"){tag=`<span class="tag ${o.type}">${cnOpen(o.type)}</span>`;desc=`${o.id}${o.evidence&&o.evidence!=="none"?"·"+cnEv(o.evidence):""}`;}
+    else{tag=`<span class="tag scale">比例尺</span>`;desc=`${o.lengthMm}mm`;}
+    const sel=state.selected&&state.selected.kind===it.kind&&state.selected.index===it.index;
+    return`<div class="obj-item${sel?" sel":""}" data-kind="${it.kind}" data-index="${it.index}">${tag}<span>${desc}</span><span class="del" data-del="1">✕</span></div>`;
+  }).join("");
+  // clicking objects selects them & auto-switches tab to that category
+  el.querySelectorAll(".obj-item").forEach(item=>item.onclick=e=>{
+    if(e.target.closest("[data-del]"))return;
+    const kind=item.dataset.kind,index=+item.dataset.index;
+    switchCat(kind);state.selected={kind,index};draw();
+  });
+  el.querySelectorAll(".del").forEach(d=>d.onclick=e=>{e.stopPropagation();const item=d.closest(".obj-item");if(!item)return;
+    const kind=item.dataset.kind,index=+item.dataset.index;pushUndo();arrFor(kind).splice(index,1);state.selected=null;draw();});
+}
+function cnEv(v){for(const[c,x]of EVIDENCES)if(x===v)return c;return v;}
+function renderStats(){$("statText").textContent=`  房${state.rooms.length} 门${state.openings.length} 尺${state.scales.length}`;
+  $("cntRoom").textContent=state.rooms.length;$("cntOpening").textContent=state.openings.length;$("cntScale").textContent=state.scales.length;}
+
+/* ---------- category switching + visibility ---------- */
+function switchCat(cat){
+  state.mode=cat;state.pending=null;
+  document.querySelectorAll(".cat-tab").forEach(t=>t.classList.toggle("active",t.dataset.cat===cat));
+  $("modeHint").textContent="类别："+({room:"房间",opening:"门窗",scale:"比例尺"})[cat];
+  renderModeOpts();draw();
+}
+function switchVisible(cat){
+  state.visible[cat]=!state.visible[cat];
+  const b=document.querySelector(`.vis-btn[data-vis="${cat}"]`);
+  b.classList.toggle("on",state.visible[cat]);b.classList.toggle("off",!state.visible[cat]);
+  b.textContent=(state.visible[cat]?"显示":"隐藏")+({room:"房间",opening:"门窗",scale:"比例尺"})[cat];
+  draw();
+}
+
+/* ---------- export (annotation-spec format, uses pixel coords) ---------- */
+function exportJSON(){
+  if(!state.image){$("exportMsg").textContent="先加载图片";return;}
+  if(!state.rooms.length&&!state.openings.length&&!state.scales.length){$("exportMsg").textContent="还没有任何标注";return;}
+  const out={
+    schemaVersion:"0.1.0", sampleId:fileBase(state.image.file.name), imageSha256:state.image.sha256||"",
+    annotator:"", annotatedAt:new Date().toISOString(), notes:"",
+    openings:state.openings.map(o=>({id:o.id,type:o.type,evidence:o.evidence||"none",
+      pixelStart:{x:o.a.x,y:o.a.y},pixelEnd:{x:o.b.x,y:o.b.y}})),
+    rooms:state.rooms.map(r=>({id:r.id,type:r.type,polygon:r.polygon.map(p=>({x:p.x,y:p.y}))})),
+    scales:state.scales.map(s=>({id:s.id,pixelStart:{x:s.a.x,y:s.a.y},pixelEnd:{x:s.b.x,y:s.b.y},lengthMm:s.lengthMm})),
+  };
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${out.sampleId}.truth.json`;a.click();URL.revokeObjectURL(a.href);
+  $("exportMsg").textContent=`已导出 ${out.sampleId}.truth.json（房${state.rooms.length} 门${state.openings.length} 尺${state.scales.length}）`;
+}
+function fileBase(name){return name.replace(/\.[^.]+$/,"").replace(/[^\w-]/g,"_");}
+
+/* ---------- events ---------- */
+function cpos(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+canvas.addEventListener("wheel",e=>{e.preventDefault();if(!state.image)return;const pos=cpos(e),imgPt=toImage(pos.x,pos.y);
+  const f=e.deltaY<0?1.18:1/1.18,ns=Math.min(40,Math.max(.05,state.view.scale*f));
+  state.view.ox=pos.x-imgPt.x*ns;state.view.oy=pos.y-imgPt.y*ns;state.view.scale=ns;draw();},{passive:false});
+canvas.addEventListener("mousedown",e=>{const pos=cpos(e);
+  if(e.button===1||e.button===2||state.spaceKey){e.preventDefault();state.panning=true;state.lastPan=pos;return;}
+  if(e.button!==0||!state.image)return;
+  const imgPt=toImage(pos.x,pos.y);
+  if(imgPt.x<0||imgPt.y<0||imgPt.x>state.image.width||imgPt.y>state.image.height)return;
+  const hit=hitTest(imgPt,8/state.view.scale);
+  if(hit){state.selected={kind:hit.kind,index:hit.index};if(hit.kind!==state.mode)switchCat(hit.kind);state.dragging=hit;draw();return;}
+  addPoint(imgPt);draw();});
+canvas.addEventListener("mousemove",e=>{const pos=cpos(e);state.mouseImg=state.image?toImage(pos.x,pos.y):null;
+  if(state.panning&&state.lastPan){state.view.ox+=pos.x-state.lastPan.x;state.view.oy+=pos.y-state.lastPan.y;state.lastPan=pos;}
+  if(state.dragging){const imgPt=toImage(pos.x,pos.y),{kind,index,pointIdx}=state.dragging;const arr=arrFor(kind);
+    if(arr&&arr[index]){const pts=objPoints(kind,arr[index]);if(pts[pointIdx]){pts[pointIdx].x=r2(imgPt.x);pts[pointIdx].y=r2(imgPt.y);}state.dirty=true;}}
+  if(state.mouseImg)$("posInfo").textContent=`x:${Math.round(state.mouseImg.x*10)/10} y:${Math.round(state.mouseImg.y*10)/10}`;
+  $("zoomInfo").textContent=Math.round(state.view.scale*100)+"%";draw();});
+window.addEventListener("mouseup",()=>{if(state.panning){state.panning=false;state.lastPan=null;}
+  if(state.dragging){if(state.dirty){pushUndo();state.dirty=false;}state.dragging=null;draw();}});
+canvas.addEventListener("dblclick",e=>{if(state.pending&&state.pending.kind==="room"){e.preventDefault();if(state.pending.points.length>0)state.pending.points.pop();finishPending();}});
+canvas.addEventListener("contextmenu",e=>e.preventDefault());
+window.addEventListener("keydown",e=>{if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"){if(e.key==="Enter")e.target.blur();return;}
+  if(e.key===" "){e.preventDefault();state.spaceKey=true;canvas.style.cursor="grab";}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo();return;}
+  if(e.key==="Escape")cancelPending();
+  if(e.key==="Backspace"){e.preventDefault();popPendingPoint();}
+  if(e.key==="Delete")deleteSelected();
+  if(e.key==="Enter"&&state.pending&&state.pending.kind==="room")finishPending();});
+window.addEventListener("keyup",e=>{if(e.key===" "){state.spaceKey=false;canvas.style.cursor="crosshair";}});
+
+/* ---------- wiring ---------- */
+$("btnPickImg").onclick=()=>$("fileImg").click();
+$("fileImg").onchange=e=>{if(e.target.files[0])loadImage(e.target.files[0]);e.target.value="";};
+document.querySelectorAll(".cat-tab").forEach(t=>t.onclick=()=>switchCat(t.dataset.cat));
+document.querySelectorAll(".vis-btn").forEach(b=>b.onclick=()=>switchVisible(b.dataset.vis));
+$("btnUndo").onclick=undo;
+$("btnDelSel").onclick=deleteSelected;
+$("btnClear").onclick=()=>{if(!confirm("清空当前全部标注？"))return;pushUndo();state.rooms=[];state.openings=[];state.scales=[];state.selected=null;state.pending=null;draw();};
+$("btnExport").onclick=exportJSON;
+
+/* ---------- persistence: localStorage save/restore + JSON import ---------- */
+function lsKey(){return"fp-annotator-v3:current";}
+function saveLOCAL(){
+  if(!state.image&&!state.rooms.length&&!state.openings.length&&!state.scales.length)return;
+  try{
+    localStorage.setItem(lsKey(),JSON.stringify({
+      imageName:state.image?state.image.file.name:null, imageSha256:state.image?state.image.sha256:"",
+      rooms:state.rooms,openings:state.openings,scales:state.scales,counter:state.counter,
+      imageData:state.image?state.image.url:null, hasImage:!!state.image,
+    }));
+    $("exportMsg").textContent="进度已保存到浏览器";
+  }catch(e){$("exportMsg").textContent="保存失败:"+e.message;}
+}
+function restoreLOCAL(){
+  if(!state.image)return;
+  try{
+    const raw=localStorage.getItem(lsKey());if(!raw)return;
+    const d=JSON.parse(raw);
+    state.rooms=d.rooms||[];state.openings=d.openings||[];state.scales=d.scales||[];state.counter=d.counter||1;
+    draw();
+  }catch(e){}
+}
+function loadJSONFile(file){
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const d=JSON.parse(reader.result);
+      // accept both api-spec and internal state shapes
+      if(d.rooms&&Array.isArray(d.rooms)&&d.rooms[0]&&d.rooms[0].polygon){
+        state.rooms=d.rooms.map(r=>({id:r.id||nextId("room"),type:r.type||"other",polygon:r.polygon.map(p=>({x:p.x,y:p.y}))}));
+      }else if(d.rooms&&Array.isArray(d.rooms)){state.rooms=d.rooms;}
+      if(d.openings&&Array.isArray(d.openings)){
+        state.openings=d.openings.map(o=>{
+          const a=o.pixelStart||o.a||{x:0,y:0},b=o.pixelEnd||o.b||{x:0,y:0};
+          // normalize {x,y} objects to point objects
+          return{id:o.id||nextId("opening"),type:o.type||"door",evidence:o.evidence||"none",a:{x:a.x,y:a.y},b:{x:b.x,y:b.y}};
+        });
+      }
+      if(d.scales&&Array.isArray(d.scales)){
+        state.scales=d.scales.map(s=>({id:s.id||nextId("scale"),a:{x:s.pixelStart.x,y:s.pixelStart.y},b:{x:s.pixelEnd.x,y:s.pixelEnd.y},lengthMm:s.lengthMm||0}));
+      }
+      state.selected=null;state.pending=null;draw();
+      $("exportMsg").textContent="已导入 “"+d.sampleId+"” 标注：房"+state.rooms.length+" 门"+state.openings.length+" 尺"+state.scales.length;
+    }catch(e){$("exportMsg").textContent="JSON 解析失败:"+e.message;}
+  };
+  reader.readAsText(file);
+}
+$("btnSave").onclick=saveLOCAL;
+$("btnImport").onclick=()=>$("fileJson").click();
+$("fileJson").onchange=e=>{if(e.target.files[0])loadJSONFile(e.target.files[0]);e.target.value="";};
+// restore after an image is loaded (hook into loadImage end)
+// auto-restore is called from loadImage via a saved promise; simpler: poll once image set
+setInterval(()=>{if(state.image&&!state._restored){state._restored=true;restoreLOCAL();}},500);
+window.addEventListener("beforeunload",()=>saveLOCAL());
+// allow drag&drop image
+$("stage").addEventListener("dragover",e=>e.preventDefault());
+$("stage").addEventListener("drop",e=>{e.preventDefault();if(e.dataTransfer.files[0])loadImage(e.dataTransfer.files[0]);});
+window.addEventListener("resize",()=>{resizeCanvas();draw();});
+
+renderModeOpts();resizeCanvas();draw();
+</script>
+</body>
+</html>

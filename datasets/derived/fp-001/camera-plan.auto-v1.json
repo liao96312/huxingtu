@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "layoutRevisionId": "layout_fp001_auto_r5",
+  "sourceLayoutHash": "600599c78cd3488a7bc3dd552711dd65c5b53ab457fb7e2dce4bdc760ca610fe",
+  "sourceRoomHash": "edd1f553bc9270fd37228b59c26a80c7cdf3c9ef688b2ea4ff82f9e9962a6d5e",
+  "cameras": [
+    {
+      "id": "camera_room_bed_left_main",
+      "roomId": "room_bed_left",
+      "position": {
+        "x": 1243.692,
+        "y": 4714.462,
+        "z": 1500.0
+      },
+      "clearance": 1504.0,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_room_bed_center_main",
+      "roomId": "room_bed_center",
+      "position": {
+        "x": 4063.692,
+        "y": 4454.154,
+        "z": 1500.0
+      },
+      "clearance": 1113.538,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_room_bath_main",
+      "roomId": "room_bath",
+      "position": {
+        "x": 5958.154,
+        "y": 4034.769,
+        "z": 1500.0
+      },
+      "clearance": 780.923,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_room_kitchen_main",
+      "roomId": "room_kitchen",
+      "position": {
+        "x": 7621.231,
+        "y": 2299.385,
+        "z": 1500.0
+      },
+      "clearance": 882.154,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_room_living_dining_main",
+      "roomId": "room_living_dining",
+      "position": {
+        "x": 3369.538,
+        "y": 1663.077,
+        "z": 1500.0
+      },
+      "clearance": 1547.385,
+      "method": "polylabel"
+    }
+  ],
+  "contentHash": "c21b457aa7f6b15af38f7c947bb1d84fa93fc26e02f6ad4dacc0fa01f4b71ad6"
+}

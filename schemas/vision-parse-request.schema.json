@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/vision-parse-request/0.1.0",
+  "title": "VisionParseRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "imageSha256", "provider", "model", "promptVersion", "draftSchemaVersion", "sourceWidth", "sourceHeight"],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "imageSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "provider": { "const": "tuzi" },
+    "model": { "type": "string", "minLength": 1 },
+    "promptVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "draftSchemaVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "sourceWidth": { "type": "integer", "exclusiveMinimum": 0 },
+    "sourceHeight": { "type": "integer", "exclusiveMinimum": 0 }
+  }
+}

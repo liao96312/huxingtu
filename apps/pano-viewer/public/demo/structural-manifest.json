@@ -1,0 +1,178 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "revision": 5,
+  "defaultSceneId": "living-main-structural",
+  "projection": "equirectangular",
+  "scenes": [
+    {
+      "id": "living-main-structural",
+      "roomId": "room_living_dining",
+      "roomName": "客餐厅",
+      "title": "客餐厅结构全景",
+      "order": 0,
+      "assets": {
+        "original": {
+          "url": "/demo/living-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy2k": {
+          "url": "/demo/living-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy1k": {
+          "url": "/demo/living-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "thumbnailUrl": "/demo/living-main-erp-2048x1024.png"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      }
+    },
+    {
+      "id": "kitchen-main-structural",
+      "roomId": "room_kitchen",
+      "roomName": "厨房",
+      "title": "厨房结构全景",
+      "order": 1,
+      "assets": {
+        "original": {
+          "url": "/demo/kitchen-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy2k": {
+          "url": "/demo/kitchen-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy1k": {
+          "url": "/demo/kitchen-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "thumbnailUrl": "/demo/kitchen-main-erp-2048x1024.png"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      }
+    },
+    {
+      "id": "bed-center-main-structural",
+      "roomId": "room_bed_center",
+      "roomName": "中部卧室",
+      "title": "中部卧室结构全景",
+      "order": 2,
+      "assets": {
+        "original": {
+          "url": "/demo/bed-center-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy2k": {
+          "url": "/demo/bed-center-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy1k": {
+          "url": "/demo/bed-center-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "thumbnailUrl": "/demo/bed-center-main-erp-2048x1024.png"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      }
+    },
+    {
+      "id": "bed-left-main-structural",
+      "roomId": "room_bed_left",
+      "roomName": "左侧卧室",
+      "title": "左侧卧室结构全景",
+      "order": 3,
+      "assets": {
+        "original": {
+          "url": "/demo/bed-left-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy2k": {
+          "url": "/demo/bed-left-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy1k": {
+          "url": "/demo/bed-left-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "thumbnailUrl": "/demo/bed-left-main-erp-2048x1024.png"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      }
+    },
+    {
+      "id": "bath-main-structural",
+      "roomId": "room_bath",
+      "roomName": "卫生间",
+      "title": "卫生间结构全景",
+      "order": 4,
+      "assets": {
+        "original": {
+          "url": "/demo/bath-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy2k": {
+          "url": "/demo/bath-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy1k": {
+          "url": "/demo/bath-main-erp-2048x1024.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "thumbnailUrl": "/demo/bath-main-erp-2048x1024.png"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      }
+    }
+  ],
+  "share": {
+    "title": "fp-001 客餐厅结构全景"
+  },
+  "contentHash": "fe75a45fbe018dfc402ebbc3afb7d20199cae9bef6494f5d4d508f9528244878"
+}

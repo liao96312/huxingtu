@@ -1,0 +1,55 @@
+{
+  "source": {
+    "file": "living-main-imagen-clarity-v1.png",
+    "width": 1774,
+    "height": 887,
+    "byteLength": 1863267,
+    "sha256": "d82e8cd102cfbae8150776be5872782cad64786858f155963ea10b3b32df0461"
+  },
+  "upscale": {
+    "tool": "Real-ESRGAN-ncnn-vulkan",
+    "model": "realesrgan-x4plus",
+    "modelScale": 4,
+    "scale": 3,
+    "wrapPaddingInputPx": 64,
+    "finalSeamBlendPx": 24,
+    "tileMode": "manual-overlap",
+    "tileSize": 512,
+    "minimumOverlap": 96,
+    "tileGrid": [
+      5,
+      3
+    ],
+    "outputSeamMae": 0.0,
+    "assets": [
+      {
+        "file": "living-main-imagen-clarity-v1-6144x3072.jpg",
+        "width": 6144,
+        "height": 3072,
+        "byteLength": 3733199,
+        "sha256": "cfe9543891e48b50ba56646666f4233c77dc92ffd708602c38e91b14bb49af1d"
+      },
+      {
+        "file": "living-main-imagen-clarity-v1-proxy-4096x2048.jpg",
+        "width": 4096,
+        "height": 2048,
+        "byteLength": 1300421,
+        "sha256": "f41c2bd378f2ca10fed55388e0ba1688907a22e6ed3c2e174c613d0403a5c2ac"
+      },
+      {
+        "file": "living-main-imagen-clarity-v1-proxy-2048x1024.jpg",
+        "width": 2048,
+        "height": 1024,
+        "byteLength": 336051,
+        "sha256": "d70206dc3a8fac78b50b1373b4fa615c754d3e677a59f7742abac5e44e741554"
+      },
+      {
+        "file": "living-main-imagen-clarity-v1-proxy-1024x512.jpg",
+        "width": 1024,
+        "height": 512,
+        "byteLength": 82233,
+        "sha256": "d00fcad85aebddfeb48f32966ba1bfc43e193b062cec638558ce0c5bdb032c43"
+      }
+    ]
+  }
+}

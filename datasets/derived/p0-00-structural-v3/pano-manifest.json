@@ -1,0 +1,375 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-structural-v3",
+  "revision": 1,
+  "defaultSceneId": "vlm_room_006-main",
+  "projection": "equirectangular",
+  "scenes": [
+    {
+      "id": "vlm_room_006-main",
+      "roomId": "vlm_room_006",
+      "roomName": "客餐厅",
+      "title": "客餐厅 结构预览",
+      "order": 0,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_006-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_006-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_006-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-structural-v3/panorama/vlm_room_006-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 171.97265625,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": [
+        {
+          "id": "hotspot-cv_opening_002-vlm_room_006-to-vlm_room_004",
+          "label": "去卧室",
+          "targetSceneId": "vlm_room_004-main",
+          "yaw": 165.07552103683375,
+          "pitch": 0.0
+        },
+        {
+          "id": "hotspot-cv_opening_007-vlm_room_006-to-vlm_room_005",
+          "label": "去卫生间",
+          "targetSceneId": "vlm_room_005-main",
+          "yaw": 99.51748295049074,
+          "pitch": 0.0
+        }
+      ]
+    },
+    {
+      "id": "vlm_room_001-main",
+      "roomId": "vlm_room_001",
+      "roomName": "卧室",
+      "title": "卧室 结构预览",
+      "order": 1,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_001-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_001-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_001-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-structural-v3/panorama/vlm_room_001-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 108.45703125,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": [
+        {
+          "id": "hotspot-cv_opening_000-vlm_room_001-to-vlm_room_002",
+          "label": "去卧室",
+          "targetSceneId": "vlm_room_002-main",
+          "yaw": 49.2469928852132,
+          "pitch": 0.0
+        }
+      ]
+    },
+    {
+      "id": "vlm_room_004-main",
+      "roomId": "vlm_room_004",
+      "roomName": "卧室",
+      "title": "卧室 结构预览",
+      "order": 2,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_004-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_004-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_004-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-structural-v3/panorama/vlm_room_004-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 176.455078125,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": [
+        {
+          "id": "hotspot-cv_opening_002-vlm_room_004-to-vlm_room_006",
+          "label": "去客餐厅",
+          "targetSceneId": "vlm_room_006-main",
+          "yaw": -40.188465498321975,
+          "pitch": 0.0
+        }
+      ]
+    },
+    {
+      "id": "vlm_room_002-main",
+      "roomId": "vlm_room_002",
+      "roomName": "卧室",
+      "title": "卧室 结构预览",
+      "order": 3,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_002-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_002-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_002-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-structural-v3/panorama/vlm_room_002-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": -148.037109375,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": [
+        {
+          "id": "hotspot-cv_opening_000-vlm_room_002-to-vlm_room_001",
+          "label": "去卧室",
+          "targetSceneId": "vlm_room_001-main",
+          "yaw": 125.98909737408775,
+          "pitch": 0.0
+        }
+      ]
+    },
+    {
+      "id": "vlm_room_007-main",
+      "roomId": "vlm_room_007",
+      "roomName": "阳台",
+      "title": "阳台 结构预览",
+      "order": 4,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_007-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_007-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_007-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-structural-v3/panorama/vlm_room_007-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 51.85546875,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": []
+    },
+    {
+      "id": "vlm_room_008-main",
+      "roomId": "vlm_room_008",
+      "roomName": "厨房",
+      "title": "厨房 结构预览",
+      "order": 5,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_008-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_008-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_008-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-structural-v3/panorama/vlm_room_008-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 5.2734375,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": []
+    },
+    {
+      "id": "vlm_room_000-main",
+      "roomId": "vlm_room_000",
+      "roomName": "阳台",
+      "title": "阳台 结构预览",
+      "order": 6,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_000-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_000-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_000-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-structural-v3/panorama/vlm_room_000-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 33.75,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": []
+    },
+    {
+      "id": "vlm_room_005-main",
+      "roomId": "vlm_room_005",
+      "roomName": "卫生间",
+      "title": "卫生间 结构预览",
+      "order": 7,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_005-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_005-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_005-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-structural-v3/panorama/vlm_room_005-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": -88.0078125,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": [
+        {
+          "id": "hotspot-cv_opening_007-vlm_room_005-to-vlm_room_006",
+          "label": "去客餐厅",
+          "targetSceneId": "vlm_room_006-main",
+          "yaw": 46.731334934635576,
+          "pitch": 0.0
+        }
+      ]
+    },
+    {
+      "id": "vlm_room_003-main",
+      "roomId": "vlm_room_003",
+      "roomName": "卫生间",
+      "title": "卫生间 结构预览",
+      "order": 8,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_003-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_003-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-structural-v3/panorama/vlm_room_003-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-structural-v3/panorama/vlm_room_003-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 26.54296875,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": []
+    }
+  ],
+  "share": {
+    "title": "p0-00-structural-v3 · 现代全景预览"
+  },
+  "contentHash": "8017db929e089d5c1bf80179193dc8bd1cc86001cb4064a0d1b6ea1c6e4a1402"
+}

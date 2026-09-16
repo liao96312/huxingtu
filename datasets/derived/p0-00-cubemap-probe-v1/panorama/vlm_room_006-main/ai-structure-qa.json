@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "0.1.0",
+  "method": "low-frequency-wrapped-edge-proxy-v1",
+  "status": "rejected",
+  "tolerancePx": 8,
+  "referenceWidth": 2048,
+  "referenceHeight": 1024,
+  "candidateWidth": 3824,
+  "candidateHeight": 1912,
+  "referenceEdgeDensity": 0.006035,
+  "candidateEdgeDensity": 0.061119,
+  "edgeDensityRatio": 10.1277,
+  "referenceRecallWithinTolerance": 0.6346,
+  "candidatePrecisionWithinTolerance": 0.0776,
+  "referenceLongLineCount": 8,
+  "candidateLongLineCount": 36,
+  "seamMae": 0.587,
+  "wallCleanliness": {
+    "status": "accepted",
+    "coverage": 0.3113,
+    "lowFrequencyUnevennessP90": 28.83,
+    "threshold": 30.0
+  },
+  "reasonCodes": [
+    "STRUCTURE_EDGE_RECALL_LOW",
+    "STRUCTURE_EDGE_PRECISION_LOW",
+    "STRUCTURE_EDGE_DENSITY_DRIFT"
+  ],
+  "semanticIoU": null,
+  "semanticF1": null
+}

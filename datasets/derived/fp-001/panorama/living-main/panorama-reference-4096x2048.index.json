@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "scene": "living-main",
+  "renderPass": "rgb",
+  "projection": "equirectangular",
+  "file": "living-main-erp-4096x2048.png",
+  "width": 4096,
+  "height": 2048,
+  "byteLength": 462678,
+  "sha256": "f007cc43fcbec8a00a5a04e24609b3ea6ec922c09f53995877275d189ceeb5a8",
+  "seamMae": 0.055,
+  "cubemapIndex": "cubemap-2048/cubemap.index.json",
+  "captureProfile": {
+    "schemaVersion": "0.1.0",
+    "requestedResolution": 2048,
+    "actualCubeFaceSize": 2048,
+    "actualErpWidth": 4096,
+    "actualErpHeight": 2048,
+    "method": "sixFaceWebglCpuErp",
+    "supersampleScale": 1,
+    "maxCubeMapTextureSize": null,
+    "maxRenderbufferSize": null,
+    "allocationProbe": "notRun",
+    "pixelReadbackProbe": "notRun",
+    "resizeReasonCode": null
+  }
+}

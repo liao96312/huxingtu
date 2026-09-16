@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "golden_viewer",
+  "revision": 1,
+  "defaultSceneId": "living_01",
+  "projection": "equirectangular",
+  "scenes": [
+    {
+      "id": "living_01",
+      "roomId": "room_living",
+      "roomName": "客餐厅",
+      "title": "客餐厅-视角1",
+      "order": 0,
+      "assets": {
+        "original": { "url": "/demo/pano-grid.svg", "width": 6144, "height": 3072, "contentType": "image/svg+xml" },
+        "proxy2k": { "url": "/demo/pano-grid.svg", "width": 2048, "height": 1024, "contentType": "image/svg+xml" },
+        "proxy1k": { "url": "/demo/pano-grid.svg", "width": 1024, "height": 512, "contentType": "image/svg+xml" },
+        "thumbnailUrl": "/demo/pano-grid.svg"
+      },
+      "initialView": { "yaw": 0, "pitch": 0, "fov": 82 }
+    },
+    {
+      "id": "living_02",
+      "roomId": "room_living",
+      "roomName": "客餐厅",
+      "title": "客餐厅-视角2",
+      "order": 1,
+      "assets": {
+        "original": { "url": "/demo/pano-grid.svg", "width": 6144, "height": 3072, "contentType": "image/svg+xml" },
+        "proxy2k": { "url": "/demo/pano-grid.svg", "width": 2048, "height": 1024, "contentType": "image/svg+xml" },
+        "proxy1k": { "url": "/demo/pano-grid.svg", "width": 1024, "height": 512, "contentType": "image/svg+xml" },
+        "thumbnailUrl": "/demo/pano-grid.svg"
+      },
+      "initialView": { "yaw": 45, "pitch": 0, "fov": 82 }
+    },
+    {
+      "id": "living_03",
+      "roomId": "room_living",
+      "roomName": "客餐厅",
+      "title": "客餐厅-视角3",
+      "order": 2,
+      "assets": {
+        "original": { "url": "/demo/pano-grid.svg", "width": 6144, "height": 3072, "contentType": "image/svg+xml" },
+        "proxy2k": { "url": "/demo/pano-grid.svg", "width": 2048, "height": 1024, "contentType": "image/svg+xml" },
+        "proxy1k": { "url": "/demo/pano-grid.svg", "width": 1024, "height": 512, "contentType": "image/svg+xml" },
+        "thumbnailUrl": "/demo/pano-grid.svg"
+      },
+      "initialView": { "yaw": 90, "pitch": 0, "fov": 82 }
+    },
+    {
+      "id": "living_04",
+      "roomId": "room_living",
+      "roomName": "客餐厅",
+      "title": "客餐厅-视角4",
+      "order": 3,
+      "assets": {
+        "original": { "url": "/demo/pano-grid.svg", "width": 6144, "height": 3072, "contentType": "image/svg+xml" },
+        "proxy2k": { "url": "/demo/pano-grid.svg", "width": 2048, "height": 1024, "contentType": "image/svg+xml" },
+        "proxy1k": { "url": "/demo/pano-grid.svg", "width": 1024, "height": 512, "contentType": "image/svg+xml" },
+        "thumbnailUrl": "/demo/pano-grid.svg"
+      },
+      "initialView": { "yaw": 135, "pitch": 0, "fov": 82 }
+    },
+    {
+      "id": "living_05",
+      "roomId": "room_living",
+      "roomName": "客餐厅",
+      "title": "客餐厅-视角5",
+      "order": 4,
+      "assets": {
+        "original": { "url": "/demo/pano-grid.svg", "width": 6144, "height": 3072, "contentType": "image/svg+xml" },
+        "proxy2k": { "url": "/demo/pano-grid.svg", "width": 2048, "height": 1024, "contentType": "image/svg+xml" },
+        "proxy1k": { "url": "/demo/pano-grid.svg", "width": 1024, "height": 512, "contentType": "image/svg+xml" },
+        "thumbnailUrl": "/demo/pano-grid.svg"
+      },
+      "initialView": { "yaw": 180, "pitch": 0, "fov": 82 }
+    },
+    {
+      "id": "kitchen_01",
+      "roomId": "room_kitchen",
+      "roomName": "厨房",
+      "title": "厨房-视角1",
+      "order": 5,
+      "assets": {
+        "original": { "url": "/demo/pano-grid.svg", "width": 6144, "height": 3072, "contentType": "image/svg+xml" },
+        "proxy2k": { "url": "/demo/pano-grid.svg", "width": 2048, "height": 1024, "contentType": "image/svg+xml" },
+        "proxy1k": { "url": "/demo/pano-grid.svg", "width": 1024, "height": 512, "contentType": "image/svg+xml" },
+        "thumbnailUrl": "/demo/pano-grid.svg"
+      },
+      "initialView": { "yaw": -135, "pitch": 0, "fov": 82 }
+    },
+    {
+      "id": "kitchen_02",
+      "roomId": "room_kitchen",
+      "roomName": "厨房",
+      "title": "厨房-视角2",
+      "order": 6,
+      "assets": {
+        "original": { "url": "/demo/pano-grid.svg", "width": 6144, "height": 3072, "contentType": "image/svg+xml" },
+        "proxy2k": { "url": "/demo/pano-grid.svg", "width": 2048, "height": 1024, "contentType": "image/svg+xml" },
+        "proxy1k": { "url": "/demo/pano-grid.svg", "width": 1024, "height": 512, "contentType": "image/svg+xml" },
+        "thumbnailUrl": "/demo/pano-grid.svg"
+      },
+      "initialView": { "yaw": -90, "pitch": 0, "fov": 82 }
+    },
+    {
+      "id": "kitchen_03",
+      "roomId": "room_kitchen",
+      "roomName": "厨房",
+      "title": "厨房-视角3",
+      "order": 7,
+      "assets": {
+        "original": { "url": "/demo/pano-grid.svg", "width": 6144, "height": 3072, "contentType": "image/svg+xml" },
+        "proxy2k": { "url": "/demo/pano-grid.svg", "width": 2048, "height": 1024, "contentType": "image/svg+xml" },
+        "proxy1k": { "url": "/demo/pano-grid.svg", "width": 1024, "height": 512, "contentType": "image/svg+xml" },
+        "thumbnailUrl": "/demo/pano-grid.svg"
+      },
+      "initialView": { "yaw": -45, "pitch": 0, "fov": 82 }
+    }
+  ],
+  "share": { "title": "AI 全景 Golden Viewer" },
+  "contentHash": "11a1338e8943bbe1cea395e74b8a70fa55827620478b71a90cec4fadc48184f8"
+}

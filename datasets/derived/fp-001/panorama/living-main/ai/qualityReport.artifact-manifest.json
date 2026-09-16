@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "artifact:fp001:quality-report:living-main:gpt-image-2:v1",
+  "projectId": "fp001",
+  "artifactType": "qualityReport",
+  "contentHash": "7cee8f70f5bd1f46ed24a805d7d5730d78a380515d22babddb8b44eb54b01443",
+  "byteLength": 945,
+  "contentType": "application/json",
+  "generator": {
+    "name": "semantic-edge-proxy-qa",
+    "version": "0.1.0"
+  },
+  "inputDigests": [
+    "45dd48694fbdf2af04b1350deda98334a24ba31851effb98a8ca283c555a918e",
+    "80956835ac2d47dc84b0bea87792017b32c31477a7e2a2270979d7fbdb0c7f0c"
+  ],
+  "createdAt": "2026-08-25T02:07:54.106426Z",
+  "metadata": {
+    "status": "needsReview",
+    "reasonCodes": [
+      "EDGE_RECALL_PROXY_ONLY",
+      "AI_SEMANTIC_SEGMENTATION_REQUIRED_FOR_IOU_AND_F1"
+    ]
+  }
+}

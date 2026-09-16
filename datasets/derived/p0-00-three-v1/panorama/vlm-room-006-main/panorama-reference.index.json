@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-three-v1",
+  "scene": "vlm-room-006-main",
+  "renderPass": "rgb",
+  "projection": "equirectangular",
+  "file": "vlm-room-006-main-erp-2048x1024.png",
+  "width": 2048,
+  "height": 1024,
+  "byteLength": 55082,
+  "sha256": "c7c1e75fa80fc14a19e77017ac377ce6aadda1068ed6fe4325d6e35037f5db46",
+  "seamMae": 0.0,
+  "cubemapIndex": "cubemap/cubemap.index.json",
+  "captureProfile": {
+    "schemaVersion": "0.1.0",
+    "requestedResolution": 1024,
+    "actualCubeFaceSize": 1024,
+    "actualErpWidth": 2048,
+    "actualErpHeight": 1024,
+    "method": "sixFaceWebglCpuErp",
+    "supersampleScale": 1,
+    "maxCubeMapTextureSize": null,
+    "maxRenderbufferSize": null,
+    "allocationProbe": "notRun",
+    "pixelReadbackProbe": "notRun",
+    "resizeReasonCode": null
+  }
+}

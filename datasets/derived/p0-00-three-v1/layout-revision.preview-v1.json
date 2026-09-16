@@ -1,0 +1,472 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "p0_00_three_layout_r1",
+  "projectId": "p0-00-three-v1",
+  "revision": 1,
+  "units": "mm",
+  "coordinateFrame": "business-z-up-rh",
+  "source": {
+    "imageArtifactId": "sha256:7ecfc15f321221bc93466ee0080ed531399fa2183607de816ceba3459914d165",
+    "pixelToWorldTransform": [
+      8.461538461538462,
+      0.0,
+      0.0,
+      0.0,
+      8.461538461538462,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "scaleConfidence": 0.5
+  },
+  "nodes": [
+    {
+      "x": 3684.250311762738,
+      "y": 7275.35946395844,
+      "id": "node_001"
+    },
+    {
+      "x": 5981.732247749614,
+      "y": 7275.35946395844,
+      "id": "node_002"
+    },
+    {
+      "x": 8113.629900061761,
+      "y": 7275.35946395844,
+      "id": "node_003"
+    },
+    {
+      "x": 9872.962914105765,
+      "y": 7275.35946395844,
+      "id": "node_004"
+    },
+    {
+      "x": 2980.5171061451365,
+      "y": 8693.174892923314,
+      "id": "node_005"
+    },
+    {
+      "x": 7202.916339850746,
+      "y": 8693.174892923314,
+      "id": "node_006"
+    },
+    {
+      "x": 8051.535793683736,
+      "y": 8693.174892923314,
+      "id": "node_007"
+    },
+    {
+      "x": 9872.962914105765,
+      "y": 8693.174892923314,
+      "id": "node_008"
+    },
+    {
+      "x": 3911.9287018154914,
+      "y": 11508.10771539372,
+      "id": "node_009"
+    },
+    {
+      "x": 10121.339339617858,
+      "y": 11508.10771539372,
+      "id": "node_010"
+    },
+    {
+      "x": 9003.645424813432,
+      "y": 14116.060183270714,
+      "id": "node_011"
+    },
+    {
+      "x": 13640.005367705868,
+      "y": 14116.060183270714,
+      "id": "node_012"
+    },
+    {
+      "x": 13495.119119490479,
+      "y": 2359.5760423649,
+      "id": "node_013"
+    },
+    {
+      "x": 13495.119119490479,
+      "y": 14260.946431486103,
+      "id": "node_014"
+    },
+    {
+      "x": 9790.170772268399,
+      "y": 3249.5915671165726,
+      "id": "node_015"
+    },
+    {
+      "x": 9790.170772268399,
+      "y": 7513.386871740864,
+      "id": "node_016"
+    },
+    {
+      "x": 7078.728127094699,
+      "y": 3270.2896025759132,
+      "id": "node_017"
+    },
+    {
+      "x": 7078.728127094699,
+      "y": 7637.5750844969125,
+      "id": "node_018"
+    },
+    {
+      "x": 3725.6463826814206,
+      "y": 4056.8149500308805,
+      "id": "node_019"
+    },
+    {
+      "x": 3725.6463826814206,
+      "y": 7202.916339850746,
+      "id": "node_020"
+    },
+    {
+      "x": 3063.3092479825013,
+      "y": 6685.4654533672165,
+      "id": "node_021"
+    },
+    {
+      "x": 3063.3092479825013,
+      "y": 8838.061141138704,
+      "id": "node_022"
+    },
+    {
+      "x": 8196.422041899126,
+      "y": 8651.778822004633,
+      "id": "node_023"
+    },
+    {
+      "x": 8196.422041899126,
+      "y": 11590.899857231085,
+      "id": "node_024"
+    },
+    {
+      "x": 9790.170772268399,
+      "y": 8651.778822004633,
+      "id": "node_025"
+    },
+    {
+      "x": 9790.170772268399,
+      "y": 11590.899857231085,
+      "id": "node_026"
+    },
+    {
+      "x": 7720.367226334277,
+      "y": 12584.405559279465,
+      "id": "node_027"
+    },
+    {
+      "x": 7720.367226334277,
+      "y": 14260.946431486103,
+      "id": "node_028"
+    },
+    {
+      "x": 1573.050694909933,
+      "y": 2338.8780069055583,
+      "id": "node_029"
+    },
+    {
+      "x": 13619.307332246526,
+      "y": 2338.8780069055583,
+      "id": "node_030"
+    },
+    {
+      "x": 1573.050694909933,
+      "y": 15792.601055477355,
+      "id": "node_031"
+    },
+    {
+      "x": 13619.307332246526,
+      "y": 15792.601055477355,
+      "id": "node_032"
+    }
+  ],
+  "edges": [
+    {
+      "id": "wall_h1",
+      "startNodeId": "node_001",
+      "endNodeId": "node_002",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_h2",
+      "startNodeId": "node_003",
+      "endNodeId": "node_004",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_h3",
+      "startNodeId": "node_005",
+      "endNodeId": "node_006",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_h4",
+      "startNodeId": "node_007",
+      "endNodeId": "node_008",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_h5",
+      "startNodeId": "node_009",
+      "endNodeId": "node_010",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_h6",
+      "startNodeId": "node_011",
+      "endNodeId": "node_012",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_v7",
+      "startNodeId": "node_013",
+      "endNodeId": "node_014",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_v8",
+      "startNodeId": "node_015",
+      "endNodeId": "node_016",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_v9",
+      "startNodeId": "node_017",
+      "endNodeId": "node_018",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_v10",
+      "startNodeId": "node_019",
+      "endNodeId": "node_020",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_v11",
+      "startNodeId": "node_021",
+      "endNodeId": "node_022",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_v12",
+      "startNodeId": "node_023",
+      "endNodeId": "node_024",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_v13",
+      "startNodeId": "node_025",
+      "endNodeId": "node_026",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_v14",
+      "startNodeId": "node_027",
+      "endNodeId": "node_028",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_gap15",
+      "startNodeId": "node_002",
+      "endNodeId": "node_003",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_gap16",
+      "startNodeId": "node_006",
+      "endNodeId": "node_007",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_gap17",
+      "startNodeId": "node_016",
+      "endNodeId": "node_025",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_boundary_h15",
+      "startNodeId": "node_029",
+      "endNodeId": "node_030",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_boundary_h16",
+      "startNodeId": "node_031",
+      "endNodeId": "node_032",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "wall_boundary_v17",
+      "startNodeId": "node_029",
+      "endNodeId": "node_031",
+      "thickness": 110.0,
+      "height": 2800.0,
+      "confidence": 0.5
+    }
+  ],
+  "openings": [
+    {
+      "id": "cv_opening_000",
+      "type": "door",
+      "wallEdgeId": "wall_gap15",
+      "offset": 615.948826156073,
+      "width": 900.0,
+      "height": 2100.0,
+      "sill": 0.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "cv_opening_002",
+      "type": "door",
+      "wallEdgeId": "wall_gap16",
+      "offset": 25.000000000000284,
+      "width": 798.6194538329896,
+      "height": 2100.0,
+      "sill": 0.0,
+      "confidence": 0.5
+    },
+    {
+      "id": "cv_opening_007",
+      "type": "door",
+      "wallEdgeId": "wall_v13",
+      "offset": 1845.412124545268,
+      "width": 900.0,
+      "height": 2100.0,
+      "sill": 0.0,
+      "confidence": 0.5
+    }
+  ],
+  "roomAnnotations": [
+    {
+      "id": "annotation_vlm_room_006",
+      "type": "livingDining",
+      "label": "livingDining",
+      "anchor": {
+        "x": 4205.384615384615,
+        "y": 3264.0384615384614
+      },
+      "confidence": 0.5
+    },
+    {
+      "id": "annotation_vlm_room_001",
+      "type": "bedroom",
+      "label": "bedroom",
+      "anchor": {
+        "x": 2208.4615384615386,
+        "y": 2193.6157692307693
+      },
+      "confidence": 0.5
+    },
+    {
+      "id": "annotation_vlm_room_004",
+      "type": "bedroom",
+      "label": "bedroom",
+      "anchor": {
+        "x": 2436.923076923077,
+        "y": 4129.2307692307695
+      },
+      "confidence": 0.5
+    },
+    {
+      "id": "annotation_vlm_room_002",
+      "type": "bedroom",
+      "label": "bedroom",
+      "anchor": {
+        "x": 3448.0769230769233,
+        "y": 2193.6157692307693
+      },
+      "confidence": 0.5
+    },
+    {
+      "id": "annotation_vlm_room_007",
+      "type": "balcony",
+      "label": "balcony",
+      "anchor": {
+        "x": 3866.597307692308,
+        "y": 5237.692307692308
+      },
+      "confidence": 0.5
+    },
+    {
+      "id": "annotation_vlm_room_008",
+      "type": "kitchen",
+      "label": "kitchen",
+      "anchor": {
+        "x": 5053.742692307693,
+        "y": 5237.692307692308
+      },
+      "confidence": 0.5
+    },
+    {
+      "id": "annotation_vlm_room_000",
+      "type": "balcony",
+      "label": "balcony",
+      "anchor": {
+        "x": 4759.615384615385,
+        "y": 1335.2519230769233
+      },
+      "confidence": 0.5
+    },
+    {
+      "id": "annotation_vlm_room_005",
+      "type": "bathroom",
+      "label": "bathroom",
+      "anchor": {
+        "x": 3676.5384615384614,
+        "y": 4129.2307692307695
+      },
+      "confidence": 0.5
+    },
+    {
+      "id": "annotation_vlm_room_003",
+      "type": "bathroom",
+      "label": "bathroom",
+      "anchor": {
+        "x": 1826.1903846153846,
+        "y": 3264.0384615384614
+      },
+      "confidence": 0.5
+    }
+  ],
+  "contentHash": "ebeb855a1b85980aedce48c4b1e3deeb93e1f186ad5f063cdb08d844dac5cb71"
+}

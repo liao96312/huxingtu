@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "candidateSetHash": "df239b6ecd45083189686e533eb3cc02c93ea44f7022da2cf28da144e501d6e5",
+  "sourceLayoutHash": "32388ae818d8772ce6cdb0a436bac61459decce9d4703ae0da954c6750aaa52b",
+  "decisions": [
+    {
+      "candidateId": "opening_candidate_01",
+      "decision": "confirmed"
+    },
+    {
+      "candidateId": "opening_candidate_02",
+      "decision": "confirmed"
+    },
+    {
+      "candidateId": "opening_candidate_03",
+      "decision": "rejected"
+    },
+    {
+      "candidateId": "opening_candidate_04",
+      "decision": "confirmed"
+    },
+    {
+      "candidateId": "opening_candidate_05",
+      "decision": "confirmed"
+    },
+    {
+      "candidateId": "opening_candidate_06",
+      "decision": "rejected"
+    },
+    {
+      "candidateId": "opening_candidate_07",
+      "decision": "confirmed"
+    }
+  ],
+  "outputLayoutHash": "4eac75c4a4b63784bb53b9abd58e2dd04570f0d5fec96c7d666fba2e874b1b3c",
+  "contentHash": "e45240c51935ec330461dacb1dfbf05eae6fbb9038173e0241684e950a9b2817"
+}

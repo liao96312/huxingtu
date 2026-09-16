@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "roomId": "room_kitchen",
+  "reference": "datasets/derived/fp-001/panorama/kitchen-main/control/semantic/semantic-erp-2048x1024.png",
+  "candidate": "datasets/derived/fp-001/panorama/kitchen-main/ai/kitchen-main-gpt-image-2-v1-proxy-2048x1024.jpg",
+  "method": "semantic-boundary-to-canny-chamfer-v1",
+  "tolerancePx": 6,
+  "allStructureEdges": {
+    "pixelCount": 13512,
+    "recallWithin6px": 0.3632,
+    "meanChamferPx": 46.9824,
+    "p95ChamferPx": 226.2559
+  },
+  "doorWindowEdges": {
+    "pixelCount": 5865,
+    "recallWithin6px": 0.4324,
+    "meanChamferPx": 58.159,
+    "p95ChamferPx": 232.894
+  },
+  "candidateEdgeDensity": 0.0105,
+  "sharpnessLaplacianVariance": 107.5246,
+  "regionIoU": null,
+  "edgeF1": null,
+  "status": "needsReview",
+  "reasonCodes": [
+    "EDGE_RECALL_PROXY_ONLY",
+    "AI_SEMANTIC_SEGMENTATION_REQUIRED_FOR_IOU_AND_F1"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "layoutRevisionId": "layout_fp001_auto_r5",
+  "cameraPlanHash": "c21b457aa7f6b15af38f7c947bb1d84fa93fc26e02f6ad4dacc0fa01f4b71ad6",
+  "camera": {
+    "id": "camera_room_kitchen_main",
+    "roomId": "room_kitchen",
+    "position": {
+      "x": 7621.231,
+      "y": 2299.385,
+      "z": 1500
+    },
+    "clearance": 882.154,
+    "method": "polylabel"
+  },
+  "renderPass": "semantic",
+  "faceSize": 1024,
+  "generatedAt": "2026-08-25T02:16:23.632Z",
+  "assets": [
+    {
+      "face": "px",
+      "file": "px.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 5237,
+      "sha256": "5179ff159940a245c7a806333002d19f9d3ca823b93b6d68763bf8f88dbb4560"
+    },
+    {
+      "face": "nx",
+      "file": "nx.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 5406,
+      "sha256": "30d6f5472633d91684f29abd18015db8a8a777301e9bfafe15c4fb21f74e6ca9"
+    },
+    {
+      "face": "py",
+      "file": "py.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 5395,
+      "sha256": "80fb1b5d774ffaa9ec353651bb0b29c4b9e3fd8c7d090bf1908b10c3fef81d15"
+    },
+    {
+      "face": "ny",
+      "file": "ny.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 7197,
+      "sha256": "ca61e11f835d88cae15ef760fb7073a8051148f20b9722ca905bf0b31ab520b6"
+    },
+    {
+      "face": "pz",
+      "file": "pz.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 5237,
+      "sha256": "5179ff159940a245c7a806333002d19f9d3ca823b93b6d68763bf8f88dbb4560"
+    },
+    {
+      "face": "nz",
+      "file": "nz.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 9382,
+      "sha256": "630f7352a002c70e666fc57023c24cf9acdbe0a9962c1a0c8d8dc483b652fe2b"
+    }
+  ]
+}

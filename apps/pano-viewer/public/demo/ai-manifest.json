@@ -1,0 +1,169 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "revision": 5,
+  "defaultSceneId": "living-main-ai-v1",
+  "projection": "equirectangular",
+  "scenes": [
+    {
+      "id": "living-main-ai-v1",
+      "roomId": "room_living_dining",
+      "roomName": "客餐厅",
+      "title": "客餐厅 AI 效果 v1 · 6K",
+      "order": 0,
+      "assets": {
+        "original": {
+          "url": "/demo/living-main-gpt-image-2-v1-6144x3072.jpg",
+          "width": 6144,
+          "height": 3072,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": {
+          "url": "/demo/living-main-gpt-image-2-v1-proxy-4096x2048.jpg",
+          "width": 4096,
+          "height": 2048,
+          "contentType": "image/jpeg"
+        },
+        "proxy2k": {
+          "url": "/demo/living-main-gpt-image-2-v1-proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/demo/living-main-gpt-image-2-v1-proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/demo/living-main-gpt-image-2-v1-proxy-1024x512.jpg"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      }
+    },
+    {
+      "id": "kitchen-main-ai-v1",
+      "roomId": "room_kitchen",
+      "roomName": "厨房",
+      "title": "厨房 AI 效果 v1 · 6K",
+      "order": 1,
+      "assets": {
+        "original": {
+          "url": "/demo/kitchen-main-gpt-image-2-v1-6144x3072.jpg",
+          "width": 6144,
+          "height": 3072,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": {
+          "url": "/demo/kitchen-main-gpt-image-2-v1-proxy-4096x2048.jpg",
+          "width": 4096,
+          "height": 2048,
+          "contentType": "image/jpeg"
+        },
+        "proxy2k": {
+          "url": "/demo/kitchen-main-gpt-image-2-v1-proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/demo/kitchen-main-gpt-image-2-v1-proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/demo/kitchen-main-gpt-image-2-v1-proxy-1024x512.jpg"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      }
+    },
+    {
+      "id": "living-main-ai-cream-v1",
+      "roomId": "room_living_dining",
+      "roomName": "客餐厅",
+      "title": "客餐厅 奶油风 v1 · 6K",
+      "order": 2,
+      "assets": {
+        "original": {
+          "url": "/demo/living-main-gpt-image-2-cream-v1-6144x3072.jpg",
+          "width": 6144,
+          "height": 3072,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": {
+          "url": "/demo/living-main-gpt-image-2-cream-v1-proxy-4096x2048.jpg",
+          "width": 4096,
+          "height": 2048,
+          "contentType": "image/jpeg"
+        },
+        "proxy2k": {
+          "url": "/demo/living-main-gpt-image-2-cream-v1-proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/demo/living-main-gpt-image-2-cream-v1-proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/demo/living-main-gpt-image-2-cream-v1-proxy-1024x512.jpg"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      }
+    },
+    {
+      "id": "living-main-ai-imagen-clarity-v1",
+      "roomId": "room_living_dining",
+      "roomName": "客餐厅",
+      "title": "客餐厅 Imagen 清晰度样张 · 6K",
+      "order": 3,
+      "assets": {
+        "original": {
+          "url": "/demo/living-main-imagen-clarity-v1-6144x3072.jpg",
+          "width": 6144,
+          "height": 3072,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": {
+          "url": "/demo/living-main-imagen-clarity-v1-proxy-4096x2048.jpg",
+          "width": 4096,
+          "height": 2048,
+          "contentType": "image/jpeg"
+        },
+        "proxy2k": {
+          "url": "/demo/living-main-imagen-clarity-v1-proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/demo/living-main-imagen-clarity-v1-proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/demo/living-main-imagen-clarity-v1-proxy-1024x512.jpg"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      }
+    }
+  ],
+  "share": {
+    "title": "fp-001 AI 全景 v1 · 6K"
+  },
+  "contentHash": "8b2a894c97524ff275de13d3809c87a785d3510af9e3288ea94a2e7e8efd88c8"
+}

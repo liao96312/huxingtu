@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/derived-rooms/0.1.0",
+  "title": "DerivedRoomSet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "projectId", "layoutRevisionId", "sourceLayoutHash", "rooms", "contentHash"],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "projectId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "layoutRevisionId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "sourceLayoutHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "rooms": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/room" } },
+    "contentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  },
+  "$defs": {
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "room": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "type", "polygon", "areaMm2", "confidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "type": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "polygon": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point" } },
+        "areaMm2": { "type": "number", "exclusiveMinimum": 0 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

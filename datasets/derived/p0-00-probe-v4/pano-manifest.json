@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-probe-v4",
+  "revision": 1,
+  "defaultSceneId": "vlm_room_006-main",
+  "projection": "equirectangular",
+  "scenes": [
+    {
+      "id": "vlm_room_006-main",
+      "roomId": "vlm_room_006",
+      "roomName": "客餐厅",
+      "title": "客餐厅 结构预览",
+      "order": 0,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-probe-v4/panorama/vlm_room_006-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-probe-v4/panorama/vlm_room_006-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-probe-v4/panorama/vlm_room_006-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-probe-v4/panorama/vlm_room_006-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 175.48828125,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": []
+    }
+  ],
+  "share": {
+    "title": "p0-00-probe-v4 · 现代全景预览"
+  },
+  "contentHash": "2830dd0c19925f347fe42d12e41c7763ba7ec3732fb7ba9764969ac7a11fc80c"
+}

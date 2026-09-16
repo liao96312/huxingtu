@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "0.1.0",
+  "requestId": "4f6d5159-ea22-4d79-90f1-7554074c0714",
+  "command": "parse",
+  "projectId": "p001",
+  "payload": {
+    "sourceArtifactId": "artifact_floorplan_001"
+  }
+}

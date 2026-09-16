@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/capture-profile/0.1.0",
+  "title": "CaptureProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "requestedResolution", "actualCubeFaceSize", "actualErpWidth", "actualErpHeight",
+    "method", "supersampleScale", "maxCubeMapTextureSize", "maxRenderbufferSize",
+    "allocationProbe", "pixelReadbackProbe", "resizeReasonCode"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "requestedResolution": { "type": "integer", "minimum": 1 },
+    "actualCubeFaceSize": { "type": "integer", "minimum": 1 },
+    "actualErpWidth": { "type": ["integer", "null"], "minimum": 1 },
+    "actualErpHeight": { "type": ["integer", "null"], "minimum": 1 },
+    "method": { "const": "sixFaceWebglCpuErp" },
+    "supersampleScale": { "type": "number", "minimum": 1, "maximum": 4 },
+    "maxCubeMapTextureSize": { "type": ["integer", "null"], "minimum": 1 },
+    "maxRenderbufferSize": { "type": ["integer", "null"], "minimum": 1 },
+    "allocationProbe": { "enum": ["passed", "failed", "notRun"] },
+    "pixelReadbackProbe": { "enum": ["passed", "failed", "notRun"] },
+    "resizeReasonCode": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "actualErpWidth": { "type": "null" } } },
+      "then": { "properties": { "actualErpHeight": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "actualErpHeight": { "type": "null" } } },
+      "then": { "properties": { "actualErpWidth": { "type": "null" } } }
+    }
+  ]
+}

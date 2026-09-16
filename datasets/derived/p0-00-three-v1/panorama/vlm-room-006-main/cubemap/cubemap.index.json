@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-three-v1",
+  "layoutRevisionId": "p0_00_three_layout_r1",
+  "cameraPlanHash": "3bc5005fb6b637d987382247d13aa7c21b1176088146e92e27c0e5358aa3b53a",
+  "camera": {
+    "id": "camera_vlm_room_006_main",
+    "roomId": "vlm_room_006",
+    "position": {
+      "x": 12853.48,
+      "y": 8492.487,
+      "z": 1500
+    },
+    "clearance": 641.639,
+    "method": "polylabel"
+  },
+  "renderPass": "rgb",
+  "faceSize": 1024,
+  "generatedAt": "2026-09-16T01:40:07.255Z",
+  "assets": [
+    {
+      "face": "px",
+      "file": "px.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 5235,
+      "sha256": "ec9834e49f0b7cff39e4d5669574950ffbe96bea22851249b10cc9b86bf73e2e"
+    },
+    {
+      "face": "nx",
+      "file": "nx.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 9900,
+      "sha256": "45cf0482aedd548b928396d7e2ea37929de6f49a55d4d029580dc6084f35ee56"
+    },
+    {
+      "face": "py",
+      "file": "py.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 5259,
+      "sha256": "958783e5d5cabba403c8bea00c6c8d4908be4902acd8f90eb92955707bdeed90"
+    },
+    {
+      "face": "ny",
+      "file": "ny.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 5248,
+      "sha256": "4a7e0811661a6f8d5b67f3a5316e39163208ab7b616838ac9b7e8b733f40e12d"
+    },
+    {
+      "face": "pz",
+      "file": "pz.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 11857,
+      "sha256": "b34849def1149b5871a3c8f584c9b551a49799d6b124f998d27b93574d45d474"
+    },
+    {
+      "face": "nz",
+      "file": "nz.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 13207,
+      "sha256": "c00e853e669625a0bc96c859c7ee374782d581269d3b1b093efd63684a9ce290"
+    }
+  ],
+  "captureProfile": {
+    "schemaVersion": "0.1.0",
+    "requestedResolution": 1024,
+    "actualCubeFaceSize": 1024,
+    "actualErpWidth": null,
+    "actualErpHeight": null,
+    "method": "sixFaceWebglCpuErp",
+    "supersampleScale": 1,
+    "maxCubeMapTextureSize": null,
+    "maxRenderbufferSize": null,
+    "allocationProbe": "notRun",
+    "pixelReadbackProbe": "notRun",
+    "resizeReasonCode": null
+  }
+}

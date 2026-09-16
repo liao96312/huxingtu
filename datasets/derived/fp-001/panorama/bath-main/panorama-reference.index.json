@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "scene": "bath-main",
+  "renderPass": "rgb",
+  "projection": "equirectangular",
+  "file": "bath-main-erp-2048x1024.png",
+  "width": 2048,
+  "height": 1024,
+  "byteLength": 109083,
+  "sha256": "1fd28aed1635275f1b90db460a1dc9df6b12b2688c72794e6db48598b4ae3564",
+  "seamMae": 0.0,
+  "cubemapIndex": "cubemap/cubemap.index.json"
+}

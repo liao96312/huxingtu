@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "layoutRevisionId": "layout_fp001_auto_r5",
+  "cameraPlanHash": "c21b457aa7f6b15af38f7c947bb1d84fa93fc26e02f6ad4dacc0fa01f4b71ad6",
+  "camera": {
+    "id": "camera_room_bed_left_main",
+    "roomId": "room_bed_left",
+    "position": {
+      "x": 1243.692,
+      "y": 4714.462,
+      "z": 1500
+    },
+    "clearance": 1504,
+    "method": "polylabel"
+  },
+  "renderPass": "rgb",
+  "faceSize": 1024,
+  "generatedAt": "2026-08-25T02:03:22.516Z",
+  "assets": [
+    {
+      "face": "px",
+      "file": "px.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 10222,
+      "sha256": "0b0d17852cf54f40d0733937d64188f3ea0fdb20f75f78427b10e696128cd0bd"
+    },
+    {
+      "face": "nx",
+      "file": "nx.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 103071,
+      "sha256": "fab6311e413a6c6e7d0d22501bc0f70a69f823077ec8f05e7c4b39c93f25ae37"
+    },
+    {
+      "face": "py",
+      "file": "py.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 5235,
+      "sha256": "161397bdbc4a0411100e21c0af98142443e3c684b91bee01458cf9b2a6cc9d72"
+    },
+    {
+      "face": "ny",
+      "file": "ny.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 37191,
+      "sha256": "e6d0c966f1ee01dee593da4b844025678073506df753bb334dd0d5993f6329d5"
+    },
+    {
+      "face": "pz",
+      "file": "pz.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 21670,
+      "sha256": "27099774cbd4229570f25e90d24c69dd45abfe97fc6a7d5b60d2aea53b57e1f9"
+    },
+    {
+      "face": "nz",
+      "file": "nz.png",
+      "width": 1024,
+      "height": 1024,
+      "byteLength": 59864,
+      "sha256": "272e8fd83d6000f0f28a45b36e203faffd6ef69e4df24855042d97fdf2911273"
+    }
+  ]
+}

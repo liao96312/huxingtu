@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/camera-plan/0.1.0",
+  "title": "CameraPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "projectId", "layoutRevisionId", "sourceLayoutHash", "sourceRoomHash", "cameras", "contentHash"],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "projectId": { "type": "string", "minLength": 1 },
+    "layoutRevisionId": { "type": "string", "minLength": 1 },
+    "sourceLayoutHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "sourceRoomHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "cameras": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/camera" } },
+    "contentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  },
+  "$defs": {
+    "point3d": {
+      "type": "object", "additionalProperties": false,
+      "required": ["x", "y", "z"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } }
+    },
+    "camera": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "roomId", "position", "clearance", "method"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "roomId": { "type": "string", "minLength": 1 },
+        "position": { "$ref": "#/$defs/point3d" },
+        "clearance": { "type": "number", "exclusiveMinimum": 0 },
+        "method": { "const": "polylabel" }
+      }
+    }
+  }
+}

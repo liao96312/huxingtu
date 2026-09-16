@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-local-check",
+  "status": "preview",
+  "reasonCodes": [
+    "CV_ONLY_ROOM"
+  ]
+}

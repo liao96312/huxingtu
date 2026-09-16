@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/layout-revision/0.1.0",
+  "title": "LayoutRevision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "projectId",
+    "revision",
+    "units",
+    "coordinateFrame",
+    "source",
+    "nodes",
+    "edges",
+    "openings",
+    "roomAnnotations",
+    "contentHash"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "projectId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "revision": { "type": "integer", "minimum": 1 },
+    "units": { "const": "mm" },
+    "coordinateFrame": { "const": "business-z-up-rh" },
+    "source": { "$ref": "#/$defs/source" },
+    "nodes": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "edges": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "$ref": "#/$defs/edge" }
+    },
+    "openings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/opening" }
+    },
+    "roomAnnotations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/roomAnnotation" }
+    },
+    "contentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  },
+  "$defs": {
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "x", "y"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "startNodeId", "endNodeId", "thickness", "height", "confidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "startNodeId": { "type": "string", "minLength": 1 },
+        "endNodeId": { "type": "string", "minLength": 1 },
+        "thickness": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "confidence": { "$ref": "#/$defs/confidence" }
+      }
+    },
+    "opening": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "wallEdgeId", "offset", "width", "height", "confidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["door", "window"] },
+        "wallEdgeId": { "type": "string", "minLength": 1 },
+        "offset": { "type": "number", "minimum": 0 },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "sill": { "type": "number", "minimum": 0 },
+        "confidence": { "$ref": "#/$defs/confidence" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "window" } } },
+          "then": { "required": ["sill"] }
+        }
+      ]
+    },
+    "roomAnnotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "anchor", "confidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "anchor": { "$ref": "#/$defs/point" },
+        "confidence": { "$ref": "#/$defs/confidence" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["imageArtifactId", "pixelToWorldTransform", "scaleConfidence"],
+      "properties": {
+        "imageArtifactId": { "type": "string", "minLength": 1 },
+        "pixelToWorldTransform": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": { "type": "number" }
+        },
+        "scaleConfidence": { "$ref": "#/$defs/confidence" }
+      }
+    }
+  }
+}

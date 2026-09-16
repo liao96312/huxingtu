@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "0.1.0",
+  "provider": "tuzi",
+  "endpoint": "/v1/images/edits",
+  "model": "gpt-image-2",
+  "quality": "2k",
+  "requestedSize": "2048x1024",
+  "styleContextId": "cream",
+  "sourceFile": "datasets/derived/fp-001/panorama/living-main/living-main-erp-2048x1024.png",
+  "sourceSha256": "3c982848ef188a6914829f0f787aaf6816f85b1b0f0314885223ea446bc5580b",
+  "promptSha256": "ad41c2c48d6f76ff7e18259f01c27ed82ede9ecd9a2433351dd23750fa4144ad",
+  "rawFile": "datasets/derived/fp-001/panorama/living-main/ai/living-main-gpt-image-2-cream-v1.png",
+  "rawSha256": "6886d9f4e9d3e45c58b618cb0f3d9eb9e3b8c430b1a1daba81f0db8c16b5af11",
+  "rawWidth": 1774,
+  "rawHeight": 887,
+  "rawSeamMae": 10.8106,
+  "outputFile": "datasets/derived/fp-001/panorama/living-main/ai/living-main-gpt-image-2-cream-v1-normalized-2048x1024.jpg",
+  "outputSha256": "8d77319b5b8afebd94c8f428769a69936884961eab367a4622dbe781000f690e",
+  "outputWidth": 2048,
+  "outputHeight": 1024,
+  "outputSeamMae": 0.0,
+  "normalization": {
+    "resize": "lanczos4",
+    "seamBlendStripPx": 96,
+    "jpegQuality": 94
+  },
+  "status": "needsStructureReview",
+  "createdAt": "2026-08-25T02:40:45.206279+00:00",
+  "upscale": {
+    "tool": "Real-ESRGAN-ncnn-vulkan",
+    "model": "realesrgan-x4plus",
+    "modelScale": 4,
+    "scale": 3,
+    "wrapPaddingInputPx": 64,
+    "finalSeamBlendPx": 24,
+    "tileMode": "manual-overlap",
+    "tileSize": 512,
+    "minimumOverlap": 96,
+    "tileGrid": [
+      5,
+      3
+    ],
+    "outputSeamMae": 0.0,
+    "assets": [
+      {
+        "file": "living-main-gpt-image-2-cream-v1-6144x3072.jpg",
+        "width": 6144,
+        "height": 3072,
+        "byteLength": 2490508,
+        "sha256": "0a6897628222128863301f2810b553565cb09eb4c5f172eb912ad9c99d2fab5f"
+      },
+      {
+        "file": "living-main-gpt-image-2-cream-v1-proxy-4096x2048.jpg",
+        "width": 4096,
+        "height": 2048,
+        "byteLength": 862415,
+        "sha256": "f00e55977e37bfa8c0ae7bc70c3c904a3106aa31bb7c45fa499a0683b75d238a"
+      },
+      {
+        "file": "living-main-gpt-image-2-cream-v1-proxy-2048x1024.jpg",
+        "width": 2048,
+        "height": 1024,
+        "byteLength": 214007,
+        "sha256": "ac25dee1928980f1cfeccbfff614113f0a31b07e1c6ee9affa393e21558a1277"
+      },
+      {
+        "file": "living-main-gpt-image-2-cream-v1-proxy-1024x512.jpg",
+        "width": 1024,
+        "height": 512,
+        "byteLength": 54997,
+        "sha256": "28577027e6bfaafe06849ed18758756ca0c2ec540bf05011b94c198ccaf665f2"
+      }
+    ]
+  }
+}

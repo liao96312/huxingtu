@@ -1,0 +1,269 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-local-check",
+  "revision": 1,
+  "defaultSceneId": "room_001-main",
+  "projection": "equirectangular",
+  "scenes": [
+    {
+      "id": "room_001-main",
+      "roomId": "room_001",
+      "roomName": "其他空间",
+      "title": "其他空间 结构预览",
+      "order": 0,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_001-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_001-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_001-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-local-check/panorama/room_001-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      },
+      "hotspots": [
+        {
+          "id": "hotspot-cv_opening_000-room_001-to-room_004",
+          "label": "去其他空间",
+          "targetSceneId": "room_004-main",
+          "yaw": -34.613285765640285,
+          "pitch": 0.0
+        }
+      ]
+    },
+    {
+      "id": "room_002-main",
+      "roomId": "room_002",
+      "roomName": "其他空间",
+      "title": "其他空间 结构预览",
+      "order": 1,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_002-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_002-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_002-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-local-check/panorama/room_002-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      },
+      "hotspots": [
+        {
+          "id": "hotspot-cv_opening_005-room_002-to-room_004",
+          "label": "去其他空间",
+          "targetSceneId": "room_004-main",
+          "yaw": 161.46907843683175,
+          "pitch": 0.0
+        },
+        {
+          "id": "hotspot-cv_opening_007-room_002-to-room_005",
+          "label": "去其他空间",
+          "targetSceneId": "room_005-main",
+          "yaw": 117.98942407321283,
+          "pitch": 0.0
+        }
+      ]
+    },
+    {
+      "id": "room_006-main",
+      "roomId": "room_006",
+      "roomName": "其他空间",
+      "title": "其他空间 结构预览",
+      "order": 2,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_006-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_006-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_006-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-local-check/panorama/room_006-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      },
+      "hotspots": []
+    },
+    {
+      "id": "room_004-main",
+      "roomId": "room_004",
+      "roomName": "其他空间",
+      "title": "其他空间 结构预览",
+      "order": 3,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_004-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_004-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_004-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-local-check/panorama/room_004-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      },
+      "hotspots": [
+        {
+          "id": "hotspot-cv_opening_000-room_004-to-room_001",
+          "label": "去其他空间",
+          "targetSceneId": "room_001-main",
+          "yaw": -152.92415302875952,
+          "pitch": 0.0
+        },
+        {
+          "id": "hotspot-cv_opening_005-room_004-to-room_002",
+          "label": "去其他空间",
+          "targetSceneId": "room_002-main",
+          "yaw": 4.1477765380808576,
+          "pitch": 0.0
+        }
+      ]
+    },
+    {
+      "id": "room_005-main",
+      "roomId": "room_005",
+      "roomName": "其他空间",
+      "title": "其他空间 结构预览",
+      "order": 4,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_005-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_005-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_005-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-local-check/panorama/room_005-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      },
+      "hotspots": [
+        {
+          "id": "hotspot-cv_opening_007-room_005-to-room_002",
+          "label": "去其他空间",
+          "targetSceneId": "room_002-main",
+          "yaw": 13.01635213190511,
+          "pitch": 0.0
+        }
+      ]
+    },
+    {
+      "id": "room_003-main",
+      "roomId": "room_003",
+      "roomName": "其他空间",
+      "title": "其他空间 结构预览",
+      "order": 5,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_003-main/structural-erp-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy4k": null,
+        "proxy2k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_003-main/proxy-2048x1024.jpg",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/jpeg"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-local-check/panorama/room_003-main/proxy-1024x512.jpg",
+          "width": 1024,
+          "height": 512,
+          "contentType": "image/jpeg"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-local-check/panorama/room_003-main/thumb-320x160.jpg"
+      },
+      "initialView": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "fov": 82.0
+      },
+      "hotspots": []
+    }
+  ],
+  "share": {
+    "title": "p0-00-local-check · 现代全景预览"
+  },
+  "contentHash": "cca9a78424ff6f7231e8c6058bc3de5699e5bd32508abbd5fe34ae9579925ba0"
+}

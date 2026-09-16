@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp001",
+  "scene": "living-main",
+  "renderPass": "semantic",
+  "projection": "equirectangular",
+  "file": "semantic-erp-2048x1024.png",
+  "width": 2048,
+  "height": 1024,
+  "byteLength": 29057,
+  "sha256": "45dd48694fbdf2af04b1350deda98334a24ba31851effb98a8ca283c555a918e",
+  "seamMae": 0.0,
+  "cubemapIndex": "control/semantic/cubemap/cubemap.index.json"
+}

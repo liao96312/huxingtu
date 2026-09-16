@@ -1,0 +1,175 @@
+{
+  "schemaVersion": "0.1.0",
+  "source": "clean-room behavior mapping from 3vjia aidraw config 20250427",
+  "styles": [
+    {
+      "id": "modern",
+      "label": "现代",
+      "designStyle": "modern",
+      "visualMode": "realistic",
+      "inspirations": [
+        "natural light",
+        "texture"
+      ],
+      "palette": [
+        "warm white",
+        "soft gray",
+        "light oak"
+      ],
+      "materials": [
+        "oak",
+        "stone",
+        "matte metal"
+      ],
+      "promptSuffix": "Contemporary modern interior, clean architectural lines, warm white and light oak, restrained built-ins, realistic natural light."
+    },
+    {
+      "id": "chinese",
+      "label": "中式",
+      "designStyle": "Chinese style",
+      "visualMode": "realistic",
+      "inspirations": [
+        "natural light",
+        "texture"
+      ],
+      "palette": [
+        "warm white",
+        "walnut",
+        "ink black"
+      ],
+      "materials": [
+        "walnut",
+        "stone",
+        "linen"
+      ],
+      "promptSuffix": "Contemporary Chinese interior, balanced symmetry, warm walnut, pale stone, subtle ink-art accents, elegant and restrained rather than ornate."
+    },
+    {
+      "id": "scandinavian",
+      "label": "北欧",
+      "designStyle": "Scandinavian",
+      "visualMode": "realistic",
+      "inspirations": [
+        "natural light",
+        "texture"
+      ],
+      "palette": [
+        "white",
+        "pale oak",
+        "sage"
+      ],
+      "materials": [
+        "pale oak",
+        "wool",
+        "linen"
+      ],
+      "promptSuffix": "Scandinavian interior, pale oak, soft white walls, wool and linen textures, functional furniture, generous natural daylight."
+    },
+    {
+      "id": "cream",
+      "label": "奶油风",
+      "designStyle": "cream style",
+      "visualMode": "realistic",
+      "inspirations": [
+        "natural light",
+        "texture"
+      ],
+      "palette": [
+        "ivory",
+        "cream",
+        "light beige"
+      ],
+      "materials": [
+        "microcement",
+        "boucle",
+        "light oak"
+      ],
+      "promptSuffix": "Realistic cream-style interior, soft ivory and light beige palette, rounded but structurally faithful furniture, boucle and light oak, diffuse natural light, no excessive ornament."
+    },
+    {
+      "id": "french",
+      "label": "法式",
+      "designStyle": "French style",
+      "visualMode": "realistic",
+      "inspirations": [
+        "natural light",
+        "texture"
+      ],
+      "palette": [
+        "ivory",
+        "taupe",
+        "brass"
+      ],
+      "materials": [
+        "plaster",
+        "oak",
+        "brass"
+      ],
+      "promptSuffix": "Contemporary French interior, ivory plaster, restrained wall moulding, warm oak and subtle brass, elegant proportions, realistic daylight."
+    },
+    {
+      "id": "eclectic",
+      "label": "混搭",
+      "designStyle": "eclectic",
+      "visualMode": "realistic",
+      "inspirations": [
+        "natural light",
+        "texture"
+      ],
+      "palette": [
+        "warm neutral",
+        "terracotta",
+        "deep green"
+      ],
+      "materials": [
+        "wood",
+        "textile",
+        "stone"
+      ],
+      "promptSuffix": "Controlled eclectic interior, coherent warm-neutral base with limited terracotta and deep-green accents, mixed textures without clutter."
+    },
+    {
+      "id": "light-luxury",
+      "label": "轻奢",
+      "designStyle": "Light luxury style",
+      "visualMode": "realistic",
+      "inspirations": [
+        "natural light",
+        "texture"
+      ],
+      "palette": [
+        "warm white",
+        "greige",
+        "champagne metal"
+      ],
+      "materials": [
+        "stone",
+        "wood veneer",
+        "champagne metal"
+      ],
+      "promptSuffix": "Light-luxury interior, premium stone and wood veneer, restrained champagne-metal details, refined lighting, no gaudy decoration."
+    },
+    {
+      "id": "wabi-sabi",
+      "label": "侘寂",
+      "designStyle": "Wabi-sabi style",
+      "visualMode": "realistic",
+      "inspirations": [
+        "natural light",
+        "texture"
+      ],
+      "palette": [
+        "clay",
+        "sand",
+        "warm gray"
+      ],
+      "materials": [
+        "limewash",
+        "aged wood",
+        "travertine"
+      ],
+      "promptSuffix": "Wabi-sabi interior, warm clay and sand tones, limewash, aged wood and travertine, quiet imperfect textures, minimal objects, soft natural light."
+    }
+  ],
+  "contentHash": "4ad514999ab7fd0598b84d514284bfc3f9195da50c9714f946d912fdb8af5a8c"
+}

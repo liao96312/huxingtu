@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-three-room-v1",
+  "layoutRevisionId": "p0_00_three_room_layout_r1",
+  "sourceLayoutHash": "5cd1e75ad02de2add7fb44dfbfa19564beed5b525974f004a68c5c649b638b85",
+  "sourceRoomHash": "9c951e3fcfb2004114b5fe767ddc35cdf75f16346b9fc4d2faf68ad32d1b480b",
+  "cameras": [
+    {
+      "id": "camera_vlm_room_006_main",
+      "roomId": "vlm_room_006",
+      "position": {
+        "x": 12211.841,
+        "y": 7738.581,
+        "z": 1500.0
+      },
+      "clearance": 1283.278,
+      "method": "polylabel"
+    }
+  ],
+  "contentHash": "64ee18ac16a2ad226b6117d8ce58bd7ddddfe355596ec9d1f19a93c1a2ceaf1b"
+}

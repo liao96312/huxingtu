@@ -1,0 +1,17 @@
+[
+  {
+    "sampleId": "fp-golden",
+    "mode": "off",
+    "visionLatencyMs": null,
+    "schemeEnabled": false,
+    "roomMiou": 0.4889418322395037,
+    "roomCountCorrect": false,
+    "roomCountPredicted": 1,
+    "roomCountTruth": 2,
+    "openingsF1": 0.0,
+    "gateAccepted": true,
+    "mmPerPx": 15.714285714285714,
+    "scaleStatus": null,
+    "dirty": true
+  }
+]

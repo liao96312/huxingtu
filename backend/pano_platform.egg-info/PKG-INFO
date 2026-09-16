@@ -1,0 +1,17 @@
+Metadata-Version: 2.2
+Name: pano-platform
+Version: 0.1.0
+Requires-Python: >=3.12
+Requires-Dist: fastapi==0.110.2
+Requires-Dist: opencv-python-headless==5.0.0.93
+Requires-Dist: psycopg[binary]==3.3.4
+Requires-Dist: pydantic==2.13.4
+Requires-Dist: python-dotenv==1.2.3
+Requires-Dist: python-multipart==0.0.32
+Requires-Dist: requests==2.34.2
+Requires-Dist: shapely==2.1.2
+Requires-Dist: uvicorn==0.29.0
+Provides-Extra: dev
+Requires-Dist: httpx==0.28.1; extra == "dev"
+Requires-Dist: jsonschema==4.26.0; extra == "dev"
+Requires-Dist: pytest==9.1.1; extra == "dev"

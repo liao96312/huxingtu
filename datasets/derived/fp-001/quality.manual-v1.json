@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "0.1.0",
+  "layoutRevisionId": "layout_fp001_manual_r1",
+  "layoutHash": "d239b827bed97e77d7c1f1dff9939275d20a71a20dfcf11a7eb230e790e88766",
+  "sourceImage": "datasets/source/fp-001.png",
+  "sourceShortEdge": 450,
+  "wallAlignmentCoverage": 0.9119,
+  "wallAlignmentSamples": 1351,
+  "perEdgeCoverage": {
+    "w_outer_top_left": 1.0,
+    "w_outer_step_1": 0.7895,
+    "w_outer_top_center": 0.9103,
+    "w_outer_step_2": 1.0,
+    "w_outer_top_bath": 1.0,
+    "w_outer_step_3": 1.0,
+    "w_outer_top_kitchen": 1.0,
+    "w_outer_right_kitchen": 1.0,
+    "w_outer_bottom_kitchen": 1.0,
+    "w_outer_right_living": 1.0,
+    "w_outer_bottom_living": 1.0,
+    "w_outer_left_living": 0.7945,
+    "w_outer_recess": 0.9412,
+    "w_outer_left_bed": 1.0,
+    "w_bed_left_right": 0.7619,
+    "w_bed_left_bottom": 1.0,
+    "w_bed_center_right": 0.8506,
+    "w_bed_center_bottom": 0.6383,
+    "w_bath_bottom": 0.963,
+    "w_kitchen_left_upper": 0.7414,
+    "w_kitchen_left_lower": 0.3636
+  },
+  "scaleMaxRelativeResidual": 0.024428684003152082,
+  "decision": "needsReview",
+  "reasonCodes": [
+    "SHORT_EDGE_BELOW_1200",
+    "OPENING_CONFIRMATION_REQUIRED"
+  ],
+  "contentHash": "47be44b0c01ab87fc7a7b30ffeebf3342d62174e1bebaa2889c7ef5ea5c98a04"
+}

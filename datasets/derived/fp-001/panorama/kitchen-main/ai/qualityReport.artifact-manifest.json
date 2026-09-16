@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "artifact:fp001:quality-report:kitchen-main:gpt-image-2:v1",
+  "projectId": "fp001",
+  "artifactType": "qualityReport",
+  "contentHash": "afe3558d4f2ae6e9da4241df69a3b2c108368f3fae8e850a98b17cd19b44d4e1",
+  "byteLength": 943,
+  "contentType": "application/json",
+  "generator": {
+    "name": "semantic-edge-proxy-qa",
+    "version": "0.1.0"
+  },
+  "inputDigests": [
+    "7470309c834359786bd0d117953a353219c420e2e9f25c2993536d88929fb0a0",
+    "4e9aac143d63f4442ba0c052d7fdd44fb55c415004a9cef278110040dae0169b"
+  ],
+  "createdAt": "2026-08-25T02:17:10.089344Z",
+  "metadata": {
+    "status": "needsReview",
+    "reasonCodes": [
+      "EDGE_RECALL_PROXY_ONLY",
+      "AI_SEMANTIC_SEGMENTATION_REQUIRED_FOR_IOU_AND_F1"
+    ]
+  }
+}

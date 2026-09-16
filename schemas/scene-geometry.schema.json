@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pano.local/schemas/scene-geometry/0.1.0",
+  "title": "SceneGeometry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "projectId", "layoutRevisionId", "sourceLayoutHash", "solids", "wallSlabs", "openingComponents", "surfaces", "contentHash"],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "projectId": { "type": "string", "minLength": 1 },
+    "layoutRevisionId": { "type": "string", "minLength": 1 },
+    "sourceLayoutHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "solids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/solid" } },
+    "wallSlabs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/wallSlab" } },
+    "openingComponents": { "type": "array", "items": { "$ref": "#/$defs/openingComponent" } },
+    "surfaces": { "type": "array", "items": { "$ref": "#/$defs/surface" } },
+    "contentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  },
+  "$defs": {
+    "point3d": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "z"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } }
+    },
+    "solid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "wallEdgeId", "kind", "center", "length", "thickness", "height", "angleRadians"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "wallEdgeId": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["wall", "sill", "lintel"] },
+        "center": { "$ref": "#/$defs/point3d" },
+        "length": { "type": "number", "exclusiveMinimum": 0 },
+        "thickness": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "angleRadians": { "type": "number" }
+      }
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "roomId", "kind", "z", "polygon"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "roomId": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["floor", "ceiling"] },
+        "z": { "type": "number", "minimum": 0 },
+        "polygon": {
+          "type": "array", "minItems": 3,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["x", "y"],
+            "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+          }
+        }
+      }
+    },
+    "wallSlab": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "zStart", "zEnd", "polygons"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "zStart": { "type": "number", "minimum": 0 },
+        "zEnd": { "type": "number", "exclusiveMinimum": 0 },
+        "polygons": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/polygonWithHoles" } }
+      }
+    },
+    "polygonWithHoles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exterior", "holes"],
+      "properties": {
+        "exterior": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point2d" } },
+        "holes": { "type": "array", "items": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point2d" } } }
+      }
+    },
+    "point2d": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    },
+    "openingComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "openingId", "kind", "center", "length", "depth", "height", "angleRadians", "state"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "openingId": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["doorFrame", "doorLeaf", "windowFrame", "glass"] },
+        "center": { "$ref": "#/$defs/point3d" },
+        "length": { "type": "number", "exclusiveMinimum": 0 },
+        "depth": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "angleRadians": { "type": "number" },
+        "state": { "enum": ["fixed", "closed"] }
+      }
+    }
+  }
+}

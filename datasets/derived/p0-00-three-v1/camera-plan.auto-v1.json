@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-three-v1",
+  "layoutRevisionId": "p0_00_three_layout_r1",
+  "sourceLayoutHash": "ebeb855a1b85980aedce48c4b1e3deeb93e1f186ad5f063cdb08d844dac5cb71",
+  "sourceRoomHash": "4ffb0137fa5044ae7453a7e320df8250f8c6e5dae48d73d682ada50bf4fc0b1d",
+  "cameras": [
+    {
+      "id": "camera_vlm_room_006_main",
+      "roomId": "vlm_room_006",
+      "position": {
+        "x": 12853.48,
+        "y": 8492.487,
+        "z": 1500.0
+      },
+      "clearance": 641.639,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_vlm_room_001_main",
+      "roomId": "vlm_room_001",
+      "position": {
+        "x": 4508.032,
+        "y": 4154.624,
+        "z": 1500.0
+      },
+      "clearance": 698.239,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_vlm_room_004_main",
+      "roomId": "vlm_room_004",
+      "position": {
+        "x": 5812.008,
+        "y": 10851.29,
+        "z": 1500.0
+      },
+      "clearance": 656.818,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_vlm_room_002_main",
+      "roomId": "vlm_room_002",
+      "position": {
+        "x": 8434.449,
+        "y": 5365.873,
+        "z": 1500.0
+      },
+      "clearance": 1355.721,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_vlm_room_007_main",
+      "roomId": "vlm_room_007",
+      "position": {
+        "x": 9458.205,
+        "y": 12812.084,
+        "z": 1500.0
+      },
+      "clearance": 1303.976,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_vlm_room_008_main",
+      "roomId": "vlm_room_008",
+      "position": {
+        "x": 12362.119,
+        "y": 12812.084,
+        "z": 1500.0
+      },
+      "clearance": 1133.0,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_vlm_room_000_main",
+      "roomId": "vlm_room_000",
+      "position": {
+        "x": 11642.645,
+        "y": 3266.202,
+        "z": 1500.0
+      },
+      "clearance": 702.854,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_vlm_room_005_main",
+      "roomId": "vlm_room_005",
+      "position": {
+        "x": 8833.922,
+        "y": 10194.472,
+        "z": 1500.0
+      },
+      "clearance": 637.499,
+      "method": "polylabel"
+    },
+    {
+      "id": "camera_vlm_room_003_main",
+      "roomId": "vlm_room_003",
+      "position": {
+        "x": 4467.102,
+        "y": 7984.267,
+        "z": 1500.0
+      },
+      "clearance": 708.908,
+      "method": "polylabel"
+    }
+  ],
+  "contentHash": "3bc5005fb6b637d987382247d13aa7c21b1176088146e92e27c0e5358aa3b53a"
+}

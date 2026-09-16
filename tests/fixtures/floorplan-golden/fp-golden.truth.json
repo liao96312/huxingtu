@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "0.1.0",
+  "sampleId": "fp-golden",
+  "imageSha256": "304465023fedd0fa9ba001d6a99b45d81b505a63a3d22b237dfa97829b8eb33f",
+  "annotator": "fixture",
+  "annotatedAt": "2026-08-28T00:00:00+08:00",
+  "notes": "",
+  "openings": [
+    {
+      "id": "op_door",
+      "type": "door",
+      "pixelStart": {
+        "x": 200,
+        "y": 110
+      },
+      "pixelEnd": {
+        "x": 200,
+        "y": 150
+      },
+      "evidence": "doorArc"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "room_l",
+      "type": "bedroom",
+      "polygon": [
+        {
+          "x": 50,
+          "y": 50
+        },
+        {
+          "x": 200,
+          "y": 50
+        },
+        {
+          "x": 200,
+          "y": 270
+        },
+        {
+          "x": 50,
+          "y": 270
+        }
+      ]
+    },
+    {
+      "id": "room_r",
+      "type": "living",
+      "polygon": [
+        {
+          "x": 200,
+          "y": 50
+        },
+        {
+          "x": 350,
+          "y": 50
+        },
+        {
+          "x": 350,
+          "y": 270
+        },
+        {
+          "x": 200,
+          "y": 270
+        }
+      ]
+    }
+  ],
+  "scales": []
+}

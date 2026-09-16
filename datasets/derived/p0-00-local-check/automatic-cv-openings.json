@@ -1,0 +1,386 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-local-check",
+  "confirmed": [
+    {
+      "id": "cv_opening_000",
+      "type": "door",
+      "wallEdgeId": "wall_gap15",
+      "startPx": [
+        289.0,
+        351.5
+      ],
+      "endPx": [
+        392.0,
+        351.5
+      ],
+      "widthMm": 871.5384615384615,
+      "sideRoomIds": [
+        [],
+        [
+          "room_001"
+        ]
+      ],
+      "reasonCodes": [
+        "CV_ARC_AUTOMATIC"
+      ]
+    },
+    {
+      "id": "cv_opening_002",
+      "type": "door",
+      "wallEdgeId": "wall_gap16",
+      "startPx": [
+        348.0,
+        420.0
+      ],
+      "endPx": [
+        389.0,
+        420.0
+      ],
+      "widthMm": 346.9230769230769,
+      "sideRoomIds": [
+        [],
+        [
+          "room_004"
+        ]
+      ],
+      "reasonCodes": [
+        "CV_ARC_AUTOMATIC",
+        "CV_ARC_BOOTSTRAP_SCALE_TOLERANCE"
+      ]
+    },
+    {
+      "id": "cv_opening_005",
+      "type": "door",
+      "wallEdgeId": "wall_gap17",
+      "startPx": [
+        473.0,
+        363.0
+      ],
+      "endPx": [
+        473.0,
+        418.0
+      ],
+      "widthMm": 465.3846153846154,
+      "sideRoomIds": [
+        [
+          "room_004"
+        ],
+        [
+          "room_002"
+        ]
+      ],
+      "reasonCodes": [
+        "CV_ARC_AUTOMATIC",
+        "CV_ARC_BOOTSTRAP_SCALE_TOLERANCE"
+      ]
+    },
+    {
+      "id": "cv_opening_007",
+      "type": "door",
+      "wallEdgeId": "wall_v13",
+      "startPx": [
+        473.0,
+        510.29999923706055
+      ],
+      "endPx": [
+        473.0,
+        547.5
+      ],
+      "widthMm": 314.7692372248723,
+      "sideRoomIds": [
+        [
+          "room_005"
+        ],
+        []
+      ],
+      "reasonCodes": [
+        "CV_ARC_AUTOMATIC",
+        "CV_ARC_BOOTSTRAP_SCALE_TOLERANCE"
+      ]
+    }
+  ],
+  "rejected": [
+    {
+      "id": "cv_window_wall_candidate_000",
+      "type": "window",
+      "wallEdgeId": "wall_h1",
+      "startPx": [
+        256,
+        351.5
+      ],
+      "endPx": [
+        280,
+        351.5
+      ],
+      "widthMm": 203.0769230769231,
+      "sideRoomIds": [
+        [],
+        [
+          "room_001"
+        ]
+      ],
+      "reasonCodes": [
+        "CV_WINDOW_WALL_LINES_DOOR_ARC_OVERLAP",
+        "CV_WINDOW_WALL_LINES_WIDTH_OUT_OF_PROFILE"
+      ]
+    },
+    {
+      "id": "cv_window_wall_candidate_001",
+      "type": "window",
+      "wallEdgeId": "wall_h3",
+      "startPx": [
+        299,
+        420.0
+      ],
+      "endPx": [
+        338,
+        420.0
+      ],
+      "widthMm": 330.0,
+      "sideRoomIds": [
+        [
+          "room_001"
+        ],
+        []
+      ],
+      "reasonCodes": [
+        "CV_WINDOW_WALL_LINES_DOOR_ARC_OVERLAP"
+      ]
+    },
+    {
+      "id": "cv_window_wall_candidate_002",
+      "type": "window",
+      "wallEdgeId": "wall_v13",
+      "startPx": [
+        473.0,
+        510
+      ],
+      "endPx": [
+        473.0,
+        552
+      ],
+      "widthMm": 355.3846153846154,
+      "sideRoomIds": [
+        [
+          "room_005"
+        ],
+        []
+      ],
+      "reasonCodes": [
+        "CV_WINDOW_WALL_LINES_DOOR_ARC_OVERLAP"
+      ]
+    },
+    {
+      "id": "cv_window_wall_candidate_003",
+      "type": "window",
+      "wallEdgeId": "wall_v10",
+      "startPx": [
+        180.0,
+        510
+      ],
+      "endPx": [
+        180.0,
+        534
+      ],
+      "widthMm": 203.0769230769231,
+      "sideRoomIds": [
+        [
+          "room_001"
+        ],
+        [
+          "room_001"
+        ]
+      ],
+      "reasonCodes": [
+        "CV_WINDOW_WALL_LINES_WIDTH_OUT_OF_PROFILE",
+        "CV_WINDOW_WALL_LINES_SAME_ROOM_BOTH_SIDES"
+      ]
+    },
+    {
+      "id": "cv_window_wall_candidate_004",
+      "type": "window",
+      "wallEdgeId": "wall_v12",
+      "startPx": [
+        396.0,
+        424
+      ],
+      "endPx": [
+        396.0,
+        452
+      ],
+      "widthMm": 236.92307692307693,
+      "sideRoomIds": [
+        [],
+        []
+      ],
+      "reasonCodes": [
+        "CV_WINDOW_WALL_LINES_DOOR_ARC_OVERLAP",
+        "CV_WINDOW_WALL_LINES_WIDTH_OUT_OF_PROFILE",
+        "CV_WINDOW_WALL_LINES_NO_ADJACENT_ROOM"
+      ]
+    },
+    {
+      "id": "cv_window_wall_candidate_005",
+      "type": "window",
+      "wallEdgeId": "wall_boundary_h15",
+      "startPx": [
+        489,
+        113.0
+      ],
+      "endPx": [
+        519,
+        113.0
+      ],
+      "widthMm": 253.84615384615384,
+      "sideRoomIds": [
+        [
+          "room_002"
+        ],
+        []
+      ],
+      "reasonCodes": [
+        "CV_WINDOW_WALL_LINES_WIDTH_OUT_OF_PROFILE"
+      ]
+    },
+    {
+      "id": "cv_window_wall_candidate_006",
+      "type": "window",
+      "wallEdgeId": "wall_boundary_h15",
+      "startPx": [
+        579,
+        113.0
+      ],
+      "endPx": [
+        610,
+        113.0
+      ],
+      "widthMm": 262.3076923076923,
+      "sideRoomIds": [
+        [
+          "room_002"
+        ],
+        []
+      ],
+      "reasonCodes": [
+        "CV_WINDOW_WALL_LINES_WIDTH_OUT_OF_PROFILE"
+      ]
+    },
+    {
+      "id": "cv_opening_001",
+      "type": "door",
+      "wallEdgeId": "wall_gap15",
+      "startPx": [
+        393.0,
+        351.5
+      ],
+      "endPx": [
+        388.9000015258789,
+        351.5
+      ],
+      "widthMm": 0.0,
+      "sideRoomIds": [
+        [],
+        [
+          "room_004"
+        ]
+      ],
+      "reasonCodes": [
+        "CV_ARC_WIDTH_OUT_OF_PROFILE",
+        "CV_ARC_DUPLICATE_OPENING"
+      ]
+    },
+    {
+      "id": "cv_opening_003",
+      "type": "door",
+      "wallEdgeId": "wall_gap16",
+      "startPx": [
+        348.0,
+        420.0
+      ],
+      "endPx": [
+        389.0,
+        420.0
+      ],
+      "widthMm": 346.9230769230769,
+      "sideRoomIds": [
+        [],
+        [
+          "room_004"
+        ]
+      ],
+      "reasonCodes": [
+        "CV_ARC_DUPLICATE_OPENING"
+      ]
+    },
+    {
+      "id": "cv_opening_004",
+      "type": "door",
+      "wallEdgeId": "wall_gap16",
+      "startPx": [
+        348.0,
+        420.0
+      ],
+      "endPx": [
+        389.0,
+        420.0
+      ],
+      "widthMm": 346.9230769230769,
+      "sideRoomIds": [
+        [],
+        [
+          "room_004"
+        ]
+      ],
+      "reasonCodes": [
+        "CV_ARC_DUPLICATE_OPENING"
+      ]
+    },
+    {
+      "id": "cv_opening_006",
+      "type": "door",
+      "wallEdgeId": "",
+      "startPx": [
+        406.5,
+        469.5
+      ],
+      "endPx": [
+        406.5,
+        469.5
+      ],
+      "widthMm": null,
+      "sideRoomIds": [
+        [],
+        []
+      ],
+      "reasonCodes": [
+        "CV_ARC_NO_WALL_EDGE"
+      ]
+    },
+    {
+      "id": "cv_opening_008",
+      "type": "door",
+      "wallEdgeId": "wall_h6",
+      "startPx": [
+        431.5,
+        682.0
+      ],
+      "endPx": [
+        445.1000003814697,
+        682.0
+      ],
+      "widthMm": 115.07692630474384,
+      "sideRoomIds": [
+        [
+          "room_001"
+        ],
+        [
+          "room_001"
+        ]
+      ],
+      "reasonCodes": [
+        "CV_ARC_WIDTH_OUT_OF_PROFILE"
+      ]
+    }
+  ]
+}
