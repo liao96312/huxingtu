@@ -17,9 +17,10 @@ parser.add_argument("--pass", dest="render_pass", choices=("rgb", "semantic"), d
 parser.add_argument("--face-size", type=int, choices=(512, 1024, 2048), default=1024)
 parser.add_argument("--width", type=int, default=2048)
 args = parser.parse_args()
+furnished = os.environ.get("PANO_FURNITURE") == "1"
 project_id = os.environ.get("PANO_PROJECT_ID", "fp001")
 project_folder = os.environ.get("PANO_PROJECT_FOLDER", "fp-001" if project_id == "fp001" else project_id)
-PANORAMA = ROOT / "datasets" / "derived" / project_folder / "panorama" / args.scene
+PANORAMA = ROOT / "datasets" / "derived" / project_folder / ("panorama-furniture" if furnished else "panorama") / args.scene
 cubemap_folder = "cubemap" if args.face_size == 1024 else f"cubemap-{args.face_size}"
 CUBEMAP = PANORAMA / cubemap_folder if args.render_pass == "rgb" else PANORAMA / "control" / args.render_pass / cubemap_folder
 if args.width < 1024 or args.width % 2:
@@ -36,6 +37,10 @@ if face_size != args.face_size:
 
 erp = cubemap_to_erp(faces, WIDTH, nearest=args.render_pass == "semantic")
 cubemap_index = json.loads((CUBEMAP / "cubemap.index.json").read_text(encoding="utf-8"))
+if bool(cubemap_index.get("furnished")) != furnished:
+    raise SystemExit("cubemap furniture mode does not match PANO_FURNITURE")
+if furnished and not cubemap_index.get("furniturePlanHash"):
+    raise SystemExit("furnished cubemap has no furniture plan hash")
 base_profile = cubemap_index.get("captureProfile", {
     "schemaVersion": "0.1.0", "requestedResolution": face_size, "actualCubeFaceSize": face_size,
     "actualErpWidth": None, "actualErpHeight": None, "method": "sixFaceWebglCpuErp", "supersampleScale": 1,
@@ -50,8 +55,9 @@ capture_profile = {
 }
 
 if args.render_pass == "rgb":
-    output = PANORAMA / f"{args.scene}-erp-{WIDTH}x{HEIGHT}.png"
-    index_path = PANORAMA / ("panorama-reference.index.json" if WIDTH == 2048 else f"panorama-reference-{WIDTH}x{HEIGHT}.index.json")
+    suffix = "-furnished" if furnished else ""
+    output = PANORAMA / f"{args.scene}{suffix}-erp-{WIDTH}x{HEIGHT}.png"
+    index_path = PANORAMA / (("panorama-furnished-reference" if furnished else "panorama-reference") + (".index.json" if WIDTH == 2048 else f"-{WIDTH}x{HEIGHT}.index.json"))
 else:
     output = PANORAMA / "control" / args.render_pass / f"{args.render_pass}-erp-{WIDTH}x{HEIGHT}.png"
     index_path = PANORAMA / "control" / args.render_pass / (f"{args.render_pass}-reference.index.json" if WIDTH == 2048 else f"{args.render_pass}-reference-{WIDTH}x{HEIGHT}.index.json")
@@ -66,5 +72,7 @@ index = {
     "cubemapIndex": str((CUBEMAP / "cubemap.index.json").relative_to(PANORAMA)).replace("\\", "/"),
     "captureProfile": capture_profile,
 }
+if furnished:
+    index.update(furnished=True, furniturePlanHash=cubemap_index["furniturePlanHash"], furnitureItemCount=cubemap_index["furnitureItemCount"])
 index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2), encoding="utf-8")
 print(f"{output.name}; seam MAE={seam_mae:.4f}")

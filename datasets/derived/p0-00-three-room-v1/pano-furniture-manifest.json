@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "p0-00-three-room-v1",
+  "revision": 1,
+  "defaultSceneId": "vlm-room-006-main",
+  "projection": "equirectangular",
+  "scenes": [
+    {
+      "id": "vlm-room-006-main",
+      "roomId": "vlm_room_006",
+      "roomName": "客餐厅",
+      "title": "客餐厅 确定性家具预览",
+      "order": 0,
+      "assets": {
+        "original": {
+          "url": "/artifacts/p0-00-three-room-v1/panorama-furniture/vlm-room-006-main/vlm-room-006-main-furnished-06da72dcf9ef073d4a888e00bbfbc60b13020543b2ae8eb643b12f10a609a4a2.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy2k": {
+          "url": "/artifacts/p0-00-three-room-v1/panorama-furniture/vlm-room-006-main/vlm-room-006-main-furnished-06da72dcf9ef073d4a888e00bbfbc60b13020543b2ae8eb643b12f10a609a4a2.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "proxy1k": {
+          "url": "/artifacts/p0-00-three-room-v1/panorama-furniture/vlm-room-006-main/vlm-room-006-main-furnished-06da72dcf9ef073d4a888e00bbfbc60b13020543b2ae8eb643b12f10a609a4a2.png",
+          "width": 2048,
+          "height": 1024,
+          "contentType": "image/png"
+        },
+        "thumbnailUrl": "/artifacts/p0-00-three-room-v1/panorama-furniture/vlm-room-006-main/vlm-room-006-main-furnished-06da72dcf9ef073d4a888e00bbfbc60b13020543b2ae8eb643b12f10a609a4a2.png"
+      },
+      "initialView": {
+        "yaw": 16.341,
+        "pitch": 0.0,
+        "fov": 55.0
+      },
+      "hotspots": []
+    }
+  ],
+  "share": {
+    "title": "p0-00-three-room-v1 · 确定性家具预览"
+  },
+  "contentHash": "43976ef722a00dcc48547e3621684a8a08088f442369322447468f4f95a06d31"
+}

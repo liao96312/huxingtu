@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -15,18 +16,31 @@ const renderPass = process.argv[3] ?? "rgb";
 if (!["rgb", "semantic"].includes(renderPass)) throw new Error(`unsupported pass ${renderPass}`);
 const size = Number(process.argv[4] ?? 1024);
 if (![512, 1024, 2048].includes(size)) throw new Error(`unsupported face size ${size}`);
+const furnished = process.env.PANO_FURNITURE === "1";
 const sceneName = roomId === "room_living_dining" ? "living-main" : `${roomId.replace(/^room_/, "").replaceAll("_", "-")}-main`;
 const cubemapFolder = size === 1024 ? "cubemap" : `cubemap-${size}`;
-const relativeOutput = renderPass === "rgb" ? `panorama/${sceneName}/${cubemapFolder}/` : `panorama/${sceneName}/control/${renderPass}/${cubemapFolder}/`;
+const panoramaRoot = furnished ? "panorama-furniture" : "panorama";
+const relativeOutput = renderPass === "rgb" ? `${panoramaRoot}/${sceneName}/${cubemapFolder}/` : `${panoramaRoot}/${sceneName}/control/${renderPass}/${cubemapFolder}/`;
 const output = new URL(relativeOutput, derived);
 const plan = JSON.parse(await readFile(new URL("camera-plan.auto-v1.json", derived), "utf8"));
 const camera = plan.cameras.find((item) => item.roomId === roomId);
 if (!camera) throw new Error(`camera missing for ${roomId}`);
 const faces = ["px", "nx", "py", "ny", "pz", "nz"];
 await mkdir(output, { recursive: true });
+let furniturePlan = null;
+if (furnished) {
+  const response = await fetch(`http://127.0.0.1:8000/api/v1/projects/${projectId}/furniture-plan`);
+  if (!response.ok) throw new Error(`furniture plan request failed (${response.status})`);
+  furniturePlan = await response.json();
+}
 
+const browserPaths = [
+  process.env.CHROME_PATH,
+  join(process.env.ProgramFiles ?? "C:/Program Files", "Google/Chrome/Application/chrome.exe"),
+  join(process.env["ProgramFiles(x86)"] ?? "C:/Program Files (x86)", "Microsoft/Edge/Application/msedge.exe"),
+].filter(Boolean);
 const browser = await chromium.launch({
-  executablePath: process.env.CHROME_PATH ?? join(process.env.ProgramFiles ?? "C:/Program Files", "Google/Chrome/Application/chrome.exe"),
+  executablePath: browserPaths.find(existsSync),
   headless: true,
   args: ["--enable-webgl", "--use-angle=swiftshader"],
 });
@@ -37,9 +51,13 @@ try {
     const position = camera.position;
     const query = new URLSearchParams({ model: "fp001", capture: "1", ceiling: "1", face, pass: renderPass, camX: String(position.x), camY: String(position.y), camZ: String(position.z) });
     query.set("model", projectId);
+    if (furnished) query.set("furniture", "1");
     await page.goto(`http://127.0.0.1:5173/?${query}`, { waitUntil: "domcontentloaded" });
     const canvas = page.locator("canvas[data-capture-ready='true']");
     await canvas.waitFor({ state: "visible", timeout: size >= 2048 ? 60000 : 15000 });
+    if (furnished && await canvas.getAttribute("data-furniture-hash") !== furniturePlan.contentHash) {
+      throw new Error(`face ${face} furniture layout differs from the plan`);
+    }
     const file = `${face}.png`;
     const path = fileURLToPath(new URL(file, output));
     await page.screenshot({ path });
@@ -53,6 +71,7 @@ try {
 const index = {
   schemaVersion: "0.1.0", projectId, layoutRevisionId: plan.layoutRevisionId,
   cameraPlanHash: plan.contentHash, camera, renderPass, faceSize: size, generatedAt: new Date().toISOString(), assets,
+  furnished, furniturePlanHash: furniturePlan?.contentHash ?? null, furnitureItemCount: furniturePlan?.items.length ?? 0,
   captureProfile: {
     schemaVersion: "0.1.0", requestedResolution: size, actualCubeFaceSize: size,
     actualErpWidth: null, actualErpHeight: null, method: "sixFaceWebglCpuErp", supersampleScale: 1,
@@ -61,4 +80,4 @@ const index = {
   },
 };
 await writeFile(new URL("cubemap.index.json", output), `${JSON.stringify(index, null, 2)}\n`, "utf8");
-process.stdout.write(`6 ${renderPass} cubemap faces captured for ${camera.roomId}\n`);
+process.stdout.write(`6 ${renderPass} cubemap faces captured for ${camera.roomId}${furnished ? " (furnished)" : ""}\n`);

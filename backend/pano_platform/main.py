@@ -21,6 +21,7 @@ from .contracts import (
     CommandEnvelope,
     CommandName,
     ErrorEnvelope,
+    FurniturePlan,
     OpeningCandidateSet,
     OpeningReviewRequest,
     OpeningReviewResult,
@@ -33,6 +34,7 @@ from .contracts import (
 )
 from .facade import CommandFacade, CommandNotImplementedError, load_parse_result, parse_command
 from .geometry import calibrate_scale
+from .furniture import build_furniture_plan, load_furniture_inputs
 from .opening_review import complete_opening_review, load_derived_rooms, load_latest_reviewed_layout, load_opening_candidates
 from .pipeline import load_preview_scene_geometry, load_style_catalog, load_style_context, run_upload_pipeline
 from .scene_geometry import build_scene_geometry
@@ -93,6 +95,15 @@ async def get_scene_geometry(project_id: str = Path(pattern=r"^[a-zA-Z0-9_-]+$")
             raise HTTPException(status_code=404, detail="scene geometry not found") from error
     except ValueError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+@app.get("/api/v1/projects/{project_id}/furniture-plan", response_model=FurniturePlan)
+async def get_furniture_plan(project_id: str = Path(pattern=r"^[a-zA-Z0-9_-]+$")) -> FurniturePlan:
+    try:
+        layout, rooms, cameras = load_furniture_inputs(project_id)
+        return build_furniture_plan(layout, rooms, cameras)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="furniture inputs not found") from error
 
 
 @app.post("/api/v1/pipeline/upload")

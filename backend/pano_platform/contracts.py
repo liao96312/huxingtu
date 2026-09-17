@@ -687,6 +687,44 @@ class CameraPlan(StrictModel):
         return self
 
 
+class FurnitureItem(StrictModel):
+    id: str = Field(min_length=1, max_length=128)
+    roomId: str = Field(min_length=1, max_length=128)
+    kind: Literal["sofa", "coffeeTable", "diningTable", "bed", "desk"]
+    center: Point3D
+    length: float = Field(gt=0)
+    width: float = Field(gt=0)
+    height: float = Field(gt=0)
+    angleRadians: float
+
+
+class FurniturePlan(StrictModel):
+    schemaVersion: Literal["0.1.0"] = SCHEMA_VERSION
+    projectId: str
+    layoutRevisionId: str
+    sourceLayoutHash: Sha256
+    sourceRoomHash: Sha256
+    items: list[FurnitureItem]
+    skipped: list[dict[str, str]]
+    contentHash: Sha256
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_content_hash(cls, value: Any) -> Any:
+        if isinstance(value, dict) and "contentHash" in value:
+            payload = {key: item for key, item in value.items() if key != "contentHash"}
+            if value["contentHash"] != canonical_sha256(payload):
+                raise ValueError("contentHash does not match furniture plan")
+        return value
+
+    @model_validator(mode="after")
+    def validate_item_ids(self) -> FurniturePlan:
+        ids = [item.id for item in self.items]
+        if len(ids) != len(set(ids)):
+            raise ValueError("duplicate furniture item id")
+        return self
+
+
 class StyleContext(StrictModel):
     id: str
     label: str

@@ -27,8 +27,41 @@ type RoomSurface = {
   polygon: { x: number; y: number }[];
 };
 
+type FurnitureItem = {
+  id: string;
+  kind: "sofa" | "coffeeTable" | "diningTable" | "bed" | "desk";
+  center: { x: number; y: number; z: number };
+  length: number;
+  width: number;
+  height: number;
+  angleRadians: number;
+};
+
 type SceneGeometry = { layoutRevisionId: string; wallSlabs: WallSlab[]; openingComponents: OpeningComponent[]; surfaces: RoomSurface[] };
 type RenderPass = "rgb" | "edge" | "normal" | "depth" | "semantic";
+
+const furnitureParts = (item: FurnitureItem) => {
+  const length = item.length / 1000, width = item.width / 1000, height = item.height / 1000;
+  if (item.kind === "sofa") {
+    const seat = Math.min(0.42, height * 0.56), back = Math.min(0.2, width * 0.25);
+    return [
+      { size: [length, seat, width] as const, offset: [0, seat / 2, 0] as const },
+      { size: [length, height - seat, back] as const, offset: [0, (height + seat) / 2, (width - back) / 2] as const },
+    ];
+  }
+  if (item.kind === "coffeeTable" || item.kind === "diningTable" || item.kind === "desk") {
+    const top = Math.min(0.04, height * 0.1), leg = 0.08, inset = leg / 2 + 0.02;
+    const parts: { size: readonly [number, number, number]; offset: readonly [number, number, number] }[] = [
+      { size: [length, top, width], offset: [0, height - top / 2, 0] },
+    ];
+    for (const x of [-1, 1]) for (const z of [-1, 1]) parts.push({
+      size: [leg, height - top, leg],
+      offset: [x * (length / 2 - inset), (height - top) / 2, z * (width / 2 - inset)],
+    });
+    return parts;
+  }
+  return [{ size: [length, height, width] as const, offset: [0, height / 2, 0] as const }];
+};
 
 const makeShape = (points: { x: number; y: number }[]) => {
   const [first, ...rest] = points;
@@ -43,8 +76,11 @@ export default function Floorplan3D({ projectId }: { projectId: string }) {
   const params = new URLSearchParams(window.location.search);
   const captureMode = params.get("capture") === "1";
   const cubeFace = params.get("face");
+  const furnitureEnabled = params.get("furniture") === "1";
   const hostRef = useRef<HTMLDivElement>(null);
   const [geometry, setGeometry] = useState<SceneGeometry | null>(null);
+  const [furniture, setFurniture] = useState<FurnitureItem[] | null>(furnitureEnabled ? null : []);
+  const [furnitureHash, setFurnitureHash] = useState("");
   const [error, setError] = useState("");
   const [showCeiling, setShowCeiling] = useState(params.get("ceiling") === "1");
   const [renderPass, setRenderPass] = useState<RenderPass>(() => {
@@ -66,8 +102,27 @@ export default function Floorplan3D({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   useEffect(() => {
+    if (!furnitureEnabled) return;
+    let cancelled = false;
+    fetch(`/api/v1/projects/${projectId}/furniture-plan`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`家具布局加载失败（${response.status}）`);
+        return response.json() as Promise<{ items: FurnitureItem[]; contentHash: string }>;
+      })
+      .then((plan) => {
+        if (cancelled) return;
+        setFurniture(plan.items);
+        setFurnitureHash(plan.contentHash);
+      })
+      .catch((reason: Error) => {
+        if (!cancelled) setError(reason.message);
+      });
+    return () => { cancelled = true; };
+  }, [furnitureEnabled, projectId]);
+
+  useEffect(() => {
     const host = hostRef.current;
-    if (!host || !geometry) return;
+    if (!host || !geometry || furniture === null) return;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xe9edf1);
     const camera = new THREE.PerspectiveCamera(cubeFace ? 90 : 48, 1, cubeFace ? 0.05 : 5, 30);
@@ -122,6 +177,9 @@ export default function Floorplan3D({ projectId }: { projectId: string }) {
       glass: new THREE.MeshPhysicalMaterial({ color: 0x9bd7f3, transparent: true, opacity: 0.38, roughness: 0.08, metalness: 0 }),
       semanticDoor: new THREE.MeshBasicMaterial({ color: 0xf97316 }),
       semanticWindow: new THREE.MeshBasicMaterial({ color: 0x2563eb }),
+      furnitureSoft: new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9 }),
+      furnitureWood: new THREE.MeshStandardMaterial({ color: 0x8a5a2b, roughness: 0.8 }),
+      semanticFurniture: new THREE.MeshBasicMaterial({ color: 0x9333ea }),
     };
     const normalMaterial = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
     const depthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.BasicDepthPacking, side: THREE.DoubleSide });
@@ -151,6 +209,21 @@ export default function Floorplan3D({ projectId }: { projectId: string }) {
         scene.add(lines);
         edgeLines.push(lines);
         edgeGeometries.push(edges);
+      }
+    }
+    for (const item of furniture) {
+      const rgb = item.kind === "sofa" ? materials.furnitureSoft : materials.furnitureWood;
+      for (const part of furnitureParts(item)) {
+        const partGeometry = new THREE.BoxGeometry(...part.size);
+        const mesh = new THREE.Mesh(partGeometry, rgb);
+        mesh.position.set(item.center.x / 1000, 0, -item.center.y / 1000);
+        mesh.rotation.y = item.angleRadians;
+        mesh.translateX(part.offset[0]);
+        mesh.translateY(part.offset[1]);
+        mesh.translateZ(part.offset[2]);
+        scene.add(mesh);
+        componentGeometries.push(partGeometry);
+        meshMaterials.push({ mesh, rgb, semantic: materials.semanticFurniture });
       }
     }
     for (const component of geometry.openingComponents) {
@@ -232,6 +305,7 @@ export default function Floorplan3D({ projectId }: { projectId: string }) {
       scene.background = new THREE.Color(activePass === "rgb" ? 0xe9edf1 : 0x000000);
       renderer.render(scene, camera);
       renderer.domElement.dataset.captureReady = "true";
+      if (furnitureEnabled) renderer.domElement.dataset.furnitureHash = furnitureHash;
       frame = requestAnimationFrame(render);
     };
     render();
@@ -251,7 +325,7 @@ export default function Floorplan3D({ projectId }: { projectId: string }) {
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [geometry, showCeiling, cubeFace]);
+  }, [geometry, furniture, furnitureEnabled, furnitureHash, showCeiling, cubeFace]);
 
   const selectPass = (pass: RenderPass) => {
     setRenderPass(pass);
