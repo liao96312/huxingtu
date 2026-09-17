@@ -34,7 +34,7 @@
       },
       "initialView": {
         "yaw": 16.341,
-        "pitch": 0.0,
+        "pitch": -25.0,
         "fov": 55.0
       },
       "hotspots": []
@@ -43,5 +43,5 @@
   "share": {
     "title": "p0-00-three-room-v1 · 确定性家具预览"
   },
-  "contentHash": "43976ef722a00dcc48547e3621684a8a08088f442369322447468f4f95a06d31"
+  "contentHash": "4aa8d5dcf7bca5e3aac129708dcf5a07932e9367e03be7c37fcb2ef21a1e9a0d"
 }

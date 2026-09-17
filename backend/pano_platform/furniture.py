@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from math import atan2, cos, hypot, sin
 from pathlib import Path
 
-from shapely.geometry import Point, Polygon
+from shapely.geometry import LineString, Point, Polygon
 from shapely.ops import polylabel
 
 from .contracts import CameraPlan, DerivedRoomSet, FurnitureItem, FurniturePlan, LayoutRevision, OpeningType, RoomCamera, canonical_sha256
@@ -14,7 +14,7 @@ from .contracts import CameraPlan, DerivedRoomSet, FurnitureItem, FurniturePlan,
 WALL_MARGIN_MM = 100.0
 FURNITURE_GAP_MM = 50.0
 DOOR_CLEARANCE_MM = 900.0
-CAMERA_CLEARANCE_MM = 600.0
+CAMERA_CLEARANCE_MM = 300.0
 
 
 @dataclass(frozen=True)
@@ -31,6 +31,8 @@ PACKS = {
     "dining": (Spec("diningTable", 1400, 800, 750),),
     "bedroom": (Spec("bed", 2000, 1500, 450),),
     "study": (Spec("desk", 1200, 600, 750),),
+    "kitchen": (Spec("kitchenCounter", 1600, 600, 900),),
+    "bathroom": (Spec("vanity", 700, 500, 850), Spec("toilet", 700, 400, 750)),
 }
 
 
@@ -68,6 +70,43 @@ def build_furniture_plan(layout: LayoutRevision, rooms: DerivedRoomSet, cameras:
     }
     payload["contentHash"] = canonical_sha256(payload)
     return FurniturePlan.model_validate(payload)
+
+
+def optimize_cameras_for_furniture(rooms: DerivedRoomSet, cameras: list[RoomCamera], plan: FurniturePlan) -> list[RoomCamera]:
+    current = {camera.roomId: camera for camera in cameras}
+    result = []
+    for room in rooms.rooms:
+        polygon = Polygon([(point.x, point.y) for point in room.polygon])
+        items = [item for item in plan.items if item.roomId == room.id]
+        if not items:
+            result.append(current[room.id])
+            continue
+        footprints = [_rect(item.center.x, item.center.y, item.angleRadians, item.length, item.width) for item in items]
+        safe = polygon.buffer(-400)
+        min_x, min_y, max_x, max_y = polygon.bounds
+        best = None
+        for y in [min_y + (max_y - min_y) * index / 24 for index in range(25)]:
+            for x in [min_x + (max_x - min_x) * index / 24 for index in range(25)]:
+                point = Point(x, y)
+                if safe.is_empty or not safe.covers(point):
+                    continue
+                distance = min(footprint.distance(point) for footprint in footprints)
+                if distance < 600:
+                    continue
+                visible = sum(polygon.buffer(1).covers(LineString((point, footprint.centroid))) for footprint in footprints)
+                score = visible * 10000 + distance + polygon.boundary.distance(point) * 0.2
+                if best is None or score > best[0]:
+                    best = (score, point)
+        if best is None:
+            result.append(current[room.id])
+            continue
+        point = best[1]
+        result.append(RoomCamera(
+            id=f"camera_{room.id}_main", roomId=room.id,
+            position={"x": round(point.x, 3), "y": round(point.y, 3), "z": 1500},
+            clearance=round(point.distance(polygon.boundary), 3), method="polylabel",
+        ))
+    return result
 
 
 def load_furniture_inputs(project_id: str) -> tuple[LayoutRevision, DerivedRoomSet, list[RoomCamera]]:

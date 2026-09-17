@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp-101",
+  "scene": "008-main",
+  "renderPass": "rgb",
+  "projection": "equirectangular",
+  "file": "008-main-furnished-erp-2048x1024.png",
+  "width": 2048,
+  "height": 1024,
+  "byteLength": 90124,
+  "sha256": "b98936eac5f3d649d3a10b2072698a29fe427dfb10b7cae5f03d2281aba67e99",
+  "seamMae": 0.0,
+  "cubemapIndex": "cubemap-512/cubemap.index.json",
+  "captureProfile": {
+    "schemaVersion": "0.1.0",
+    "requestedResolution": 512,
+    "actualCubeFaceSize": 512,
+    "actualErpWidth": 2048,
+    "actualErpHeight": 1024,
+    "method": "sixFaceWebglCpuErp",
+    "supersampleScale": 1,
+    "maxCubeMapTextureSize": null,
+    "maxRenderbufferSize": null,
+    "allocationProbe": "notRun",
+    "pixelReadbackProbe": "notRun",
+    "resizeReasonCode": null
+  },
+  "furnished": true,
+  "furniturePlanHash": "5b2197b0e7f5ef93a22bcc52e75d85e23676a93c8e623c33ce105ffea8256bfb",
+  "furnitureItemCount": 11
+}

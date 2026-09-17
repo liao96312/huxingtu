@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "fp-101",
+  "layoutRevisionId": "layout_fp101_truth_r1",
+  "cameraPlanHash": "6351f49f1bfb5bc70bb60285fe2de2e70f08ee3d2e5ebd11f351802e9ecab89a",
+  "camera": {
+    "id": "camera_room_006_main",
+    "roomId": "room_006",
+    "position": {
+      "x": 8989.759,
+      "y": 8822.237,
+      "z": 1500
+    },
+    "clearance": 444.045,
+    "method": "polylabel"
+  },
+  "renderPass": "rgb",
+  "faceSize": 512,
+  "generatedAt": "2026-09-17T01:32:19.211Z",
+  "assets": [
+    {
+      "face": "px",
+      "file": "px.png",
+      "width": 512,
+      "height": 512,
+      "byteLength": 1832,
+      "sha256": "c3a6a568352f7a2e3c1514a8c26378a9dce034995fcd9ffd184f3d97e450a372"
+    },
+    {
+      "face": "nx",
+      "file": "nx.png",
+      "width": 512,
+      "height": 512,
+      "byteLength": 5204,
+      "sha256": "a0db1c4ea0cebf4847256dfe720b041ae164efa99e648395d95c5e9b55fdb76d"
+    },
+    {
+      "face": "py",
+      "file": "py.png",
+      "width": 512,
+      "height": 512,
+      "byteLength": 2839,
+      "sha256": "777fbe6e1399c07fc45a5700108201348c6ef2918d9b56855a4d4445bf4994f6"
+    },
+    {
+      "face": "ny",
+      "file": "ny.png",
+      "width": 512,
+      "height": 512,
+      "byteLength": 3958,
+      "sha256": "1a02563b24e412133e20115c51b1690f9c6fd8c9cf028321ecc21c9224b2a849"
+    },
+    {
+      "face": "pz",
+      "file": "pz.png",
+      "width": 512,
+      "height": 512,
+      "byteLength": 1832,
+      "sha256": "c3a6a568352f7a2e3c1514a8c26378a9dce034995fcd9ffd184f3d97e450a372"
+    },
+    {
+      "face": "nz",
+      "file": "nz.png",
+      "width": 512,
+      "height": 512,
+      "byteLength": 7021,
+      "sha256": "c69dd1eb002b7b632c5e2318e2fc6cec1aeef539b009189e27593de5e98e1a47"
+    }
+  ],
+  "furnished": true,
+  "furniturePlanHash": "5b2197b0e7f5ef93a22bcc52e75d85e23676a93c8e623c33ce105ffea8256bfb",
+  "furnitureItemCount": 11,
+  "captureProfile": {
+    "schemaVersion": "0.1.0",
+    "requestedResolution": 512,
+    "actualCubeFaceSize": 512,
+    "actualErpWidth": null,
+    "actualErpHeight": null,
+    "method": "sixFaceWebglCpuErp",
+    "supersampleScale": 1,
+    "maxCubeMapTextureSize": null,
+    "maxRenderbufferSize": null,
+    "allocationProbe": "notRun",
+    "pixelReadbackProbe": "notRun",
+    "resizeReasonCode": null
+  }
+}

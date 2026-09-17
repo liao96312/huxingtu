@@ -11,6 +11,8 @@ import sys
 import time
 from pathlib import Path
 
+from shapely.geometry import Point, Polygon
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
@@ -22,6 +24,11 @@ def scene_name(room_id: str) -> str:
     return "living-main" if room_id == "room_living_dining" else f"{room_id.removeprefix('room_').replace('_', '-')}-main"
 
 
+def _target_yaw(camera, center_x: float, center_y: float) -> float:
+    world_angle = math.degrees(math.atan2(-(center_y - camera.position.y), center_x - camera.position.x))
+    return round((world_angle - 90.0 + 180.0) % 360.0 - 180.0, 3)
+
+
 def furniture_yaw(room_id: str, furniture, cameras) -> float:
     items = [item for item in furniture.items if item.roomId == room_id]
     camera = next((value for value in cameras if value.roomId == room_id), None)
@@ -29,11 +36,31 @@ def furniture_yaw(room_id: str, furniture, cameras) -> float:
         return 0.0
     center_x = sum(item.center.x for item in items) / len(items)
     center_y = sum(item.center.y for item in items) / len(items)
-    world_angle = math.degrees(math.atan2(-(center_y - camera.position.y), center_x - camera.position.x))
-    return round((world_angle - 90.0 + 180.0) % 360.0 - 180.0, 3)
+    return _target_yaw(camera, center_x, center_y)
 
 
-def manifest_payload(project_id: str, folder: str, room_id: str, room_name: str, scene: str, asset_name: str, yaw: float) -> dict:
+def room_yaw(room, furniture, cameras, layout) -> float:
+    if any(item.roomId == room.id for item in furniture.items):
+        return furniture_yaw(room.id, furniture, cameras)
+    camera = next((value for value in cameras if value.roomId == room.id), None)
+    if camera is None:
+        return 0.0
+    polygon = Polygon([(point.x, point.y) for point in room.polygon])
+    nodes = {node.id: node for node in layout.nodes}
+    edges = {edge.id: edge for edge in layout.edges}
+    targets = []
+    for opening in layout.openings:
+        edge = edges[opening.wallEdgeId]
+        start, end = nodes[edge.startNodeId], nodes[edge.endNodeId]
+        length = math.hypot(end.x - start.x, end.y - start.y)
+        ratio = (opening.offset + opening.width / 2) / length
+        x, y = start.x + (end.x - start.x) * ratio, start.y + (end.y - start.y) * ratio
+        if polygon.boundary.distance(Point(x, y)) <= 250:
+            targets.append((opening.type.value != "door", math.hypot(x - camera.position.x, y - camera.position.y), x, y))
+    return _target_yaw(camera, *min(targets)[2:]) if targets else 0.0
+
+
+def manifest_payload(project_id: str, folder: str, room_id: str, room_name: str, scene: str, asset_name: str, yaw: float, pitch: float = -12.0) -> dict:
     url = f"/artifacts/{folder}/panorama-furniture/{scene}/{asset_name}"
     asset = {"url": url, "width": 2048, "height": 1024, "contentType": "image/png"}
     payload = {
@@ -43,7 +70,7 @@ def manifest_payload(project_id: str, folder: str, room_id: str, room_name: str,
             "id": scene, "roomId": room_id, "roomName": room_name,
             "title": f"{room_name} 确定性家具预览", "order": 0,
             "assets": {"original": asset, "proxy4k": None, "proxy2k": asset, "proxy1k": asset, "thumbnailUrl": url},
-            "initialView": {"yaw": yaw, "pitch": 0.0, "fov": 55.0}, "hotspots": [],
+            "initialView": {"yaw": yaw, "pitch": pitch, "fov": 55.0}, "hotspots": [],
         }],
         "share": {"title": f"{project_id} · 确定性家具预览"},
     }
@@ -55,6 +82,14 @@ def atomic_write(path: Path, payload: bytes) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_bytes(payload)
     os.replace(temporary, path)
+
+
+def stable_manifest(payload: dict) -> PanoManifest:
+    manifest = PanoManifest.model_validate(payload)
+    document = manifest.model_dump(mode="json", exclude_none=True)
+    document.pop("contentHash")
+    document["contentHash"] = canonical_sha256(document)
+    return PanoManifest.model_validate(document)
 
 
 def main() -> int:
@@ -92,8 +127,9 @@ def main() -> int:
         shutil.copyfile(source, temporary)
         os.replace(temporary, immutable)
 
-    yaw = furniture_yaw(args.room, furniture, cameras)
-    manifest = PanoManifest.model_validate(manifest_payload(project_id, folder, args.room, room.name, scene, immutable.name, yaw))
+    yaw = room_yaw(room, furniture, cameras, layout)
+    pitch = -25.0 if any(item.roomId == room.id for item in furniture.items) else -8.0
+    manifest = stable_manifest(manifest_payload(project_id, folder, args.room, room.name, scene, immutable.name, yaw, pitch))
     target = derived / "pano-furniture-manifest.json"
     atomic_write(target, manifest.model_dump_json(indent=2, exclude_none=True).encode("utf-8"))
     timing = {"captureSeconds": round(captured - started, 3), "composeSeconds": round(composed - captured, 3), "totalSeconds": round(composed - started, 3), "erpSha256": digest}

@@ -690,7 +690,7 @@ class CameraPlan(StrictModel):
 class FurnitureItem(StrictModel):
     id: str = Field(min_length=1, max_length=128)
     roomId: str = Field(min_length=1, max_length=128)
-    kind: Literal["sofa", "coffeeTable", "diningTable", "bed", "desk"]
+    kind: Literal["sofa", "coffeeTable", "diningTable", "bed", "desk", "kitchenCounter", "vanity", "toilet"]
     center: Point3D
     length: float = Field(gt=0)
     width: float = Field(gt=0)

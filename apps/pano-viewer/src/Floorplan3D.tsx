@@ -29,7 +29,7 @@ type RoomSurface = {
 
 type FurnitureItem = {
   id: string;
-  kind: "sofa" | "coffeeTable" | "diningTable" | "bed" | "desk";
+  kind: "sofa" | "coffeeTable" | "diningTable" | "bed" | "desk" | "kitchenCounter" | "vanity" | "toilet";
   center: { x: number; y: number; z: number };
   length: number;
   width: number;
@@ -60,6 +60,25 @@ const furnitureParts = (item: FurnitureItem) => {
     });
     return parts;
   }
+  if (item.kind === "bed") return [
+    { size: [length, 0.22, width] as const, offset: [0, 0.11, 0] as const, surface: "wood" as const },
+    { size: [length - 0.12, 0.2, width - 0.12] as const, offset: [0, 0.32, 0] as const, surface: "light" as const },
+    { size: [0.12, 0.8, width] as const, offset: [-(length - 0.12) / 2, 0.4, 0] as const, surface: "wood" as const },
+    { size: [0.42, 0.1, width * 0.36] as const, offset: [-length * 0.28, 0.47, -width * 0.23] as const, surface: "light" as const },
+    { size: [0.42, 0.1, width * 0.36] as const, offset: [-length * 0.28, 0.47, width * 0.23] as const, surface: "light" as const },
+  ];
+  if (item.kind === "toilet") return [
+    { size: [length * 0.55, 0.38, width] as const, offset: [length * 0.12, 0.19, 0] as const, surface: "porcelain" as const },
+    { size: [length * 0.3, height * 0.72, width] as const, offset: [-length * 0.34, height * 0.36, 0] as const, surface: "porcelain" as const },
+  ];
+  if (item.kind === "vanity") return [
+    { size: [length, height * 0.72, width] as const, offset: [0, height * 0.36, 0] as const, surface: "wood" as const },
+    { size: [length, 0.12, width] as const, offset: [0, height * 0.78, 0] as const, surface: "porcelain" as const },
+  ];
+  if (item.kind === "kitchenCounter") return [
+    { size: [length, height - 0.08, width] as const, offset: [0, (height - 0.08) / 2, 0] as const, surface: "light" as const },
+    { size: [length, 0.08, width + 0.06] as const, offset: [0, height - 0.04, 0] as const, surface: "wood" as const },
+  ];
   return [{ size: [length, height, width] as const, offset: [0, height / 2, 0] as const }];
 };
 
@@ -179,6 +198,8 @@ export default function Floorplan3D({ projectId }: { projectId: string }) {
       semanticWindow: new THREE.MeshBasicMaterial({ color: 0x2563eb }),
       furnitureSoft: new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9 }),
       furnitureWood: new THREE.MeshStandardMaterial({ color: 0x8a5a2b, roughness: 0.8 }),
+      furnitureLight: new THREE.MeshStandardMaterial({ color: 0xe8dfcf, roughness: 0.86 }),
+      furniturePorcelain: new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35 }),
       semanticFurniture: new THREE.MeshBasicMaterial({ color: 0x9333ea }),
     };
     const normalMaterial = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
@@ -212,8 +233,12 @@ export default function Floorplan3D({ projectId }: { projectId: string }) {
       }
     }
     for (const item of furniture) {
-      const rgb = item.kind === "sofa" ? materials.furnitureSoft : materials.furnitureWood;
       for (const part of furnitureParts(item)) {
+        const surface = "surface" in part ? part.surface : undefined;
+        const rgb = surface === "light" ? materials.furnitureLight
+          : surface === "porcelain" ? materials.furniturePorcelain
+          : surface === "wood" ? materials.furnitureWood
+          : item.kind === "sofa" ? materials.furnitureSoft : materials.furnitureWood;
         const partGeometry = new THREE.BoxGeometry(...part.size);
         const mesh = new THREE.Mesh(partGeometry, rgb);
         mesh.position.set(item.center.x / 1000, 0, -item.center.y / 1000);
