@@ -2,21 +2,21 @@
   "schemaVersion": "0.1.0",
   "projectId": "fp-101",
   "layoutRevisionId": "layout_fp101_truth_r1",
-  "cameraPlanHash": "6351f49f1bfb5bc70bb60285fe2de2e70f08ee3d2e5ebd11f351802e9ecab89a",
+  "cameraPlanHash": "2d4e57b084fd383e8b09c7aff53cc2bd2fd5bea6646c1c36802cdd7388d49c0b",
   "camera": {
     "id": "camera_room_005_main",
     "roomId": "room_005",
     "position": {
-      "x": 7415.344,
-      "y": 10539.802,
+      "x": 7232.466,
+      "y": 9047.308,
       "z": 1500
     },
-    "clearance": 505.428,
+    "clearance": 678.899,
     "method": "polylabel"
   },
   "renderPass": "rgb",
   "faceSize": 512,
-  "generatedAt": "2026-09-17T01:32:14.558Z",
+  "generatedAt": "2026-09-17T01:51:14.142Z",
   "assets": [
     {
       "face": "px",
@@ -31,44 +31,44 @@
       "file": "nx.png",
       "width": 512,
       "height": 512,
-      "byteLength": 8314,
-      "sha256": "4b7571f81cd8c6fdcf04516d8a80c486316c6114acaf157258cf90db87156383"
+      "byteLength": 7760,
+      "sha256": "b7c0fc247129da5277ad08cd712144b3603dcb9a49e80fd70bd38e345699cf5f"
     },
     {
       "face": "py",
       "file": "py.png",
       "width": 512,
       "height": 512,
-      "byteLength": 5754,
-      "sha256": "73b5cff28934a185d467dc66893e4b13c7ff56db7f6fd4e99dfe43609609b261"
+      "byteLength": 1916,
+      "sha256": "357f940a63d292db2f07c19b0b2696916321418718654d67d0e467cf68d0c49c"
     },
     {
       "face": "ny",
       "file": "ny.png",
       "width": 512,
       "height": 512,
-      "byteLength": 4165,
-      "sha256": "e3c9af8f764e8b2e52bc3ad8afa2d69842df72c670e1de995feb3c4abd59cb54"
+      "byteLength": 5678,
+      "sha256": "71ed4898667d5a4ad84a487ac0a88fa856c2b63c7a443c8693e4fb51dc3e87d3"
     },
     {
       "face": "pz",
       "file": "pz.png",
       "width": 512,
       "height": 512,
-      "byteLength": 4166,
-      "sha256": "927a1cb0bf1190cb4bd93c671ce1ca87708aa6a74df53f2d01377c4ff46d5d9e"
+      "byteLength": 3226,
+      "sha256": "fab08cb6a1fa4887a677c00f9ec572fc127b881139bcf911beff45c9f9d6b0e3"
     },
     {
       "face": "nz",
       "file": "nz.png",
       "width": 512,
       "height": 512,
-      "byteLength": 4926,
-      "sha256": "b7f7a267d2374123785e38213356d90a3111f946f96529a51a31eeaf25dd8e5c"
+      "byteLength": 5175,
+      "sha256": "00edf6f7d451a0841587eab941bcf363f06f45cb1b7eb3eeb6a8a7fe5eaf7f49"
     }
   ],
   "furnished": true,
-  "furniturePlanHash": "5b2197b0e7f5ef93a22bcc52e75d85e23676a93c8e623c33ce105ffea8256bfb",
+  "furniturePlanHash": "baafac034958ef1009e3bcbf9c59ecbc9b581c7ba69f047f0fd321adf3799cf0",
   "furnitureItemCount": 11,
   "captureProfile": {
     "schemaVersion": "0.1.0",

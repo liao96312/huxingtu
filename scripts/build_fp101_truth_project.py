@@ -5,8 +5,8 @@ import math
 import sys
 from pathlib import Path
 
-from shapely.geometry import LineString, Point, Polygon
-from shapely.ops import polylabel
+from shapely.geometry import LineString, MultiLineString, Point, Polygon
+from shapely.ops import polylabel, unary_union
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
@@ -42,19 +42,38 @@ def _scale(truth: dict) -> float:
     return sum(values) / len(values)
 
 
+def _snap_values(values: list[float], tolerance: float = 4.0) -> dict[float, float]:
+    groups: list[list[float]] = []
+    for value in sorted(set(values)):
+        if not groups or value - groups[-1][-1] > tolerance:
+            groups.append([value])
+        else:
+            groups[-1].append(value)
+    return {value: round(sum(group) / len(group), 3) for group in groups for value in group}
+
+
 def build_payloads() -> tuple[LayoutRevision, DerivedRoomSet, CameraPlan]:
     truth = json.loads(TRUTH.read_text(encoding="utf-8"))
     scale = _scale(truth)
+    x_map = _snap_values([point["x"] for room in truth["rooms"] for point in room["polygon"]])
+    y_map = _snap_values([point["y"] for room in truth["rooms"] for point in room["polygon"]])
     room_points = {
-        room["id"]: [(round(point["x"] * scale, 3), round(point["y"] * scale, 3)) for point in room["polygon"]]
+        room["id"]: [(round(x_map[point["x"]] * scale, 3), round(y_map[point["y"]] * scale, 3)) for point in room["polygon"]]
         for room in truth["rooms"]
     }
 
-    edge_points = {}
+    boundaries = []
     for points in room_points.values():
         for start, end in zip(points, points[1:] + points[:1]):
-            key = tuple(sorted((start, end)))
-            edge_points.setdefault(key, key)
+            boundaries.append(LineString((start, end)))
+    noded = unary_union(boundaries)
+    lines = list(noded.geoms) if isinstance(noded, MultiLineString) else [noded]
+    edge_points = {
+        tuple(sorted((start, end)))
+        for line in lines
+        for start, end in zip(line.coords, list(line.coords)[1:])
+        if start != end
+    }
     node_points = sorted({point for edge in edge_points for point in edge})
     node_ids = {point: f"node_{index:03d}" for index, point in enumerate(node_points, 1)}
     edges = []

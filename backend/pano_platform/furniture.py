@@ -82,7 +82,7 @@ def optimize_cameras_for_furniture(rooms: DerivedRoomSet, cameras: list[RoomCame
             result.append(current[room.id])
             continue
         footprints = [_rect(item.center.x, item.center.y, item.angleRadians, item.length, item.width) for item in items]
-        safe = polygon.buffer(-400)
+        safe = polygon.buffer(-650)
         min_x, min_y, max_x, max_y = polygon.bounds
         best = None
         for y in [min_y + (max_y - min_y) * index / 24 for index in range(25)]:
@@ -94,7 +94,7 @@ def optimize_cameras_for_furniture(rooms: DerivedRoomSet, cameras: list[RoomCame
                 if distance < 600:
                     continue
                 visible = sum(polygon.buffer(1).covers(LineString((point, footprint.centroid))) for footprint in footprints)
-                score = visible * 10000 + distance + polygon.boundary.distance(point) * 0.2
+                score = visible * 10000 + min(distance, 2500) * 8 + polygon.boundary.distance(point) * 5
                 if best is None or score > best[0]:
                     best = (score, point)
         if best is None:

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -60,8 +60,10 @@ try {
     }
     const file = `${face}.png`;
     const path = fileURLToPath(new URL(file, output));
-    await page.screenshot({ path });
-    const bytes = await readFile(path);
+    const temporary = `${path}.${process.pid}.tmp`;
+    const bytes = await page.screenshot();
+    await writeFile(temporary, bytes);
+    await rename(temporary, path);
     assets.push({ face, file, width: size, height: size, byteLength: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") });
     await page.close();
   }

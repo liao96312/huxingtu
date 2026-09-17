@@ -7,8 +7,8 @@
   "file": "006-main-furnished-erp-2048x1024.png",
   "width": 2048,
   "height": 1024,
-  "byteLength": 69239,
-  "sha256": "1c4559db7e6198dfddfcb6d6f5d0c9a342acefac506fba5cc7d9a936c21b57a0",
+  "byteLength": 108772,
+  "sha256": "b312c705e42b10acc346a2631f4d5ad3ce7b074bde442742e41b9c6670c62da0",
   "seamMae": 0.0,
   "cubemapIndex": "cubemap-512/cubemap.index.json",
   "captureProfile": {
@@ -26,6 +26,6 @@
     "resizeReasonCode": null
   },
   "furnished": true,
-  "furniturePlanHash": "5b2197b0e7f5ef93a22bcc52e75d85e23676a93c8e623c33ce105ffea8256bfb",
+  "furniturePlanHash": "baafac034958ef1009e3bcbf9c59ecbc9b581c7ba69f047f0fd321adf3799cf0",
   "furnitureItemCount": 11
 }

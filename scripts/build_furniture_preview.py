@@ -70,7 +70,7 @@ def manifest_payload(project_id: str, folder: str, room_id: str, room_name: str,
             "id": scene, "roomId": room_id, "roomName": room_name,
             "title": f"{room_name} 确定性家具预览", "order": 0,
             "assets": {"original": asset, "proxy4k": None, "proxy2k": asset, "proxy1k": asset, "thumbnailUrl": url},
-            "initialView": {"yaw": yaw, "pitch": pitch, "fov": 55.0}, "hotspots": [],
+            "initialView": {"yaw": yaw, "pitch": pitch, "fov": 70.0}, "hotspots": [],
         }],
         "share": {"title": f"{project_id} · 确定性家具预览"},
     }
@@ -128,7 +128,7 @@ def main() -> int:
         os.replace(temporary, immutable)
 
     yaw = room_yaw(room, furniture, cameras, layout)
-    pitch = -25.0 if any(item.roomId == room.id for item in furniture.items) else -8.0
+    pitch = -15.0 if any(item.roomId == room.id for item in furniture.items) else -8.0
     manifest = stable_manifest(manifest_payload(project_id, folder, args.room, room.name, scene, immutable.name, yaw, pitch))
     target = derived / "pano-furniture-manifest.json"
     atomic_write(target, manifest.model_dump_json(indent=2, exclude_none=True).encode("utf-8"))

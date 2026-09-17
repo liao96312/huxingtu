@@ -2,108 +2,108 @@
   "schemaVersion": "0.1.0",
   "projectId": "fp-101",
   "layoutRevisionId": "layout_fp101_truth_r1",
-  "sourceLayoutHash": "68add62c589692925d3b195ab76709976eb9831c8b4e746c60f325a3de238369",
-  "sourceRoomHash": "3a05107389660e90fc1b0a4bafe19d34f3f0af81c1ad680c801d0812279a3d5e",
+  "sourceLayoutHash": "642a3454752365059b4ec98695326e86ce1d68b52d2ca251f421a687b58dfa4a",
+  "sourceRoomHash": "399fe464d6d1b21c0d06c8d3275eb9ad8e4a08b5d5344d05d59600263ccc8fb7",
   "cameras": [
     {
       "id": "camera_room_001_main",
       "roomId": "room_001",
       "position": {
-        "x": 6350.406,
-        "y": 7953.0,
+        "x": 6017.193,
+        "y": 6236.851,
         "z": 1500.0
       },
-      "clearance": 409.971,
+      "clearance": 726.269,
       "method": "polylabel"
     },
     {
       "id": "camera_room_002_main",
       "roomId": "room_002",
       "position": {
-        "x": 7363.375,
-        "y": 6677.582,
+        "x": 7480.119,
+        "y": 6508.869,
         "z": 1500.0
       },
-      "clearance": 464.128,
+      "clearance": 650.57,
       "method": "polylabel"
     },
     {
       "id": "camera_room_003_main",
       "roomId": "room_003",
       "position": {
-        "x": 11767.516207031249,
-        "y": 3111.36196484375,
+        "x": 11225.557,
+        "y": 3116.2529999999997,
         "z": 1500.0
       },
-      "clearance": 738.1719648437497,
+      "clearance": 743.0629999999995,
       "method": "polylabel"
     },
     {
       "id": "camera_room_004_main",
       "roomId": "room_004",
       "position": {
-        "x": 12482.845,
-        "y": 10512.131,
+        "x": 11205.834,
+        "y": 9283.214,
         "z": 1500.0
       },
-      "clearance": 499.346,
+      "clearance": 1763.936,
       "method": "polylabel"
     },
     {
       "id": "camera_room_005_main",
       "roomId": "room_005",
       "position": {
-        "x": 7415.344,
-        "y": 10539.802,
+        "x": 7232.466,
+        "y": 9047.308,
         "z": 1500.0
       },
-      "clearance": 505.428,
+      "clearance": 678.899,
       "method": "polylabel"
     },
     {
       "id": "camera_room_006_main",
       "roomId": "room_006",
       "position": {
-        "x": 8989.759,
-        "y": 8822.237,
+        "x": 8740.404,
+        "y": 9047.308,
         "z": 1500.0
       },
-      "clearance": 444.045,
+      "clearance": 681.29,
       "method": "polylabel"
     },
     {
       "id": "camera_room_007_main",
       "roomId": "room_007",
       "position": {
-        "x": 8772.509287109373,
-        "y": 12376.020931640624,
+        "x": 9096.3615,
+        "y": 12358.563,
         "z": 1500.0
       },
-      "clearance": 1272.6909316406236,
+      "clearance": 1267.3829999999998,
       "method": "polylabel"
     },
     {
       "id": "camera_room_008_main",
       "roomId": "room_008",
       "position": {
-        "x": 11289.013,
-        "y": 11535.234,
+        "x": 11658.659,
+        "y": 11830.487,
         "z": 1500.0
       },
-      "clearance": 415.716,
+      "clearance": 739.307,
       "method": "polylabel"
     },
     {
       "id": "camera_room_009_main",
       "roomId": "room_009",
       "position": {
-        "x": 5244.333,
-        "y": 7307.842,
+        "x": 4989.908,
+        "y": 7534.594,
         "z": 1500.0
       },
-      "clearance": 419.312,
+      "clearance": 658.639,
       "method": "polylabel"
     }
   ],
-  "contentHash": "6351f49f1bfb5bc70bb60285fe2de2e70f08ee3d2e5ebd11f351802e9ecab89a"
+  "contentHash": "2d4e57b084fd383e8b09c7aff53cc2bd2fd5bea6646c1c36802cdd7388d49c0b"
 }

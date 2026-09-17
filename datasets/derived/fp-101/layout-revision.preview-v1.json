@@ -22,241 +22,161 @@
   },
   "nodes": [
     {
-      "x": 2906.583,
-      "y": 4041.517,
+      "x": 2942.995,
+      "y": 3256.016,
       "id": "node_001"
     },
     {
-      "x": 2922.77,
-      "y": 6552.002,
+      "x": 2942.995,
+      "y": 4033.423,
       "id": "node_002"
     },
     {
-      "x": 2955.146,
-      "y": 3231.735,
+      "x": 2942.995,
+      "y": 6552.002,
       "id": "node_003"
     },
     {
-      "x": 2987.521,
-      "y": 8333.643,
+      "x": 2942.995,
+      "y": 8366.018,
       "id": "node_004"
     },
     {
-      "x": 3586.864,
-      "y": 4025.329,
+      "x": 3608.447,
+      "y": 4033.423,
       "id": "node_005"
     },
     {
-      "x": 3586.864,
-      "y": 6859.767,
+      "x": 3608.447,
+      "y": 6552.002,
       "id": "node_006"
     },
     {
-      "x": 3603.052,
-      "y": 6552.002,
+      "x": 3608.447,
+      "y": 6875.955,
       "id": "node_007"
     },
     {
-      "x": 3635.427,
-      "y": 6875.955,
+      "x": 3837.972,
+      "y": 8366.018,
       "id": "node_008"
     },
     {
-      "x": 3829.879,
-      "y": 11103.33,
+      "x": 3837.972,
+      "y": 11091.18,
       "id": "node_009"
     },
     {
-      "x": 3846.066,
-      "y": 8398.394,
+      "x": 5672.213,
+      "y": 6875.955,
       "id": "node_010"
     },
     {
-      "x": 5643.895,
-      "y": 8382.206,
+      "x": 5672.213,
+      "y": 8366.018,
       "id": "node_011"
     },
     {
-      "x": 5660.082,
-      "y": 6859.767,
+      "x": 6826.193,
+      "y": 3256.016,
       "id": "node_012"
     },
     {
-      "x": 5676.27,
-      "y": 8366.018,
+      "x": 6826.193,
+      "y": 7159.439,
       "id": "node_013"
     },
     {
-      "x": 5708.645,
-      "y": 6892.143,
+      "x": 6826.193,
+      "y": 8366.018,
       "id": "node_014"
     },
     {
-      "x": 6810.005,
-      "y": 3247.922,
+      "x": 7344.398,
+      "y": 11091.18,
       "id": "node_015"
     },
     {
-      "x": 6826.193,
-      "y": 3264.11,
+      "x": 7344.398,
+      "y": 13625.946,
       "id": "node_016"
-    },
-    {
-      "x": 6826.193,
-      "y": 7135.157,
-      "id": "node_017"
-    },
-    {
-      "x": 6826.193,
-      "y": 8398.394,
-      "id": "node_018"
-    },
-    {
-      "x": 6842.381,
-      "y": 7151.345,
-      "id": "node_019"
-    },
-    {
-      "x": 6842.381,
-      "y": 8349.831,
-      "id": "node_020"
-    },
-    {
-      "x": 7344.398,
-      "y": 11103.33,
-      "id": "node_021"
-    },
-    {
-      "x": 7344.398,
-      "y": 13646.191,
-      "id": "node_022"
-    },
-    {
-      "x": 7895.178,
-      "y": 8398.394,
-      "id": "node_023"
     },
     {
       "x": 7911.365,
       "y": 8366.018,
-      "id": "node_024"
+      "id": "node_017"
     },
     {
       "x": 7911.365,
-      "y": 11054.767,
+      "y": 11091.18,
+      "id": "node_018"
+    },
+    {
+      "x": 9441.898,
+      "y": 2373.19,
+      "id": "node_019"
+    },
+    {
+      "x": 9441.898,
+      "y": 3256.016,
+      "id": "node_020"
+    },
+    {
+      "x": 9441.898,
+      "y": 3859.316,
+      "id": "node_021"
+    },
+    {
+      "x": 9441.898,
+      "y": 7159.439,
+      "id": "node_022"
+    },
+    {
+      "x": 9441.898,
+      "y": 8366.018,
+      "id": "node_023"
+    },
+    {
+      "x": 9441.898,
+      "y": 11091.18,
+      "id": "node_024"
+    },
+    {
+      "x": 10848.325,
+      "y": 11091.18,
       "id": "node_025"
     },
     {
-      "x": 7927.553,
-      "y": 11103.33,
+      "x": 10848.325,
+      "y": 13625.946,
       "id": "node_026"
     },
     {
-      "x": 9417.616,
-      "y": 3280.298,
+      "x": 13009.216,
+      "y": 2373.19,
       "id": "node_027"
     },
     {
-      "x": 9417.616,
-      "y": 7183.72,
+      "x": 13009.216,
+      "y": 3859.316,
       "id": "node_028"
     },
     {
-      "x": 9433.804,
-      "y": 8382.206,
+      "x": 13009.216,
+      "y": 11091.18,
       "id": "node_029"
     },
     {
-      "x": 9433.804,
-      "y": 8398.394,
+      "x": 13009.216,
+      "y": 13625.946,
       "id": "node_030"
-    },
-    {
-      "x": 9433.804,
-      "y": 11103.33,
-      "id": "node_031"
-    },
-    {
-      "x": 9449.991,
-      "y": 3847.065,
-      "id": "node_032"
-    },
-    {
-      "x": 9466.179,
-      "y": 2373.19,
-      "id": "node_033"
-    },
-    {
-      "x": 9466.179,
-      "y": 3830.878,
-      "id": "node_034"
-    },
-    {
-      "x": 9466.179,
-      "y": 7167.533,
-      "id": "node_035"
-    },
-    {
-      "x": 9466.179,
-      "y": 11119.518,
-      "id": "node_036"
-    },
-    {
-      "x": 10826.741,
-      "y": 11119.518,
-      "id": "node_037"
-    },
-    {
-      "x": 10826.741,
-      "y": 13662.378,
-      "id": "node_038"
-    },
-    {
-      "x": 10842.929,
-      "y": 11103.33,
-      "id": "node_039"
-    },
-    {
-      "x": 10875.304,
-      "y": 13613.815,
-      "id": "node_040"
-    },
-    {
-      "x": 12980.898,
-      "y": 11087.143,
-      "id": "node_041"
-    },
-    {
-      "x": 12997.086,
-      "y": 3895.828,
-      "id": "node_042"
-    },
-    {
-      "x": 13013.273,
-      "y": 2373.19,
-      "id": "node_043"
-    },
-    {
-      "x": 13013.273,
-      "y": 3863.453,
-      "id": "node_044"
-    },
-    {
-      "x": 13013.273,
-      "y": 13581.44,
-      "id": "node_045"
-    },
-    {
-      "x": 13045.649,
-      "y": 11119.518,
-      "id": "node_046"
     }
   ],
   "edges": [
     {
       "id": "wall_001",
       "startNodeId": "node_001",
-      "endNodeId": "node_003",
+      "endNodeId": "node_002",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -264,7 +184,7 @@
     {
       "id": "wall_002",
       "startNodeId": "node_001",
-      "endNodeId": "node_005",
+      "endNodeId": "node_012",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -272,15 +192,15 @@
     {
       "id": "wall_003",
       "startNodeId": "node_002",
-      "endNodeId": "node_004",
+      "endNodeId": "node_005",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_004",
-      "startNodeId": "node_002",
-      "endNodeId": "node_007",
+      "startNodeId": "node_003",
+      "endNodeId": "node_004",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -288,7 +208,7 @@
     {
       "id": "wall_005",
       "startNodeId": "node_003",
-      "endNodeId": "node_016",
+      "endNodeId": "node_006",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -296,7 +216,7 @@
     {
       "id": "wall_006",
       "startNodeId": "node_004",
-      "endNodeId": "node_013",
+      "endNodeId": "node_008",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -312,7 +232,7 @@
     {
       "id": "wall_008",
       "startNodeId": "node_006",
-      "endNodeId": "node_012",
+      "endNodeId": "node_007",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -320,7 +240,7 @@
     {
       "id": "wall_009",
       "startNodeId": "node_007",
-      "endNodeId": "node_008",
+      "endNodeId": "node_010",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -328,15 +248,15 @@
     {
       "id": "wall_010",
       "startNodeId": "node_008",
-      "endNodeId": "node_014",
+      "endNodeId": "node_009",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_011",
-      "startNodeId": "node_009",
-      "endNodeId": "node_010",
+      "startNodeId": "node_008",
+      "endNodeId": "node_011",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -344,7 +264,7 @@
     {
       "id": "wall_012",
       "startNodeId": "node_009",
-      "endNodeId": "node_026",
+      "endNodeId": "node_015",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -352,7 +272,7 @@
     {
       "id": "wall_013",
       "startNodeId": "node_010",
-      "endNodeId": "node_023",
+      "endNodeId": "node_011",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -360,21 +280,29 @@
     {
       "id": "wall_014",
       "startNodeId": "node_011",
-      "endNodeId": "node_012",
+      "endNodeId": "node_014",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_015",
-      "startNodeId": "node_011",
-      "endNodeId": "node_020",
+      "startNodeId": "node_012",
+      "endNodeId": "node_013",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_016",
+      "startNodeId": "node_012",
+      "endNodeId": "node_020",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 1.0
+    },
+    {
+      "id": "wall_017",
       "startNodeId": "node_013",
       "endNodeId": "node_014",
       "thickness": 120.0,
@@ -382,63 +310,95 @@
       "confidence": 1.0
     },
     {
-      "id": "wall_017",
-      "startNodeId": "node_015",
-      "endNodeId": "node_017",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
       "id": "wall_018",
-      "startNodeId": "node_015",
-      "endNodeId": "node_027",
+      "startNodeId": "node_013",
+      "endNodeId": "node_022",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_019",
-      "startNodeId": "node_016",
-      "endNodeId": "node_020",
+      "startNodeId": "node_014",
+      "endNodeId": "node_017",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_020",
-      "startNodeId": "node_017",
-      "endNodeId": "node_035",
+      "startNodeId": "node_015",
+      "endNodeId": "node_016",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_021",
-      "startNodeId": "node_018",
-      "endNodeId": "node_019",
+      "startNodeId": "node_015",
+      "endNodeId": "node_018",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_022",
-      "startNodeId": "node_018",
-      "endNodeId": "node_030",
+      "startNodeId": "node_016",
+      "endNodeId": "node_026",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_023",
-      "startNodeId": "node_019",
-      "endNodeId": "node_028",
+      "startNodeId": "node_017",
+      "endNodeId": "node_018",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_024",
+      "startNodeId": "node_017",
+      "endNodeId": "node_023",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 1.0
+    },
+    {
+      "id": "wall_025",
+      "startNodeId": "node_018",
+      "endNodeId": "node_024",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 1.0
+    },
+    {
+      "id": "wall_026",
+      "startNodeId": "node_019",
+      "endNodeId": "node_020",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 1.0
+    },
+    {
+      "id": "wall_027",
+      "startNodeId": "node_019",
+      "endNodeId": "node_027",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 1.0
+    },
+    {
+      "id": "wall_028",
+      "startNodeId": "node_020",
+      "endNodeId": "node_021",
+      "thickness": 120.0,
+      "height": 2800.0,
+      "confidence": 1.0
+    },
+    {
+      "id": "wall_029",
       "startNodeId": "node_021",
       "endNodeId": "node_022",
       "thickness": 120.0,
@@ -446,31 +406,23 @@
       "confidence": 1.0
     },
     {
-      "id": "wall_025",
+      "id": "wall_030",
       "startNodeId": "node_021",
-      "endNodeId": "node_039",
+      "endNodeId": "node_028",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
-      "id": "wall_026",
-      "startNodeId": "node_022",
-      "endNodeId": "node_038",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_027",
+      "id": "wall_031",
       "startNodeId": "node_023",
-      "endNodeId": "node_026",
+      "endNodeId": "node_024",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
-      "id": "wall_028",
+      "id": "wall_032",
       "startNodeId": "node_024",
       "endNodeId": "node_025",
       "thickness": 120.0,
@@ -478,145 +430,49 @@
       "confidence": 1.0
     },
     {
-      "id": "wall_029",
-      "startNodeId": "node_024",
-      "endNodeId": "node_029",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_030",
-      "startNodeId": "node_025",
-      "endNodeId": "node_031",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_031",
-      "startNodeId": "node_027",
-      "endNodeId": "node_035",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_032",
-      "startNodeId": "node_028",
-      "endNodeId": "node_034",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
       "id": "wall_033",
-      "startNodeId": "node_029",
-      "endNodeId": "node_031",
+      "startNodeId": "node_025",
+      "endNodeId": "node_026",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_034",
-      "startNodeId": "node_030",
-      "endNodeId": "node_036",
+      "startNodeId": "node_025",
+      "endNodeId": "node_029",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_035",
-      "startNodeId": "node_032",
-      "endNodeId": "node_033",
+      "startNodeId": "node_026",
+      "endNodeId": "node_030",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_036",
-      "startNodeId": "node_032",
-      "endNodeId": "node_044",
+      "startNodeId": "node_027",
+      "endNodeId": "node_028",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_037",
-      "startNodeId": "node_033",
-      "endNodeId": "node_043",
+      "startNodeId": "node_028",
+      "endNodeId": "node_029",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
     },
     {
       "id": "wall_038",
-      "startNodeId": "node_034",
-      "endNodeId": "node_042",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_039",
-      "startNodeId": "node_036",
-      "endNodeId": "node_041",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_040",
-      "startNodeId": "node_037",
-      "endNodeId": "node_040",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_041",
-      "startNodeId": "node_037",
-      "endNodeId": "node_046",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_042",
-      "startNodeId": "node_038",
-      "endNodeId": "node_039",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_043",
-      "startNodeId": "node_040",
-      "endNodeId": "node_045",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_044",
-      "startNodeId": "node_041",
-      "endNodeId": "node_042",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_045",
-      "startNodeId": "node_043",
-      "endNodeId": "node_044",
-      "thickness": 120.0,
-      "height": 2800.0,
-      "confidence": 1.0
-    },
-    {
-      "id": "wall_046",
-      "startNodeId": "node_045",
-      "endNodeId": "node_046",
+      "startNodeId": "node_029",
+      "endNodeId": "node_030",
       "thickness": 120.0,
       "height": 2800.0,
       "confidence": 1.0
@@ -626,35 +482,35 @@
     {
       "id": "op_010",
       "type": "door",
-      "wallEdgeId": "wall_014",
-      "offset": 615.84,
-      "width": 874.483,
+      "wallEdgeId": "wall_013",
+      "offset": 16.188,
+      "width": 874.533,
       "height": 2100.0,
       "confidence": 1.0
     },
     {
       "id": "op_016",
       "type": "door",
-      "wallEdgeId": "wall_023",
-      "offset": 16.389,
-      "width": 987.765,
+      "wallEdgeId": "wall_018",
+      "offset": 32.375,
+      "width": 988.046,
       "height": 2100.0,
       "confidence": 1.0
     },
     {
       "id": "op_017",
       "type": "door",
-      "wallEdgeId": "wall_021",
-      "offset": 162.073,
-      "width": 890.635,
+      "wallEdgeId": "wall_017",
+      "offset": 186.158,
+      "width": 890.92,
       "height": 2100.0,
       "confidence": 1.0
     },
     {
       "id": "op_018",
       "type": "door",
-      "wallEdgeId": "wall_013",
-      "offset": 3012.502,
+      "wallEdgeId": "wall_019",
+      "offset": 32.375,
       "width": 939.483,
       "height": 2100.0,
       "confidence": 1.0
@@ -662,35 +518,35 @@
     {
       "id": "op_019",
       "type": "door",
-      "wallEdgeId": "wall_029",
-      "offset": 146.025,
-      "width": 712.272,
+      "wallEdgeId": "wall_024",
+      "offset": 145.689,
+      "width": 712.656,
       "height": 2100.0,
       "confidence": 1.0
     },
     {
       "id": "op_020",
       "type": "door",
-      "wallEdgeId": "wall_039",
-      "offset": 210.631,
-      "width": 923.206,
+      "wallEdgeId": "wall_032",
+      "offset": 234.92,
+      "width": 923.096,
       "height": 2100.0,
       "confidence": 1.0
     },
     {
       "id": "op_021",
       "type": "door",
-      "wallEdgeId": "wall_026",
-      "offset": 113.512,
-      "width": 1263.148,
+      "wallEdgeId": "wall_022",
+      "offset": 113.513,
+      "width": 1263.236,
       "height": 2100.0,
       "confidence": 1.0
     },
     {
       "id": "op_022",
       "type": "window",
-      "wallEdgeId": "wall_004",
-      "offset": 97.126,
+      "wallEdgeId": "wall_005",
+      "offset": 76.901,
       "width": 518.405,
       "height": 1200.0,
       "sill": 900.0,
@@ -699,9 +555,9 @@
     {
       "id": "op_023",
       "type": "window",
-      "wallEdgeId": "wall_005",
-      "offset": 615.509,
-      "width": 2623.978,
+      "wallEdgeId": "wall_002",
+      "offset": 627.681,
+      "width": 2623.799,
       "height": 1200.0,
       "sill": 900.0,
       "confidence": 1.0
@@ -709,9 +565,9 @@
     {
       "id": "op_024",
       "type": "window",
-      "wallEdgeId": "wall_018",
-      "offset": 161.663,
-      "width": 2348.427,
+      "wallEdgeId": "wall_016",
+      "offset": 145.689,
+      "width": 2348.608,
       "height": 1200.0,
       "sill": 900.0,
       "confidence": 1.0
@@ -719,9 +575,9 @@
     {
       "id": "op_025",
       "type": "window",
-      "wallEdgeId": "wall_035",
-      "offset": 696.404,
-      "width": 647.867,
+      "wallEdgeId": "wall_026",
+      "offset": 129.701,
+      "width": 647.906,
       "height": 1200.0,
       "sill": 900.0,
       "confidence": 1.0
@@ -729,8 +585,8 @@
     {
       "id": "op_026",
       "type": "window",
-      "wallEdgeId": "wall_037",
-      "offset": 129.701,
+      "wallEdgeId": "wall_027",
+      "offset": 153.982,
       "width": 2785.675,
       "height": 1200.0,
       "sill": 900.0,
@@ -739,8 +595,8 @@
     {
       "id": "op_027",
       "type": "window",
-      "wallEdgeId": "wall_024",
-      "offset": 485.83,
+      "wallEdgeId": "wall_020",
+      "offset": 497.98,
       "width": 1328.187,
       "height": 1200.0,
       "sill": 900.0,
@@ -749,9 +605,9 @@
     {
       "id": "op_028",
       "type": "window",
-      "wallEdgeId": "wall_011",
-      "offset": 81.227,
-      "width": 2526.827,
+      "wallEdgeId": "wall_010",
+      "offset": 129.502,
+      "width": 2526.872,
       "height": 1200.0,
       "sill": 900.0,
       "confidence": 1.0
@@ -759,27 +615,27 @@
     {
       "id": "op_030",
       "type": "door",
-      "wallEdgeId": "wall_038",
-      "offset": 487.439,
-      "width": 2444.823,
+      "wallEdgeId": "wall_030",
+      "offset": 510.31,
+      "width": 2445.535,
       "height": 2100.0,
       "confidence": 1.0
     },
     {
       "id": "op_031",
       "type": "door",
-      "wallEdgeId": "wall_039",
-      "offset": 1407.249,
-      "width": 1422.854,
+      "wallEdgeId": "wall_034",
+      "offset": 24.981,
+      "width": 1422.915,
       "height": 2100.0,
       "confidence": 1.0
     },
     {
       "id": "op_032",
       "type": "window",
-      "wallEdgeId": "wall_040",
-      "offset": 269.023,
-      "width": 1538.219,
+      "wallEdgeId": "wall_033",
+      "offset": 296.933,
+      "width": 1538.826,
       "height": 1200.0,
       "sill": 900.0,
       "confidence": 1.0
@@ -791,8 +647,8 @@
       "type": "bedroom",
       "label": "卧室",
       "anchor": {
-        "x": 5210.008397935416,
-        "y": 5450.642
+        "x": 5217.32,
+        "y": 5454.689
       },
       "confidence": 1.0
     },
@@ -801,7 +657,7 @@
       "type": "bedroom",
       "label": "卧室",
       "anchor": {
-        "x": 8129.930838780972,
+        "x": 8134.0455,
         "y": 5207.7275
       },
       "confidence": 1.0
@@ -811,8 +667,8 @@
       "type": "balcony",
       "label": "阳台",
       "anchor": {
-        "x": 11235.679,
-        "y": 3110.1275
+        "x": 11225.557,
+        "y": 3116.2529999999997
       },
       "confidence": 1.0
     },
@@ -821,8 +677,8 @@
       "type": "livingDining",
       "label": "客餐厅",
       "anchor": {
-        "x": 9911.197259649807,
-        "y": 7791.057000000001
+        "x": 9917.7045,
+        "y": 7762.7285
       },
       "confidence": 1.0
     },
@@ -831,8 +687,8 @@
       "type": "bedroom",
       "label": "卧室",
       "anchor": {
-        "x": 5874.669,
-        "y": 9750.862000000001
+        "x": 5874.6685,
+        "y": 9728.599
       },
       "confidence": 1.0
     },
@@ -841,8 +697,8 @@
       "type": "bathroom",
       "label": "卫生间",
       "anchor": {
-        "x": 8672.5845,
-        "y": 9718.486499999999
+        "x": 8676.6315,
+        "y": 9728.599
       },
       "confidence": 1.0
     },
@@ -851,8 +707,8 @@
       "type": "other",
       "label": "其他",
       "anchor": {
-        "x": 9089.64209889029,
-        "y": 12374.7605
+        "x": 9096.3615,
+        "y": 12358.563
       },
       "confidence": 1.0
     },
@@ -861,8 +717,8 @@
       "type": "kitchen",
       "label": "厨房",
       "anchor": {
-        "x": 11940.08416781101,
-        "y": 12350.479
+        "x": 11928.7705,
+        "y": 12358.563
       },
       "confidence": 1.0
     },
@@ -871,11 +727,11 @@
       "type": "bathroom",
       "label": "卫生间",
       "anchor": {
-        "x": 4327.069761835783,
-        "y": 7612.893
+        "x": 4307.603999999999,
+        "y": 7620.9865
       },
       "confidence": 1.0
     }
   ],
-  "contentHash": "68add62c589692925d3b195ab76709976eb9831c8b4e746c60f325a3de238369"
+  "contentHash": "642a3454752365059b4ec98695326e86ce1d68b52d2ca251f421a687b58dfa4a"
 }

@@ -4,52 +4,52 @@
   "rounds": [
     {
       "round": 1,
-      "seconds": 43.035,
+      "seconds": 39.362,
       "assets": [
-        "/artifacts/fp-101/panorama-furniture/004-main/004-main-furnished-cf829830acc3fe5e918ed52113b61b60be9603da0814eb45cb047e30f26a336f.png",
-        "/artifacts/fp-101/panorama-furniture/001-main/001-main-furnished-7d5b6fd89e2f2b41afe66d2e0c183efdddede9f88a897bffdd80b7f45012cc6b.png",
-        "/artifacts/fp-101/panorama-furniture/002-main/002-main-furnished-a807a8dac3fafabce05c0504aa97e8b0e215354ebe3a5b69c11b5c8d6b25f77b.png",
-        "/artifacts/fp-101/panorama-furniture/003-main/003-main-furnished-bef1f90ad5abfcc609d9c1940e20555b2ec7909ee263ea8d2be81e29f737908c.png",
-        "/artifacts/fp-101/panorama-furniture/005-main/005-main-furnished-c0bf4c976735266909c6c98a9cc8acc78e353917e3630f7b2a2270c55ea506cd.png",
-        "/artifacts/fp-101/panorama-furniture/006-main/006-main-furnished-1c4559db7e6198dfddfcb6d6f5d0c9a342acefac506fba5cc7d9a936c21b57a0.png",
-        "/artifacts/fp-101/panorama-furniture/007-main/007-main-furnished-1e99d7d6cbd71eae588412aebdfd65a1475b57dba5f62944713ac8937e90e148.png",
-        "/artifacts/fp-101/panorama-furniture/008-main/008-main-furnished-b98936eac5f3d649d3a10b2072698a29fe427dfb10b7cae5f03d2281aba67e99.png",
-        "/artifacts/fp-101/panorama-furniture/009-main/009-main-furnished-9369f7f154f01f7d117168b5f8b67959877a6642c77b1db8e08928901d09f5f1.png"
+        "/artifacts/fp-101/panorama-furniture/004-main/004-main-furnished-d9dcb6eefe9b8e14a90c1476a1961ebd37dd999385636af91e476615c8dc65cd.png",
+        "/artifacts/fp-101/panorama-furniture/001-main/001-main-furnished-9cf9d5df45220d7b849d2b392690875ecde6ebd04391775d71d5106c29937f65.png",
+        "/artifacts/fp-101/panorama-furniture/002-main/002-main-furnished-a6519c0686108c728aa02a2e325bb7e1899fc38520df26fc8336ed290368ca89.png",
+        "/artifacts/fp-101/panorama-furniture/003-main/003-main-furnished-edc03bd9b751cdb8ef9a068e3fc3619758cfa77ebcd8194659402504af545b87.png",
+        "/artifacts/fp-101/panorama-furniture/005-main/005-main-furnished-957ed99cfc921e0547b1a800edd45b0d50bf84e11198390186eff292b2259151.png",
+        "/artifacts/fp-101/panorama-furniture/006-main/006-main-furnished-b312c705e42b10acc346a2631f4d5ad3ce7b074bde442742e41b9c6670c62da0.png",
+        "/artifacts/fp-101/panorama-furniture/007-main/007-main-furnished-2bae43d5777f237eefef41e4162da7714bf4144a4531c415efa14cc27876ca80.png",
+        "/artifacts/fp-101/panorama-furniture/008-main/008-main-furnished-cf920d949a5ffce4604622ef633a38e7facfe7c17f4dad330f3b80750640df8e.png",
+        "/artifacts/fp-101/panorama-furniture/009-main/009-main-furnished-64fcdf517e4c899e3e0354aff5ca15658d60a3e8d4321bb79c07861d3eceada0.png"
       ]
     },
     {
       "round": 2,
-      "seconds": 42.221,
+      "seconds": 39.281,
       "assets": [
-        "/artifacts/fp-101/panorama-furniture/004-main/004-main-furnished-cf829830acc3fe5e918ed52113b61b60be9603da0814eb45cb047e30f26a336f.png",
-        "/artifacts/fp-101/panorama-furniture/001-main/001-main-furnished-7d5b6fd89e2f2b41afe66d2e0c183efdddede9f88a897bffdd80b7f45012cc6b.png",
-        "/artifacts/fp-101/panorama-furniture/002-main/002-main-furnished-a807a8dac3fafabce05c0504aa97e8b0e215354ebe3a5b69c11b5c8d6b25f77b.png",
-        "/artifacts/fp-101/panorama-furniture/003-main/003-main-furnished-bef1f90ad5abfcc609d9c1940e20555b2ec7909ee263ea8d2be81e29f737908c.png",
-        "/artifacts/fp-101/panorama-furniture/005-main/005-main-furnished-c0bf4c976735266909c6c98a9cc8acc78e353917e3630f7b2a2270c55ea506cd.png",
-        "/artifacts/fp-101/panorama-furniture/006-main/006-main-furnished-1c4559db7e6198dfddfcb6d6f5d0c9a342acefac506fba5cc7d9a936c21b57a0.png",
-        "/artifacts/fp-101/panorama-furniture/007-main/007-main-furnished-1e99d7d6cbd71eae588412aebdfd65a1475b57dba5f62944713ac8937e90e148.png",
-        "/artifacts/fp-101/panorama-furniture/008-main/008-main-furnished-b98936eac5f3d649d3a10b2072698a29fe427dfb10b7cae5f03d2281aba67e99.png",
-        "/artifacts/fp-101/panorama-furniture/009-main/009-main-furnished-9369f7f154f01f7d117168b5f8b67959877a6642c77b1db8e08928901d09f5f1.png"
+        "/artifacts/fp-101/panorama-furniture/004-main/004-main-furnished-d9dcb6eefe9b8e14a90c1476a1961ebd37dd999385636af91e476615c8dc65cd.png",
+        "/artifacts/fp-101/panorama-furniture/001-main/001-main-furnished-9cf9d5df45220d7b849d2b392690875ecde6ebd04391775d71d5106c29937f65.png",
+        "/artifacts/fp-101/panorama-furniture/002-main/002-main-furnished-a6519c0686108c728aa02a2e325bb7e1899fc38520df26fc8336ed290368ca89.png",
+        "/artifacts/fp-101/panorama-furniture/003-main/003-main-furnished-edc03bd9b751cdb8ef9a068e3fc3619758cfa77ebcd8194659402504af545b87.png",
+        "/artifacts/fp-101/panorama-furniture/005-main/005-main-furnished-957ed99cfc921e0547b1a800edd45b0d50bf84e11198390186eff292b2259151.png",
+        "/artifacts/fp-101/panorama-furniture/006-main/006-main-furnished-b312c705e42b10acc346a2631f4d5ad3ce7b074bde442742e41b9c6670c62da0.png",
+        "/artifacts/fp-101/panorama-furniture/007-main/007-main-furnished-2bae43d5777f237eefef41e4162da7714bf4144a4531c415efa14cc27876ca80.png",
+        "/artifacts/fp-101/panorama-furniture/008-main/008-main-furnished-cf920d949a5ffce4604622ef633a38e7facfe7c17f4dad330f3b80750640df8e.png",
+        "/artifacts/fp-101/panorama-furniture/009-main/009-main-furnished-64fcdf517e4c899e3e0354aff5ca15658d60a3e8d4321bb79c07861d3eceada0.png"
       ]
     },
     {
       "round": 3,
-      "seconds": 41.264,
+      "seconds": 38.981,
       "assets": [
-        "/artifacts/fp-101/panorama-furniture/004-main/004-main-furnished-cf829830acc3fe5e918ed52113b61b60be9603da0814eb45cb047e30f26a336f.png",
-        "/artifacts/fp-101/panorama-furniture/001-main/001-main-furnished-7d5b6fd89e2f2b41afe66d2e0c183efdddede9f88a897bffdd80b7f45012cc6b.png",
-        "/artifacts/fp-101/panorama-furniture/002-main/002-main-furnished-a807a8dac3fafabce05c0504aa97e8b0e215354ebe3a5b69c11b5c8d6b25f77b.png",
-        "/artifacts/fp-101/panorama-furniture/003-main/003-main-furnished-bef1f90ad5abfcc609d9c1940e20555b2ec7909ee263ea8d2be81e29f737908c.png",
-        "/artifacts/fp-101/panorama-furniture/005-main/005-main-furnished-c0bf4c976735266909c6c98a9cc8acc78e353917e3630f7b2a2270c55ea506cd.png",
-        "/artifacts/fp-101/panorama-furniture/006-main/006-main-furnished-1c4559db7e6198dfddfcb6d6f5d0c9a342acefac506fba5cc7d9a936c21b57a0.png",
-        "/artifacts/fp-101/panorama-furniture/007-main/007-main-furnished-1e99d7d6cbd71eae588412aebdfd65a1475b57dba5f62944713ac8937e90e148.png",
-        "/artifacts/fp-101/panorama-furniture/008-main/008-main-furnished-b98936eac5f3d649d3a10b2072698a29fe427dfb10b7cae5f03d2281aba67e99.png",
-        "/artifacts/fp-101/panorama-furniture/009-main/009-main-furnished-9369f7f154f01f7d117168b5f8b67959877a6642c77b1db8e08928901d09f5f1.png"
+        "/artifacts/fp-101/panorama-furniture/004-main/004-main-furnished-d9dcb6eefe9b8e14a90c1476a1961ebd37dd999385636af91e476615c8dc65cd.png",
+        "/artifacts/fp-101/panorama-furniture/001-main/001-main-furnished-9cf9d5df45220d7b849d2b392690875ecde6ebd04391775d71d5106c29937f65.png",
+        "/artifacts/fp-101/panorama-furniture/002-main/002-main-furnished-a6519c0686108c728aa02a2e325bb7e1899fc38520df26fc8336ed290368ca89.png",
+        "/artifacts/fp-101/panorama-furniture/003-main/003-main-furnished-edc03bd9b751cdb8ef9a068e3fc3619758cfa77ebcd8194659402504af545b87.png",
+        "/artifacts/fp-101/panorama-furniture/005-main/005-main-furnished-957ed99cfc921e0547b1a800edd45b0d50bf84e11198390186eff292b2259151.png",
+        "/artifacts/fp-101/panorama-furniture/006-main/006-main-furnished-b312c705e42b10acc346a2631f4d5ad3ce7b074bde442742e41b9c6670c62da0.png",
+        "/artifacts/fp-101/panorama-furniture/007-main/007-main-furnished-2bae43d5777f237eefef41e4162da7714bf4144a4531c415efa14cc27876ca80.png",
+        "/artifacts/fp-101/panorama-furniture/008-main/008-main-furnished-cf920d949a5ffce4604622ef633a38e7facfe7c17f4dad330f3b80750640df8e.png",
+        "/artifacts/fp-101/panorama-furniture/009-main/009-main-furnished-64fcdf517e4c899e3e0354aff5ca15658d60a3e8d4321bb79c07861d3eceada0.png"
       ]
     }
   ],
   "roomCount": 9,
   "stable": true,
-  "totalSeconds": 126.524,
-  "contentHash": "cff54785c13e151d6f8094f14d4772a0274f001de4014bba9dbc253c0c9a29d5"
+  "totalSeconds": 117.627,
+  "contentHash": "9e1fdb20eb9f2b6977c7cbfd4463b2e8e386c03b5e9db5d044a645994e2e427f"
 }
