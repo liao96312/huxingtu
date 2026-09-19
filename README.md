@@ -1,8 +1,15 @@
-# Pano platform
+# Pano Platform
 
-户型图到 360°全景的自主实现工程。当前处于通用户型识别与几何融合 Gate：Viewer、单户型3D/全景和识别原型可运行，发布准确率门尚未通过。
+**语言：** 简体中文
 
-## 当前可运行内容
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.x-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React%20%2B%20Three.js-Viewer-61DAFB?logo=react&logoColor=111)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+
+户型图到 3D 场景和 360° 全景的自主实现工程。当前处于通用户型识别与几何融合 Gate：Viewer、单户型 3D/全景和识别原型可运行，发布准确率门尚未通过。
+
+## 核心能力
 
 - FastAPI 健康检查与版本化 Command Facade
 - `parse` 命令：Base64图片输入、CV/Tuzi模式、显式第三方授权、阶段证据持久化和结果查询
@@ -15,7 +22,21 @@
 
 `layout/buildScene/capture/render/queryResult` 等尚未实现的业务命令会明确返回 `501 COMMAND_NOT_IMPLEMENTED`。通用户型发布门当前仍为 `releaseReady=false`。
 
-## 本地验证
+## 系统架构
+
+```mermaid
+flowchart LR
+  Upload["户型图上传"] --> API["FastAPI Command Facade"]
+  API --> CV["CV 墙体识别"]
+  API --> VLM["Tuzi 视觉草案"]
+  CV --> Fusion["几何融合与质量门"]
+  VLM --> Fusion
+  Fusion --> Scene["LayoutRevision / SceneGeometry"]
+  Scene --> Pano["结构 ERP / 可选 image-2"]
+  Pano --> Viewer["React + Three.js Viewer"]
+```
+
+## 快速开始
 
 ```powershell
 python -m venv .venv
@@ -101,7 +122,7 @@ python scripts/run_resplan_regression.py --limit 10
 
 下载器会自动探测本机 `127.0.0.1:7897`，仅对本次下载使用代理并校验固定版本的字节数和 SHA-256；随后以受限反序列化生成本项目的 PNG/真值 JSON，最后实际跑无人干预上传到 Viewer 链并输出房间/门窗数量差。派生文件只写入被 Git 忽略的 `tmp/`。数据来源和许可证见 `datasets/external/registry.json`。
 
-## 目录
+## 目录结构
 
 ```text
 apps/pano-viewer/       # React + Three.js 全景 Viewer
@@ -114,3 +135,7 @@ docs/plan/              # 户型识别CV+Tuzi视觉模型方案与详细TODO
 ```
 
 户型识别实施基线：[CV + Tuzi视觉模型 + 几何融合方案](docs/plan/floorplan-recognition-v2.md)；执行清单见 [识别v2详细TODO](docs/plan/floorplan-recognition-v2-todo.md)。
+
+## 当前状态
+
+Viewer、单户型 3D/全景和识别原型均可运行；通用户型发布门仍为 `releaseReady=false`，当前输出应视为预览并接受人工复核。
