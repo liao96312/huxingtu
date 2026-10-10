@@ -16,7 +16,7 @@ styles = [
     ("wabi-sabi", "侘寂", "Wabi-sabi style", ["clay", "sand", "warm gray"], ["limewash", "aged wood", "travertine"], "Wabi-sabi interior, warm clay and sand tones, limewash, aged wood and travertine, quiet imperfect textures, minimal objects, soft natural light."),
 ]
 payload = {
-    "schemaVersion": "0.1.0", "source": "clean-room behavior mapping from 3vjia aidraw config 20250427",
+    "schemaVersion": "0.1.0", "source": "independently defined style catalog v1",
     "styles": [{
         "id": style_id, "label": label, "designStyle": provider_value, "visualMode": "realistic",
         "inspirations": ["natural light", "texture"], "palette": palette, "materials": materials, "promptSuffix": prompt,

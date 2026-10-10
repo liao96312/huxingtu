@@ -24,7 +24,7 @@ P0 固定为一条自托管垂直链路：
 - UI 不直接持有解析器、求解器或渲染器内部对象，只调用 `parse/layout/buildScene/capture/render/queryResult`。
 - `LayoutRevision` 是几何事实源；布局、相机、场景和全景都是带输入摘要的派生工件。
 - Three.js 负责确定性 3D/360°主链路，GPT Image 2 负责可选 AI 精渲；失败不阻断基础材质全景。
-- 不引入 `3vj-js` Bundle、3VJIA 私有域名、RoyScene 或私有 API。
+- 不引入任何第三方闭源 Bundle、私有域名或私有 API。
 
 ## 暂缓
 
