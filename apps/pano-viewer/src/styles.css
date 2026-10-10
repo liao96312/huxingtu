@@ -449,3 +449,27 @@ button {
 .pipeline-result { display: grid; gap: 12px; padding: 18px; border-radius: 14px; background: #eef6ff; }
 .pipeline-result ol { margin: 0; padding-left: 22px; display: grid; gap: 7px; font-size: 14px; }
 .pipeline-error { padding: 13px; border-radius: 10px; background: #fee2e2; color: #991b1b; }
+
+/* Floorplan3D interactive showcase (rgb mode only) */
+.model-info .showcase-panel { display: grid; gap: 6px; margin-top: 6px; }
+.model-info .sun-slider { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #475467; }
+.model-info .sun-slider input[type="range"] { flex: 1; }
+.model-room-label {
+  padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.86);
+  color: #344054; font-size: 12px; font-weight: 600; white-space: nowrap; box-shadow: 0 1px 4px rgba(16, 24, 40, 0.15);
+}
+.walk-overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  border: 0; background: rgba(16, 24, 40, 0.45); color: #fff; font-size: 18px; cursor: pointer; z-index: 5;
+}
+.walk-overlay small { font-size: 13px; opacity: 0.85; }
+.walk-cross {
+  position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px;
+  border: 2px solid rgba(255, 255, 255, 0.9); border-radius: 50%; pointer-events: none; z-index: 5;
+}
+.walk-joystick {
+  position: absolute; left: 28px; bottom: 28px; width: 120px; height: 120px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35); border: 2px solid rgba(255, 255, 255, 0.7); touch-action: none; z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+}
+.walk-joystick span { width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 255, 255, 0.9); pointer-events: none; }
