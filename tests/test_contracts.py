@@ -115,12 +115,12 @@ def test_golden_pano_manifest_matches_target_scene_matrix() -> None:
     assert sum(scene.roomId == "room_kitchen" for scene in manifest.scenes) == 3
     assert all((scene.assets.original.width, scene.assets.original.height) == (6144, 3072) for scene in manifest.scenes)
     assert all((scene.assets.proxy2k.width, scene.assets.proxy2k.height) == (2048, 1024) for scene in manifest.scenes)
-    assert all("3vjia" not in asset.url for scene in manifest.scenes for asset in (
+    assert all(not asset.url.startswith(("http://", "https://")) for scene in manifest.scenes for asset in (
         scene.assets.original,
         scene.assets.proxy2k,
         scene.assets.proxy1k,
     ))
-    assert all("3vjia" not in scene.assets.thumbnailUrl for scene in manifest.scenes)
+    assert all(not scene.assets.thumbnailUrl.startswith(("http://", "https://")) for scene in manifest.scenes)
 
 
 def test_pano_hotspot_target_must_reference_another_scene() -> None:

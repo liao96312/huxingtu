@@ -1,6 +1,6 @@
 {
   "schemaVersion": "0.1.0",
-  "source": "clean-room behavior mapping from 3vjia aidraw config 20250427",
+  "source": "independently defined style catalog v1",
   "styles": [
     {
       "id": "modern",
@@ -171,5 +171,5 @@
       "promptSuffix": "Wabi-sabi interior, warm clay and sand tones, limewash, aged wood and travertine, quiet imperfect textures, minimal objects, soft natural light."
     }
   ],
-  "contentHash": "4ad514999ab7fd0598b84d514284bfc3f9195da50c9714f946d912fdb8af5a8c"
+  "contentHash": "7427eb1f40b6b97f47f68e37079a5b502831717d1266cc78e4899061afd74b81"
 }

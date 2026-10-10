@@ -6,7 +6,7 @@
 
 ## 目标
 
-最终成品以用户指定的 [3VJIA 全景分享页](https://pano.3vjia.com/?schemeId=a5f05daa63434378912ac6313cbaa229&imageId=bec67a6bc88b4ab3a2db91768dc80cee&aiModel=1&fromShare=1) 为黑盒交互与画质基线，但不得依赖其代码、域名、数据或私有协议。
+最终成品以用户指定的 第三方全景分享页 为黑盒交互与画质基线，但不得依赖其代码、域名、数据或私有协议。
 
 实测基线：
 

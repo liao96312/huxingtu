@@ -31,3 +31,13 @@ datasets/derived/_vision_cache/
 # third-party CLI binaries (do not commit large executables)
 tools/cloudflared.exe
 tools/*.exe
+
+# build metadata
+*.egg-info/
+build/
+
+# third-party reverse-engineering material must never be committed
+*3vj*
+*3VJ*
+*逆向*
+*友商*

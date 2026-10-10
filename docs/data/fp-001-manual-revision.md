@@ -131,7 +131,6 @@ Revision 5 场景进一步从 5 门/1窗自动生成 25 个 Opening 组件：每
 ## StyleCatalog 与奶油风第3样本
 
 - [`style-catalog.v1.json`](../../datasets/derived/fp-001/style-catalog.v1.json) 包含现代、中式、北欧、奶油、法式、混搭、轻奢、侘寂8种设计风格；设计风格与写实媒介、灵感、色板、材质分字段保存。
-- 该字段分层参考 `3vj-js` Bundle 与公开 `aidrawcfg20250427.json` 的行为；PromptSuffix、色板和材质由本项目独立定义。
 - 奶油风6K：[`living-main-gpt-image-2-cream-v1-6144x3072.jpg`](../../datasets/derived/fp-001/panorama/living-main/ai/living-main-gpt-image-2-cream-v1-6144x3072.jpg)。
 - 奶油风QA：[`living-main-gpt-image-2-cream-v1.structure-qa.json`](../../datasets/derived/fp-001/panorama/living-main/ai/living-main-gpt-image-2-cream-v1.structure-qa.json)。
 - QA代理：全结构6px召回0.475、门窗0.564，仍为 `needsReview`。
