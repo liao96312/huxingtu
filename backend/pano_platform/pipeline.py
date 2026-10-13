@@ -330,6 +330,23 @@ def _publish_preview(
     if door_split:
         fallback_codes.append("CV_DOOR_SPLIT_ROOM")
 
+    # CV-only path: openings were arbitrated against the wall-graph rooms
+    # above; publish the sealed-gap raster rooms, which track true room
+    # extents better, when they exist.
+    if "CV_ONLY_ROOM" in fallback_codes:
+        raster = _raster_rooms(decoded, graph)
+        if raster:
+            from .floorplan.raster_rooms import reconcile_rooms
+
+            closed_rooms, raster_added = reconcile_rooms(
+                closed_rooms, [room.polygon for room in raster],
+                (image_height, image_width), graph.wall_width_px,
+                float(getattr(graph, "mm_per_px", 0) or 0),
+            )
+            fallback_codes.append("CV_RASTER_ROOM_EXTENT")
+            if raster_added:
+                fallback_codes.append("CV_RASTER_ROOM_ADDED")
+
     unsupported_boundary_rooms = unsupported_boundary_room_ids(
         graph, closed_rooms, wall_mask
     )
@@ -527,6 +544,35 @@ def _extend_opening_carriers(segments, openings):
             high = max(segment.start[1], segment.end[1], opening.start_px[1], opening.end_px[1])
             by_id[segment.id] = replace(segment, start=(segment.start[0], low), end=(segment.start[0], high))
     return tuple(by_id[segment.id] for segment in segments)
+
+
+def _raster_rooms(decoded, graph):
+    """Rooms from sealed-gap raster flooding; empty when it finds none."""
+
+    if decoded is None:
+        return ()
+    from types import SimpleNamespace
+
+    from .floorplan.preprocess import binarize, measure_strokes, separate_layers, to_grayscale
+    from .floorplan.raster_rooms import raster_room_polygons
+
+    try:
+        binary = binarize(to_grayscale(decoded))
+        strokes = measure_strokes(binary.ink)
+        layers = separate_layers(binary.ink, strokes)
+        wall_px = float(getattr(graph, "wall_width_px", 0) or strokes.wall_width_px)
+        polygons = raster_room_polygons(binary.ink, layers.wall, wall_px)
+    except Exception:
+        return ()
+    mm_per_px = float(getattr(graph, "mm_per_px", 0) or strokes.mm_per_px or 0)
+    rooms = []
+    for index, polygon in enumerate(polygons):
+        area_px2 = abs(_polygon_area_px(polygon))
+        rooms.append(SimpleNamespace(
+            id=f"room_{index + 1:03d}", polygon=polygon, area_px2=area_px2,
+            area_mm2=area_px2 * mm_per_px * mm_per_px,
+        ))
+    return tuple(rooms)
 
 
 def _estimate_preview_scale(width: int, height: int) -> float:
