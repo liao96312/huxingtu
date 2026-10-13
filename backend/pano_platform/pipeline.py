@@ -320,6 +320,16 @@ def _publish_preview(
     if footprint_clipped:
         fallback_codes.append("CV_FOOTPRINT_ROOM_CLIPPED")
 
+    # Unsealed door gaps flood neighbouring rooms together; split them along
+    # confirmed doors plus interior wall ink.
+    from .floorplan.room_split import split_rooms_by_doors
+
+    closed_rooms, door_split = split_rooms_by_doors(
+        closed_rooms, graph, wall_mask, confirmed_openings
+    )
+    if door_split:
+        fallback_codes.append("CV_DOOR_SPLIT_ROOM")
+
     unsupported_boundary_rooms = unsupported_boundary_room_ids(
         graph, closed_rooms, wall_mask
     )
