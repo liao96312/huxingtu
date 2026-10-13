@@ -308,6 +308,18 @@ def _publish_preview(
             automatic_cv_confirmed.append(candidate)
     confirmed_openings = tuple(existing_intervals)
 
+    # Exterior notches closed only by synthetic bbox edges are not rooms.
+    # Clip after opening arbitration so entrance doors keep their topology.
+    from .floorplan.footprint import clip_rooms_to_footprint
+
+    closed_rooms, footprint_dropped, footprint_clipped = clip_rooms_to_footprint(
+        closed_rooms, graph, wall_mask
+    )
+    if footprint_dropped:
+        fallback_codes.append("CV_FOOTPRINT_EXTERIOR_ROOM_FILTERED")
+    if footprint_clipped:
+        fallback_codes.append("CV_FOOTPRINT_ROOM_CLIPPED")
+
     unsupported_boundary_rooms = unsupported_boundary_room_ids(
         graph, closed_rooms, wall_mask
     )
