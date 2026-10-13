@@ -561,7 +561,10 @@ def _raster_rooms(decoded, graph):
         strokes = measure_strokes(binary.ink)
         layers = separate_layers(binary.ink, strokes)
         wall_px = float(getattr(graph, "wall_width_px", 0) or strokes.wall_width_px)
-        polygons = raster_room_polygons(binary.ink, layers.wall, wall_px)
+        from .floorplan.cubicasa import cubicasa_wall_mask
+
+        extra = cubicasa_wall_mask(decoded)
+        polygons = raster_room_polygons(binary.ink, layers.wall, wall_px, extra_barrier=extra)
     except Exception:
         return ()
     mm_per_px = float(getattr(graph, "mm_per_px", 0) or strokes.mm_per_px or 0)
