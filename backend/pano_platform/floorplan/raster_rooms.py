@@ -30,6 +30,7 @@ MIN_ROOM_WALL_WIDTH2 = 37.5
 
 def raster_room_polygons(
     ink: np.ndarray, wall: np.ndarray, wall_width_px: float,
+    extra_barrier: np.ndarray | None = None,
 ) -> list[tuple[tuple[float, float], ...]]:
     from shapely.geometry import Polygon
 
@@ -58,6 +59,8 @@ def raster_room_polygons(
             points = cv2.findNonZero((labels == label).astype(np.uint8))
             cv2.fillConvexPoly(barrier, cv2.convexHull(points), 1)
 
+    if extra_barrier is not None:
+        barrier = barrier | (extra_barrier > 0).astype(np.uint8)
     free = (1 - barrier).astype(np.uint8)
     count, labels, stats, _ = cv2.connectedComponentsWithStats(free, connectivity=4)
     border = set(np.unique(np.concatenate([labels[0], labels[-1], labels[:, 0], labels[:, -1]])).tolist())
