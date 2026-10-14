@@ -139,3 +139,7 @@ docs/plan/              # 户型识别CV+Tuzi视觉模型方案与详细TODO
 ## 当前状态
 
 Viewer、单户型 3D/全景和识别原型均可运行；通用户型发布门仍为 `releaseReady=false`，当前输出应视为预览并接受人工复核。
+
+## 许可证
+
+本项目以 [PolyForm Noncommercial 1.0.0](LICENSE) 授权：允许个人学习、研究等**非商业**用途，**禁止任何商业使用**。第三方组件按各自许可证使用，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；数据集来源与许可见 `datasets/external/registry.json`。发布页中的训练包与模型权重（`best.pth`）同样仅限非商业使用。
