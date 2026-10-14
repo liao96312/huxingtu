@@ -22,12 +22,16 @@ def main() -> int:
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--encoder", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--init", type=Path, help="v1 best.pth for warm start (kit v2)")
+    parser.add_argument("--top", default="huxingtu-train-kit-v2")
     args = parser.parse_args()
-    top = "huxingtu-train-kit"
+    top = args.top  # new folder name: a v1 output/last.pth must never be resumed
     with zipfile.ZipFile(args.out, "w", zipfile.ZIP_DEFLATED) as archive:
         for name in FILES:
             archive.write(KIT / name, f"{top}/{name}")
         archive.write(args.encoder, f"{top}/weights/resnet34_imagenet_encoder.pth")
+        if args.init:
+            archive.write(args.init, f"{top}/weights/v1_best.pth")
         for path in sorted(args.data.rglob("*")):
             if path.is_file():
                 archive.write(path, f"{top}/data/{path.relative_to(args.data).as_posix()}",

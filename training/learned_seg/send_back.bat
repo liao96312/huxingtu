@@ -8,7 +8,7 @@ if not exist "output\best.pth" (
 )
 where gh >nul 2>&1
 if errorlevel 1 goto manual
-gh release upload learned-seg-kit-v1 "output\best.pth" --repo liao96312/huxingtu --clobber
+gh release upload learned-seg-kit-v2 "output\best.pth" --repo liao96312/huxingtu --clobber
 if errorlevel 1 goto manual
 echo 已上传到 GitHub，告诉我一声就行。
 pause
