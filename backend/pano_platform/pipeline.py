@@ -364,6 +364,33 @@ def _publish_preview(
             )
             fallback_codes.append("LEARNED_SEG_ROOMS")
 
+    # The trained model also localises doors/windows far better than the arc
+    # and parallel-line rules; when present, its spans replace the CV ones.
+    # Each span gets its own carrier edge so it never depends on graph gaps.
+    from .floorplan.learned_seg import learned_openings
+
+    learned_carriers = ()
+    learned_spans = learned_openings(decoded, graph.wall_width_px)
+    if learned_spans and os.environ.get("PANO_LEARNED_OPENINGS", "1") != "0":
+        from .floorplan.fusion_openings import FusedOpening
+
+        scale = float(getattr(graph, "mm_per_px", 0) or 0) or _estimate_preview_scale(image_width, image_height)
+        carriers, learned = [], []
+        for index, (kind, start, end) in enumerate(learned_spans):
+            edge_id = f"wall_learned_{index + 1:03d}"
+            carriers.append(WallSegment(
+                edge_id, "horizontal" if start[1] == end[1] else "vertical",
+                start, end, float(graph.wall_width_px or 1.0), False,
+            ))
+            learned.append(FusedOpening(
+                f"learned_{kind}_{index + 1:03d}", kind, edge_id, start, end,
+                _distance(start, end) * scale, "confirmed", ("LEARNED_SEG_OPENING",),
+            ))
+        learned_carriers = tuple(carriers)
+        confirmed_openings = tuple(learned)
+        automatic_cv_confirmed = list(learned)
+        fallback_codes.append("LEARNED_SEG_OPENINGS")
+
     unsupported_boundary_rooms = unsupported_boundary_room_ids(
         graph, closed_rooms, wall_mask
     )
@@ -411,7 +438,7 @@ def _publish_preview(
         if segment.id in confirmed_edge_ids
     )
     layout_segments = _extend_opening_carriers(
-        (*graph.segments, *door_carriers), confirmed_openings
+        (*graph.segments, *door_carriers, *learned_carriers), confirmed_openings
     )
     edges = [
         {

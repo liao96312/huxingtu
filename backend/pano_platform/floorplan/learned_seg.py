@@ -129,3 +129,32 @@ def learned_room_polygons(image_bgr: np.ndarray | None, wall_width_px: float):
         if len(points) >= 3:
             polygons.append(points)
     return polygons
+
+
+MIN_OPENING_WALL_WIDTH2 = 0.3  # ~80 px^2 with 17 px walls (val-tuned)
+
+
+def learned_openings(image_bgr: np.ndarray | None, wall_width_px: float):
+    """Door/window spans from the model as ``(type, start, end)`` tuples, or ``None``.
+
+    Each door (class 2) / window (class 3) component becomes one span along
+    the long side of its bounding box, centred across the wall.
+    """
+
+    result = segment(image_bgr)
+    if result is None:
+        return None
+    classes, _ = result
+    ww = max(2.0, float(wall_width_px or 0))
+    spans = []
+    for kind, value in (("door", 2), ("window", 3)):
+        count, _, stats, _ = cv2.connectedComponentsWithStats((classes == value).astype(np.uint8), connectivity=8)
+        for label in range(1, count):
+            x, y, w, h, area = (float(v) for v in stats[label])
+            if area < MIN_OPENING_WALL_WIDTH2 * ww * ww:
+                continue
+            if w >= h:
+                spans.append((kind, (x, y + h / 2), (x + w, y + h / 2)))
+            else:
+                spans.append((kind, (x + w / 2, y), (x + w / 2, y + h)))
+    return spans
