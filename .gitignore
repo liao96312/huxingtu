@@ -41,3 +41,9 @@ build/
 *3VJ*
 *逆向*
 *友商*
+
+# learned_seg training kit (local artifacts)
+training/learned_seg/data/
+training/learned_seg/weights/
+training/learned_seg/output/
+training/learned_seg/venv/

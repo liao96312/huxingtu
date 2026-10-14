@@ -564,6 +564,11 @@ def _raster_rooms(decoded, graph):
         from .floorplan.cubicasa import cubicasa_wall_mask
 
         extra = cubicasa_wall_mask(decoded)
+        from .floorplan.learned_seg import learned_barrier
+
+        learned = learned_barrier(decoded)
+        if learned is not None:
+            extra = learned if extra is None else (extra | learned)
         polygons = raster_room_polygons(binary.ink, layers.wall, wall_px, extra_barrier=extra)
     except Exception:
         return ()

@@ -171,38 +171,7 @@ def _draw_window_symbol(image: np.ndarray, start: dict, end: dict) -> None:
 
 def convert_plan(plan: dict, output_dir: Path, canvas: int = 1024) -> dict:
     sample_id = f"resplan-{int(plan['id']):05d}"
-    apply = _transform(plan, canvas, margin=48)
-    image = np.full((canvas, canvas), 255, dtype=np.uint8)
-    _draw_geometry(image, apply(plan["wall"]), 0)
-
-    openings = []
-    opening_index = 0
-    for source_type, truth_type in (("door", "door"), ("front_door", "door"), ("window", "window")):
-        for part in geometries(plan.get(source_type)):
-            transformed = apply(part)
-            _draw_geometry(image, transformed, 255)
-            start, end = _long_axis(transformed)
-            openings.append({
-                "id": f"op_{opening_index:03d}", "type": truth_type,
-                "pixelStart": start, "pixelEnd": end,
-                "evidence": "none" if truth_type == "door" else "parallelLines",
-            })
-            opening_index += 1
-            if truth_type == "door":
-                _draw_door_symbol(image, start, end)
-            else:
-                _draw_window_symbol(image, start, end)
-
-    rooms = []
-    for source_type, truth_type in ROOM_TYPES.items():
-        for part in geometries(plan.get(source_type)):
-            if isinstance(part, Polygon):
-                rooms.append({
-                    "id": f"room_{len(rooms):03d}",
-                    "type": truth_type,
-                    "polygon": _polygon_points(apply(part)),
-                })
-
+    image, openings, rooms = render_plan(plan, canvas)
     output_dir.mkdir(parents=True, exist_ok=True)
     image_path = output_dir / f"{sample_id}.png"
     ok, encoded = cv2.imencode(".png", image)
@@ -224,6 +193,53 @@ def convert_plan(plan: dict, output_dir: Path, canvas: int = 1024) -> dict:
         json.dumps(truth, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     return {"sampleId": sample_id, "rooms": len(rooms), "openings": len(openings)}
+
+
+def render_plan(plan: dict, canvas: int = 1024, *, with_geometry: bool = False):
+    """Render one plan exactly like the regression fixtures.
+
+    Returns ``(image, openings, rooms)``; with ``with_geometry`` also the
+    transformed wall/door/window/room geometries for label rasterization.
+    """
+
+    apply = _transform(plan, canvas, margin=48)
+    geometry = {"wall": apply(plan["wall"]), "door": [], "window": [], "rooms": []}
+    image = np.full((canvas, canvas), 255, dtype=np.uint8)
+    _draw_geometry(image, geometry["wall"], 0)
+
+    openings = []
+    opening_index = 0
+    for source_type, truth_type in (("door", "door"), ("front_door", "door"), ("window", "window")):
+        for part in geometries(plan.get(source_type)):
+            transformed = apply(part)
+            geometry[truth_type].append(transformed)
+            _draw_geometry(image, transformed, 255)
+            start, end = _long_axis(transformed)
+            openings.append({
+                "id": f"op_{opening_index:03d}", "type": truth_type,
+                "pixelStart": start, "pixelEnd": end,
+                "evidence": "none" if truth_type == "door" else "parallelLines",
+            })
+            opening_index += 1
+            if truth_type == "door":
+                _draw_door_symbol(image, start, end)
+            else:
+                _draw_window_symbol(image, start, end)
+
+    rooms = []
+    for source_type, truth_type in ROOM_TYPES.items():
+        for part in geometries(plan.get(source_type)):
+            if isinstance(part, Polygon):
+                geometry["rooms"].append(apply(part))
+                rooms.append({
+                    "id": f"room_{len(rooms):03d}",
+                    "type": truth_type,
+                    "polygon": _polygon_points(apply(part)),
+                })
+
+    if with_geometry:
+        return image, openings, rooms, geometry
+    return image, openings, rooms
 
 
 def main() -> int:

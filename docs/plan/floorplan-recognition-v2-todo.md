@@ -1004,3 +1004,10 @@ DoD：安全测试通过；删除能清理所有视觉工件；超预算任务�
 - [x] val 前 40 张：Room mIoU 0.5522 → 0.5623，40/40 图提升，房间数与开口指标不变；test 前 30 张：0.6082 → 0.6174，30/30 提升，房间数 |差| 30、完全一致 12/30、门/窗/开口 F1 不变；
 - [x] 默认关闭；`scripts/fetch_cubicasa.sh` 下载后自动启用，权重不入库，缺 torch/权重时回退；
 - [ ] 增益很小：发布门的主要缺口是"无墙分隔的开放式房间/阳台"与漏门，需在 ResPlan train 上训练专用分割模型（房间实例 + 门窗），而不是套用 CubiCasa。
+
+## 87. 2026-10-14 学习式分割：Windows 一键训练包
+
+- [x] `scripts/build_seg_dataset.py`：用回归同款渲染器（`render_plan`，与回归图字节一致）把 ResPlan train 全部 13045 张 + val 末尾 400 张预渲染成 512² 图像与标签（背景/墙/门/窗/房间 + 房间边界位）；回归用的 test 前 30、val 前 40 均不进训练；数据 119MB；
+- [x] `training/learned_seg/`：U-Net/ResNet34（smp，MIT），CE + 边界 BCE，旋转/翻转增强，每轮存 last.pth 可断点续训，早停、11 小时上限、fp16 连续数值异常自动切 fp32，Windows 防睡眠；`start_training.bat` 自动装 Python 3.11 / CUDA PyTorch（cu121/cu118，官方源失败走阿里云）/ 清华源依赖，冒烟测试后正式训练；
+- [x] 推理侧 `learned_seg.py`：读 `tmp/models/learned_seg/best.pth`，CPU 推理，墙/门/窗/房间边界并入栅格房间屏障；无权重即回退；
+- [ ] 等用户训练完发回 best.pth，在 test 30 + val 40 上测量后决定是否默认启用、是否改用学习式房间直接出房间。
