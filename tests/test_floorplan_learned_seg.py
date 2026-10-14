@@ -21,7 +21,9 @@ def test_room_cells_split_by_boundary(monkeypatch):
 
 def test_openings_from_door_and_window_components(monkeypatch):
     classes = np.zeros((200, 300), np.uint8)
+    classes[50:58, 80:170] = 1    # wall around the door
     classes[50:58, 100:150] = 2   # horizontal door
+    classes[110:180, 20:27] = 1   # wall around the window
     classes[120:170, 20:27] = 3   # vertical window
     classes[10:11, 10:11] = 2     # speck, ignored
     monkeypatch.setattr(learned_seg, "segment", lambda image: (classes, np.zeros_like(classes)))

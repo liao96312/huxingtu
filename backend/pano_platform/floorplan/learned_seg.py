@@ -154,7 +154,34 @@ def learned_openings(image_bgr: np.ndarray | None, wall_width_px: float):
             if area < MIN_OPENING_WALL_WIDTH2 * ww * ww:
                 continue
             if w >= h:
-                spans.append((kind, (x, y + h / 2), (x + w, y + h / 2)))
+                start, end = (x, y + h / 2), (x + w, y + h / 2)
             else:
-                spans.append((kind, (x + w / 2, y), (x + w / 2, y + h)))
+                start, end = (x + w / 2, y), (x + w / 2, y + h)
+            if _wall_at_both_ends(classes, start, end, ww):
+                spans.append((kind, start, end))
     return spans
+
+
+def _wall_at_both_ends(classes: np.ndarray, start, end, ww: float) -> bool:
+    """An opening sits in a wall: wall pixels must continue past both ends.
+
+    Rejects door/window-coloured specks on text, dimensions or furniture,
+    which the model produces on real (non-ResPlan) plans.
+    """
+
+    height, width = classes.shape
+    dx, dy = end[0] - start[0], end[1] - start[1]
+    length = max(1e-6, (dx * dx + dy * dy) ** 0.5)
+    ux, uy = dx / length, dy / length
+    reach = int(round(ww))
+    for (px, py), sign in ((start, -1.0), (end, 1.0)):
+        found = False
+        for step in range(1, reach + 1):
+            x = int(round(px + sign * ux * step))
+            y = int(round(py + sign * uy * step))
+            if 0 <= x < width and 0 <= y < height and classes[y, x] == 1:
+                found = True
+                break
+        if not found:
+            return False
+    return True
