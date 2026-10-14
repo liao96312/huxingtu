@@ -241,14 +241,12 @@ def main() -> int:
     parser.add_argument("--encoder-weights", type=Path, default=here / "weights" / "resnet34_imagenet_encoder.pth")
     parser.add_argument("--init", type=Path, default=here / "weights" / "v1_best.pth",
                         help="v1 模型权重，用来热启动（全卷积网络，分辨率变化不影响）")
-    parser.add_argument("--epochs", type=int, default=30)
-    parser.add_argument("--min-epochs", type=int, default=15)
+    parser.add_argument("--epochs", type=int, default=6)
     parser.add_argument("--batch", type=int, default=4)
     parser.add_argument("--accum", type=int, default=2, help="梯度累积步数（等效 batch = batch × accum）")
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--amp", choices=("auto", "on", "off"), default="auto")
-    parser.add_argument("--patience", type=int, default=8)
     parser.add_argument("--max-hours", type=float, default=12.0, help="累计训练时长上限（含断点续训）")
     parser.add_argument("--limit-train", type=int, default=0)
     parser.add_argument("--smoke", action="store_true", help="约1分钟的冒烟测试，不覆盖正式结果")
@@ -281,7 +279,6 @@ def main() -> int:
         log(f"已从 v1 模型热启动（v1 第 {init.get('epoch', '?')} 轮，输入 {init.get('input_size', '?')}px → 现在 {train_set.images and read_png(train_set.images[0]).shape[0]}px）")
     model = model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    plateau = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max", factor=0.5, patience=2, min_lr=1e-6)
     use_amp = device.type == "cuda" and args.amp != "off"
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
     epochs = 1 if args.smoke else args.epochs
@@ -297,8 +294,6 @@ def main() -> int:
         optimizer.load_state_dict(state["optimizer"])
         start_epoch, best, bad_epochs, history = state["epoch"] + 1, state["best"], state["bad_epochs"], state["history"]
         elapsed_before = state.get("elapsed", 0.0)
-        if "plateau" in state:
-            plateau.load_state_dict(state["plateau"])
         use_amp = use_amp and state.get("use_amp", True)
         scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
         log(f"检测到上次的进度，从第 {start_epoch + 1} 轮继续（目前最好得分 {best:.4f}）")
@@ -322,9 +317,8 @@ def main() -> int:
         running = 0.0
         for step, (image, cls, boundary, _) in enumerate(train_loader):
             global_step = epoch * steps_per_epoch + step
-            if global_step < warmup_steps:
-                for group in optimizer.param_groups:
-                    group["lr"] = args.lr * (global_step + 1) / warmup_steps
+            for group in optimizer.param_groups:  # warmup, then cosine down to 2% over all epochs
+                group["lr"] = lr_at(global_step, total_steps, args.lr, warmup=warmup_steps)
             image = image.to(device, non_blocking=True)
             cls, boundary = cls.to(device, non_blocking=True), boundary.to(device, non_blocking=True)
             with torch.autocast(device_type=device.type, dtype=torch.float16, enabled=use_amp):
@@ -358,8 +352,6 @@ def main() -> int:
             if time.time() - started > args.max_hours * 3600:
                 break
         metrics = evaluate(model, val_loader, device, use_amp)
-        if global_step >= warmup_steps:
-            plateau.step(metrics["score"])
         named = "  ".join(f"{n}{v:.3f}" for n, v in zip((*CLASS_NAMES_ZH, "边界"), metrics["iou"]))
         improved = metrics["score"] > best
         history.append({"epoch": epoch + 1, "loss": running / max(1, steps_per_epoch), **metrics,
@@ -374,7 +366,7 @@ def main() -> int:
             bad_epochs += 1
         torch.save({"model": model.state_dict(), "optimizer": optimizer.state_dict(), "epoch": epoch,
                     "best": best, "bad_epochs": bad_epochs, "history": history, "use_amp": use_amp,
-                    "plateau": plateau.state_dict(), "elapsed": time.time() - started},
+                    "elapsed": time.time() - started},
                    str(last_path))
         (out / "history.json").write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
         log(f"第 {epoch + 1} 轮完成：验证 IoU {named}  房间数全对 {metrics['roomCountExact']:.1%}  房间IoU {metrics['roomIoU']:.3f}  "
@@ -383,8 +375,6 @@ def main() -> int:
         if args.smoke:
             log("冒烟测试通过：数据、模型、显卡、保存都正常。")
             return 0
-        if bad_epochs >= args.patience and epoch + 1 >= args.min_epochs:
-            log(f"连续 {args.patience} 轮没有提升，提前结束。")
             break
         if time.time() - started > args.max_hours * 3600:
             log(f"已达到累计 {args.max_hours} 小时上限，训练结束。")
