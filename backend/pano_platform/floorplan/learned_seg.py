@@ -129,3 +129,59 @@ def learned_room_polygons(image_bgr: np.ndarray | None, wall_width_px: float):
         if len(points) >= 3:
             polygons.append(points)
     return polygons
+
+
+MIN_OPENING_WALL_WIDTH2 = 0.3  # ~80 px^2 with 17 px walls (val-tuned)
+
+
+def learned_openings(image_bgr: np.ndarray | None, wall_width_px: float):
+    """Door/window spans from the model as ``(type, start, end)`` tuples, or ``None``.
+
+    Each door (class 2) / window (class 3) component becomes one span along
+    the long side of its bounding box, centred across the wall.
+    """
+
+    result = segment(image_bgr)
+    if result is None:
+        return None
+    classes, _ = result
+    ww = max(2.0, float(wall_width_px or 0))
+    spans = []
+    for kind, value in (("door", 2), ("window", 3)):
+        count, _, stats, _ = cv2.connectedComponentsWithStats((classes == value).astype(np.uint8), connectivity=8)
+        for label in range(1, count):
+            x, y, w, h, area = (float(v) for v in stats[label])
+            if area < MIN_OPENING_WALL_WIDTH2 * ww * ww:
+                continue
+            if w >= h:
+                start, end = (x, y + h / 2), (x + w, y + h / 2)
+            else:
+                start, end = (x + w / 2, y), (x + w / 2, y + h)
+            if _wall_at_both_ends(classes, start, end, ww):
+                spans.append((kind, start, end))
+    return spans
+
+
+def _wall_at_both_ends(classes: np.ndarray, start, end, ww: float) -> bool:
+    """An opening sits in a wall: wall pixels must continue past both ends.
+
+    Rejects door/window-coloured specks on text, dimensions or furniture,
+    which the model produces on real (non-ResPlan) plans.
+    """
+
+    height, width = classes.shape
+    dx, dy = end[0] - start[0], end[1] - start[1]
+    length = max(1e-6, (dx * dx + dy * dy) ** 0.5)
+    ux, uy = dx / length, dy / length
+    reach = int(round(ww))
+    for (px, py), sign in ((start, -1.0), (end, 1.0)):
+        found = False
+        for step in range(1, reach + 1):
+            x = int(round(px + sign * ux * step))
+            y = int(round(py + sign * uy * step))
+            if 0 <= x < width and 0 <= y < height and classes[y, x] == 1:
+                found = True
+                break
+        if not found:
+            return False
+    return True

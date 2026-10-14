@@ -360,6 +360,7 @@ def test_unconfirmed_geometry_never_calls_paid_ai(tmp_path, monkeypatch) -> None
 def test_connected_window_panes_survive_into_automatic_pipeline(tmp_path, monkeypatch) -> None:
     from pano_platform.pipeline import run_upload_pipeline
 
+    monkeypatch.setenv("PANO_LEARNED_OPENINGS", "0")  # exercises the CV window rules
     monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
     image_path = Path(__file__).parents[1] / "datasets/source/desktop-9/fp-109.png"
     result = run_upload_pipeline(
@@ -374,6 +375,7 @@ def test_connected_window_panes_survive_into_automatic_pipeline(tmp_path, monkey
 def test_neighboring_door_sweep_does_not_hide_real_window(tmp_path, monkeypatch) -> None:
     from pano_platform.pipeline import run_upload_pipeline
 
+    monkeypatch.setenv("PANO_LEARNED_OPENINGS", "0")  # exercises the CV window rules
     monkeypatch.setenv("PANO_DATA_ROOT", str(tmp_path))
     image_path = Path(__file__).parents[1] / "datasets/source/desktop-9/fp-106.png"
     result = run_upload_pipeline(
