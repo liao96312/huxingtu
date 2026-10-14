@@ -346,6 +346,23 @@ def _publish_preview(
             fallback_codes.append("CV_RASTER_ROOM_EXTENT")
             if raster_added:
                 fallback_codes.append("CV_RASTER_ROOM_ADDED")
+        # A trained segmentation model (optional weights) gives both room
+        # count and extent, including open-plan splits; prefer it when present.
+        from .floorplan.learned_seg import learned_room_polygons
+
+        learned_rooms = learned_room_polygons(decoded, graph.wall_width_px)
+        if learned_rooms and os.environ.get("PANO_LEARNED_ROOMS", "1") != "0":
+            mm_per_px = float(getattr(graph, "mm_per_px", 0) or 0)
+            closed_rooms = tuple(
+                FusedRoom(
+                    f"room_{index + 1:03d}", "other", polygon,
+                    abs(_polygon_area_px(polygon)) * mm_per_px * mm_per_px,
+                    abs(_polygon_area_px(polygon)), "review",
+                    ("CV_ONLY_ROOM", "LEARNED_SEG_ROOM"),
+                )
+                for index, polygon in enumerate(learned_rooms)
+            )
+            fallback_codes.append("LEARNED_SEG_ROOMS")
 
     unsupported_boundary_rooms = unsupported_boundary_room_ids(
         graph, closed_rooms, wall_mask

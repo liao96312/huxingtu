@@ -7,3 +7,13 @@ def test_missing_weights_returns_none(tmp_path, monkeypatch):
     monkeypatch.setenv("PANO_LEARNED_SEG", str(tmp_path / "nope.pth"))
     monkeypatch.setattr(learned_seg, "_STATE", {})
     assert learned_seg.learned_barrier(np.zeros((64, 64, 3), np.uint8)) is None
+
+
+def test_room_cells_split_by_boundary(monkeypatch):
+    classes = np.zeros((200, 300), np.uint8)
+    classes[20:180, 20:280] = 4
+    boundary = np.zeros_like(classes)
+    boundary[20:180, 148:152] = 1  # open-plan split, no wall
+    monkeypatch.setattr(learned_seg, "segment", lambda image: (classes, boundary))
+    rooms = learned_seg.learned_room_polygons(np.zeros((200, 300, 3), np.uint8), 10.0)
+    assert len(rooms) == 2

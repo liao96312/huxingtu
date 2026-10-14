@@ -52,6 +52,16 @@ def segment(image_bgr: np.ndarray | None):
     model = _load()
     if model is None or image_bgr is None:
         return None
+    import hashlib
+
+    key = hashlib.md5(image_bgr.tobytes()).hexdigest()
+    if _STATE.get("cache_key") == key:
+        return _STATE["cache_value"]
+    _STATE["cache_key"], _STATE["cache_value"] = key, _segment(model, image_bgr)
+    return _STATE["cache_value"]
+
+
+def _segment(model, image_bgr):
     try:
         import torch
 
@@ -82,3 +92,40 @@ def learned_barrier(image_bgr: np.ndarray | None) -> np.ndarray | None:
         return None
     classes, boundary = result
     return (((classes >= 1) & (classes <= 3)) | (boundary > 0)).astype(np.uint8)
+
+
+# Tuned on the ResPlan val slice only (first 40 images); test slice untouched.
+MIN_ROOM_WALL_WIDTH2 = 10.0  # ~3000 px^2 with 17 px walls on a 1024 canvas
+GROW_WALL_WIDTHS = 0.3       # ~5 px: push room cells back into the wall band
+
+
+def learned_room_polygons(image_bgr: np.ndarray | None, wall_width_px: float):
+    """Room polygons = connected (room & not boundary) cells, or ``None``."""
+
+    from shapely.geometry import Polygon
+
+    result = segment(image_bgr)
+    if result is None:
+        return None
+    classes, boundary = result
+    ww = max(2.0, float(wall_width_px or 0))
+    free = ((classes == 4) & (boundary == 0)).astype(np.uint8)
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(free, connectivity=4)
+    grow = max(1, int(round(GROW_WALL_WIDTHS * ww)))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2 * grow + 1, 2 * grow + 1))
+    polygons = []
+    for label in range(1, count):
+        if stats[label, cv2.CC_STAT_AREA] < MIN_ROOM_WALL_WIDTH2 * ww * ww:
+            continue
+        mask = cv2.dilate((labels == label).astype(np.uint8), kernel)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        polygon = Polygon(max(contours, key=cv2.contourArea).reshape(-1, 2)).buffer(0)
+        if polygon.is_empty:
+            continue
+        if polygon.geom_type != "Polygon":
+            polygon = max(polygon.geoms, key=lambda part: part.area)
+        polygon = polygon.simplify(3.0, preserve_topology=True)
+        points = tuple((float(x), float(y)) for x, y in list(polygon.exterior.coords)[:-1])
+        if len(points) >= 3:
+            polygons.append(points)
+    return polygons
