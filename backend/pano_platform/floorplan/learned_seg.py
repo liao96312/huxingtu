@@ -96,7 +96,7 @@ def learned_barrier(image_bgr: np.ndarray | None) -> np.ndarray | None:
 
 # Tuned on the ResPlan val slice only (first 40 images); test slice untouched.
 MIN_ROOM_WALL_WIDTH2 = 10.0  # ~3000 px^2 with 17 px walls on a 1024 canvas
-GROW_WALL_WIDTHS = 0.3       # ~5 px: push room cells back into the wall band
+GROW_WALL_WIDTHS = 0.4       # ~7 px (v2 weights, val-tuned): push room cells back into the wall band
 
 
 def learned_room_polygons(image_bgr: np.ndarray | None, wall_width_px: float):
